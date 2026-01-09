@@ -145,20 +145,22 @@ BOOL CInstrumentEditorN163Wave::OnInitDialog()
 BOOL CInstrumentEditorN163Wave::PreTranslateMessage(MSG* pMsg)		// // //
 {
 	if (pMsg->message == WM_KEYDOWN) {
-		if ((::GetKeyState(VK_CONTROL) & 0x80) == 0x80) {
-			switch (pMsg->wParam) {
-			case VK_LEFT:
-				m_pWaveEditor->PhaseShift(1);
-				m_pWaveEditor->WaveChanged();
-				return TRUE;
-			case VK_RIGHT:
-				m_pWaveEditor->PhaseShift(-1);
-				m_pWaveEditor->WaveChanged();
-				return TRUE;
-			case VK_DOWN:
-				m_pWaveEditor->Invert(15);
-				m_pWaveEditor->WaveChanged();
-				return TRUE;
+		if (m_pWaveEditor->GetFocus()->m_hWnd != GetDlgItem(IDC_MML)->m_hWnd) {
+			if ((::GetKeyState(VK_CONTROL) & 0x80) == 0x80) {
+				switch (pMsg->wParam) {
+				case VK_LEFT:
+					m_pWaveEditor->PhaseShift(1);
+					m_pWaveEditor->WaveChanged();
+					return TRUE;
+				case VK_RIGHT:
+					m_pWaveEditor->PhaseShift(-1);
+					m_pWaveEditor->WaveChanged();
+					return TRUE;
+				case VK_DOWN:
+					m_pWaveEditor->Invert(15);
+					m_pWaveEditor->WaveChanged();
+					return TRUE;
+				}
 			}
 		}
 	}
