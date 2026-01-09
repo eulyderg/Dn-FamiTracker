@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 // VersionCheckerDlg.cpp : implementation file
@@ -62,8 +58,21 @@ END_MESSAGE_MAP()
 
 BOOL CVersionCheckerDlg::OnInitDialog()
 {
-	SetDlgItemText(IDC_VERSIONDATE_MSG, conv::to_t(theApp.m_pVerInfo).data());
-	SetDlgItemText(IDC_RELEASE_MSG, conv::to_t(theApp.m_pVerDesc).data());
+	if (theApp.m_bNewVersion) {
+		SetDlgItemText(IDC_VERSION_STATIC, "A new version of Dn-FamiTracker is now available.");
+		SetDlgItemText(IDC_VERSIONDATE_MSG, conv::to_t(theApp.m_pVerInfo).data());
+		SetDlgItemText(IDC_RELEASE_MSG, conv::to_t(theApp.m_pVerDesc).data());
+		SetDlgItemText(IDC_VERSION_STATIC2, "Release notes:");
+		SetDlgItemText(IDC_VERSION_STATIC3, "Pressing \"Update\" will open the GitHub page for this release.");
+	}
+	else {
+		SetDlgItemText(IDC_VERSION_STATIC, "A new version of Dn-FamiTracker has not been found.");
+		SetDlgItemText(IDC_VERSIONDATE_MSG, "You might be on the latest version.");
+		SetDlgItemText(IDC_VERSION_STATIC2, "If not, go to the latest release to download the latest version.");
+		SetDlgItemText(IDC_VERSION_STATIC3, "Pressing \"Update\" will open the GitHub page for the latest release.");
+		SetDlgItemText(IDC_RELEASE_MSG, "");
+		GetDlgItem(IDC_RELEASE_MSG)->EnableWindow(false);
+	}
 	if (theApp.m_bStartUp)
 		SetDlgItemText(IDC_UPDATE_REMIND, _T("Do not remind me again. (may be re-enabled in config menu)"));
 		//set visible the message

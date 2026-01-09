@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #pragma once
@@ -31,7 +27,9 @@
 class CChunkRenderText;
 class CDSample;		// // //
 
-typedef void (CChunkRenderText::*renderFunc_t)(CChunk *pChunk, CFile *pFile);
+typedef void (CChunkRenderText:: *renderFunc_t)(CChunk *pChunk, CFile *pFile);
+
+struct stNSFHeader;
 
 struct stChunkRenderFunc {
 	chunk_type_t type;
@@ -42,8 +40,18 @@ class CChunkRenderText
 {
 public:
 	CChunkRenderText(CFile *pFile);
-	void StoreChunks(const std::vector<CChunk*> &Chunks);
-	void StoreSamples(const std::vector<const CDSample*> &Samples);
+	void StoreChunks(const std::vector<CChunk *> &Chunks);
+	void StoreSamples(const std::vector<const CDSample *> &Samples, CChunk *pChunk = nullptr);
+	void WriteFileString(const CStringA &str, CFile *pFile) const;
+	void StoreNSFStub(unsigned char Header, vibrato_t VibratoStyle, bool LinearPitch, int ActualNamcoChannels, bool UseAllChips, bool IsAssembly = false) const;
+	void StoreNSFHeader(stNSFHeader Header) const;
+	void StoreNSFConfig(unsigned int DPCMSegment, stNSFHeader Header) const;
+	void StorePeriods(unsigned int *pLUTNTSC, unsigned int *pLUTPAL, unsigned int *pLUTSaw, unsigned int *pLUTVRC7, unsigned int *pLUTFDS, unsigned int *pLUTN163) const;
+	void StoreVibrato(unsigned int *pLUTVibrato) const;
+	void StoreUpdateExt(unsigned char Expansion) const;
+	void StoreEnableExt(std::vector<char> &ChannelOrder) const;
+	void SetExtraDataFiles(CFile *pFileNSFStub, CFile *pFileNSFHeader, CFile *pFileNSFConfig, CFile *pFilePeriods, CFile *pVibrato, CFile *pFileMultiChipEnable, CFile *pFileMultiChipUpdate);
+	void SetBankSwitching(bool bBankSwitched = false);
 
 	// Labels
 	// // // moved from CCompiler
@@ -72,7 +80,6 @@ private:
 
 private:
 	void DumpStrings(const CStringA &preStr, const CStringA &postStr, CStringArray &stringArray, CFile *pFile) const;
-	void WriteFileString(const CStringA &str, CFile *pFile) const;
 	void StoreByteString(const char *pData, int Len, CStringA &str, int LineBreak) const;
 	void StoreByteString(const CChunk *pChunk, CStringA &str, int LineBreak) const;
 
@@ -92,6 +99,10 @@ private:
 	void StorePatternChunk(CChunk *pChunk, CFile *pFile);
 	void StoreWavetableChunk(CChunk *pChunk, CFile *pFile);
 	void StoreWavesChunk(CChunk *pChunk, CFile *pFile);
+	void StoreMusicBankSegment(unsigned char bank, CStringA &str);
+	void StoreDPCMBankSegment(unsigned char bank, CStringA &str);
+
+	// taken from ChunkRenderBinary.cpp
 
 private:
 	CStringArray m_headerStrings;
@@ -107,6 +118,18 @@ private:
 	CStringArray m_songDataStrings;
 	CStringArray m_wavetableStrings;
 	CStringArray m_wavesStrings;
+	std::vector<CStringA> m_configMemoryAreaStrings;
+	std::vector<CStringA> m_configSegmentStrings;
 
 	CFile *m_pFile;
+	CFile *m_pFileNSFStub;
+	CFile *m_pFileNSFHeader;
+	CFile *m_pFileNSFConfig;
+	CFile *m_pFilePeriods;
+	CFile *m_pFileVibrato;
+	CFile *m_pFileMultiChipEnable;
+	CFile *m_pFileMultiChipUpdate;
+
+	bool m_bBankSwitched;
+	unsigned int m_iDataWritten;
 };

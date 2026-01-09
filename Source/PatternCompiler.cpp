@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #include <vector>
@@ -123,7 +119,10 @@ CPatternCompiler::CPatternCompiler(CFamiTrackerDoc *pDoc, unsigned int *pInstLis
 	m_pDocument(pDoc),
 	m_pInstrumentList(pInstList),
 	m_pDPCMList(pDPCMList),
-	m_pLogger(pLogger)
+	m_pLogger(pLogger),
+	m_iHash(0),
+	m_iDuration(0),
+	m_iCurrentDefaultDuration(0xFF)
 {
 	memset(m_bDSamplesAccessed, 0, sizeof(bool) * MAX_DSAMPLES);
 }
@@ -132,7 +131,7 @@ CPatternCompiler::~CPatternCompiler()
 {
 }
 
-void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
+void CPatternCompiler::CompileData(int Track, int Pattern, int Channel, bool bUseAllExp)
 {
 	int EffColumns = m_pDocument->GetEffColumns(Track, Channel) + 1;
 
@@ -143,6 +142,8 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
 	m_iHash = 0;
 	m_iDuration = 0;
 	m_iCurrentDefaultDuration = 0xFF;
+
+	m_bUseAllChips = bUseAllExp;
 
 	m_vData.clear();
 	m_vCompressedData.clear();
@@ -157,10 +158,29 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
 
 		m_pDocument->GetDataAtPattern(Track, Pattern, Channel, i, &ChanNote);
 
+		// !! !! if invalid note data, reset to default
+		// some of them may slip through the cracks during module loading
+		// comparison syntax based on AssertRange() template code from FamiTrackerDoc.h
 		unsigned char Note = ChanNote.Note;
+		if (!(Note >= NONE && Note <= ECHO)) {
+			Print("         Warning: Invalid note pattern (0x%02X on row %i, channel %i, pattern %i)\n", Note, i, Channel, Pattern);
+			Note = NONE;
+		}
 		unsigned char Octave = ChanNote.Octave;
+		if (!(Octave >= 0 && Octave < OCTAVE_RANGE)) {
+			Print("         Warning: Invalid octave pattern (0x%02X on row %i, channel %i, pattern %i)\n", Octave, i, Channel, Pattern);
+			Octave = 0;
+		}
 		unsigned char Instrument = FindInstrument(ChanNote.Instrument);
+		if (!((Instrument >= 0 && Instrument <= MAX_INSTRUMENTS) || Instrument == HOLD_INSTRUMENT)) {\
+			Print("         Warning: Invalid instrument index (0x%02X on row %i, channel %i, pattern %i)\n", Instrument, i, Channel, Pattern);
+			Instrument = MAX_INSTRUMENTS;
+		}
 		unsigned char Volume = ChanNote.Vol;
+		if (!(Volume >= 0 && Volume <= MAX_VOLUME)) {
+			Print("         Warning: Invalid volume pattern (0x%02X on row %i, channel %i, pattern %i)\n", Volume, i, Channel, Pattern);
+			Volume = MAX_VOLUME;
+		}
 		
 		bool Action = false;
 
@@ -172,15 +192,17 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
 			Note != HALT && Note != NONE && Note != RELEASE) {		// // //
 			if (!pTrackerChannel->IsInstrumentCompatible(ChanNote.Instrument,
 				m_pDocument->GetInstrumentType(ChanNote.Instrument))) {		// // //
-				CString str;
-				str.Format(_T("Error: Missing or incompatible instrument (on row %i, channel %i, pattern %i)\n"), i, Channel, Pattern);
-				Print(str);
+				Print("         Warning: Missing or incompatible instrument (on row %i, channel %i, pattern %i)\n", i, Channel, Pattern);
 			}
 		}
 
 		// Check for delays, must come first
 		for (int j = 0; j < EffColumns; ++j) {
-			unsigned char Effect   = ChanNote.EffNumber[j];
+			unsigned char Effect = ChanNote.EffNumber[j];
+			if (!(Effect >= EF_NONE && Effect <= EF_COUNT)) {
+				Print("         Warning: Invalid effect command data (0x%02X on row %i, channel %i, pattern %i)\n", Effect, i, Channel, Pattern);
+				Effect = EF_NONE;
+			}
 			unsigned char EffParam = ChanNote.EffParam[j];
 			if (Effect == EF_DELAY && EffParam > 0) {
 				WriteDuration();
@@ -259,6 +281,13 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
 				}
 				else {
 					DPCMInst = ChanNote.Instrument;
+					Volume = MAX_VOLUME;
+
+					// double check if DPCMInst is a valid instrument index
+					if (!(DPCMInst >= 0 && DPCMInst < MAX_INSTRUMENTS)) {
+						Print("         Warning: Invalid instrument index (0x%02X on row %i, channel %i, pattern %i)\n", DPCMInst, i, Channel, Pattern);
+						DPCMInst = MAX_INSTRUMENTS;
+					}
 				}
 			}
 			if (Instrument == HOLD_INSTRUMENT && ChanID != CHANID_DPCM) {		// // // 050B
@@ -294,15 +323,21 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
 				int LookUp = FindSample(DPCMInst, Octave, Note);
 				if (LookUp > 0) {
 					NESNote = LookUp - 1;
-					if (auto pInstrument = std::dynamic_pointer_cast<CInstrument2A03>(m_pDocument->GetInstrument(DPCMInst)))
-						m_bDSamplesAccessed[pInstrument->GetSampleIndex(Octave, Note - 1) - 1] = true;
-					// TODO: Print errors if incompatible or non-existing instrument is found
+
+					// Print errors if incompatible or non-existing instrument is found
+					if (DPCMInst != MAX_INSTRUMENTS && DPCMInst != HOLD_INSTRUMENT &&
+						Note != HALT && Note != NONE && Note != RELEASE) {		// // //
+						if (!pTrackerChannel->IsInstrumentCompatible(DPCMInst,
+							m_pDocument->GetInstrumentType(DPCMInst))) {		// // //
+							Print("         Warning: Missing or incompatible instrument (on row %i, channel %i, pattern %i)\n", i, Channel, Pattern);
+						}
+						else if (auto pInstrument = std::dynamic_pointer_cast<CInstrument2A03>(m_pDocument->GetInstrument(DPCMInst)))
+							m_bDSamplesAccessed[pInstrument->GetSampleIndex(Octave, Note - 1) - 1] = true;
+					}
 				}
 				else {
 					NESNote = 0xFF;		// Invalid sample, skip
-					CString str;
-					str.Format(_T("Error: Missing DPCM sample (on row %i, channel %i, pattern %i)\n"), i, Channel, Pattern);
-					Print(str);
+					Print("         Warning: Missing DPCM sample (on row %i, channel %i, pattern %i)\n", i, Channel, Pattern);
 				}
 			}
 			else if (ChanID == CHANID_NOISE) {
@@ -317,7 +352,12 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
 
 		for (int j = 0; j < EffColumns; ++j) {
 
-			unsigned char Effect   = ChanNote.EffNumber[j];
+			unsigned char Effect = ChanNote.EffNumber[j];
+			if (!(Effect >= EF_NONE && Effect <= EF_COUNT)) {
+				Print("         Warning: Invalid effect command data (0x%02X on row %i, channel %i, pattern %i)\n", Effect, i, Channel, Pattern);
+				Effect = EF_NONE;
+			}
+
 			unsigned char EffParam = ChanNote.EffParam[j];
 			
 			if (Effect > 0) {
@@ -519,9 +559,12 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
 					}
 					break;
 				case EF_RETRIGGER:
-					if (ChanID == CHANID_DPCM) {
+					if (ChanID == CHANID_DPCM || ChanID == CHANID_TRIANGLE) {
 						WriteData(Command(CMD_EFF_RETRIGGER));
-						WriteData(EffParam + 1);
+						if (ChanID == CHANID_DPCM)
+							WriteData(EffParam + 1);
+						else if (EffParam <= 0x7F)
+							WriteData(EffParam);
 					}
 					break;
 				case EF_DPCM_PITCH:
@@ -668,7 +711,7 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
 		}
 
 		// Volume command
-		if (Volume < 0x10) {
+		if (Volume < MAX_VOLUME) {
 			WriteDuration();
 			WriteData(0xF0 | Volume);
 			Action = true;			// Terminate command
@@ -697,7 +740,7 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel)
 unsigned char CPatternCompiler::Command(int cmd) const
 {
 	int Chip = m_pDocument->GetExpansionChip();		// // //
-	bool bMultichip = (Chip & (Chip - 1)) != 0;
+	bool bMultichip = (Chip & (Chip - 1)) != 0 && m_bUseAllChips;
 
 	if (!bMultichip) {		// // // truncate values if some chips do not exist
 		if (!m_pDocument->ExpansionEnabled(SNDCHIP_N163) && cmd > CMD_EFF_N163_WAVE_BUFFER) cmd -= sizeof(N163_EFFECTS);
@@ -950,10 +993,25 @@ unsigned int CPatternCompiler::GetHash() const
 	return m_iHash;
 }
 
-void CPatternCompiler::Print(LPCTSTR text) const
+template <typename... T>
+void CPatternCompiler::Print(std::string_view text, T... args) const
 {
-	if (m_pLogger != NULL)
-		m_pLogger->WriteLog(text);
+	if (!m_pLogger || text.empty())
+		return;
+
+	static TCHAR buf[256];
+
+	_sntprintf_s(buf, sizeof(buf), _TRUNCATE, text.data(), args...);
+
+	size_t len = _tcslen(buf);
+
+	if (buf[len - 1] == '\n' && len < (sizeof(buf) - 1)) {
+		buf[len - 1] = '\r';
+		buf[len] = '\n';
+		buf[len + 1] = 0;
+	}
+
+	m_pLogger->WriteLog(buf);
 }
 
 bool CPatternCompiler::CompareData(const std::vector<char> &data) const

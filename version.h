@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #pragma once
@@ -36,16 +32,19 @@
 
 #define VERSION_API  0
 #define VERSION_MAJ  5
-#define VERSION_MIN  0
-#define VERSION_REV  3
+#define VERSION_MIN  2
 
-#define VERSION VERSION_API,VERSION_MAJ,VERSION_MIN,VERSION_REV
+#if defined(WIP)
+	#define VERSION_BLD  9
+#else
+	#define VERSION_BLD  0
+#endif
+
+#define VERSION VERSION_API,VERSION_MAJ,VERSION_MIN
 
 #define VERSION_STR \
 		STR(VERSION_API) "." \
 		STR(VERSION_MAJ) "." \
-		STR(VERSION_MIN) "." \
-		STR(VERSION_REV)
-
+		STR(VERSION_MIN)
 
 #define APP_NAME_VERSION	APP_NAME " " VERSION_STR

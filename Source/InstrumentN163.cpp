@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #include "stdafx.h"
@@ -82,7 +78,8 @@ void CInstrumentN163::Store(CDocumentFile *pDocFile)
 	// Store wave
 	pDocFile->WriteBlockInt(m_iWaveSize);
 	pDocFile->WriteBlockInt(m_iWavePos);
-	//pDocFile->WriteBlockInt(m_bAutoWavePos ? 1 : 0);
+//	if (pDocFile->GetBlockVersion() >= 8)	// // // 050B
+//		pDocFile->WriteBlockInt(m_bAutoWavePos ? 1 : 0);
 	pDocFile->WriteBlockInt(m_iWaveCount);
 
 	for (int i = 0; i < m_iWaveCount; ++i) {
@@ -99,7 +96,7 @@ bool CInstrumentN163::Load(CDocumentFile *pDocFile)
 	m_iWaveSize = CModuleException::AssertRangeFmt(pDocFile->GetBlockInt(), 4, MAX_WAVE_SIZE, "N163 wave size", "%i");
 	m_iWavePos = CModuleException::AssertRangeFmt(pDocFile->GetBlockInt(), 0, MAX_WAVE_SIZE - 1, "N163 wave position", "%i");
 	if (pDocFile->GetBlockVersion() >= 8) {		// // // 050B
-		bool AutoPosition = pDocFile->GetBlockInt() != 0;
+		m_bAutoWavePos = pDocFile->GetBlockInt() != 0;
 	}
 	m_iWaveCount = CModuleException::AssertRangeFmt(pDocFile->GetBlockInt(), 1, MAX_WAVE_COUNT, "N163 wave count", "%i");
 	
@@ -187,7 +184,7 @@ int CInstrumentN163::Compile(CChunk *pChunk, int Index)
 int CInstrumentN163::StoreWave(CChunk *pChunk) const
 {
 	// Number of waves
-//	pChunk->StoreByte(m_iWaveCount);
+	pChunk->StoreByte(m_iWaveCount);
 
 	// Pack samples
 	for (int i = 0; i < m_iWaveCount; ++i) {
@@ -196,7 +193,7 @@ int CInstrumentN163::StoreWave(CChunk *pChunk) const
 		}
 	}
 
-	return m_iWaveCount * (m_iWaveSize >> 1);
+	return (m_iWaveCount * (m_iWaveSize >> 1)) + 1;
 }
 
 bool CInstrumentN163::IsWaveEqual(CInstrumentN163 *pInstrument)

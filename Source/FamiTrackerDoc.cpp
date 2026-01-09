@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 /*
@@ -811,7 +807,6 @@ BOOL CFamiTrackerDoc::SaveDocument(LPCTSTR lpszPathName) const
 bool CFamiTrackerDoc::WriteBlocks(CDocumentFile *pDocFile) const
 {
 	static const int DEFAULT_BLOCK_VERSION[] = {		// // // TODO: use version info
-#ifdef TRANSPOSE_FDS
 		// internal
 		6,		// Parameters
 		1,		// Song Info
@@ -820,21 +815,14 @@ bool CFamiTrackerDoc::WriteBlocks(CDocumentFile *pDocFile) const
 		6,		// Instruments
 		6,		// Sequences
 		3,		// Frames
-		5,		// Patterns
-		1,		// DSamples
-		1,		// Comments
+		// Patterns
+#ifdef TRANSPOSE_FDS
+		5,
 #else
-		6,		// Parameters
-		1,		// Song Info
-		0,		// Tuning
-		3,		// Header
-		6,		// Instruments
-		6,		// Sequences
-		3,		// Frames
-		4,		// Patterns
+		4,
+#endif
 		1,		// DSamples
 		1,		// Comments
-#endif
 		// expansion
 		6,		// SequencesVRC6
 		1,		// SequencesN163
@@ -1816,7 +1804,7 @@ void CFamiTrackerDoc::ReadBlock_Parameters(CDocumentFile *pDocFile, const int Ve
 		switch (m_iPlaybackRateType) {
 		case 1:
 			// workaround for now
-			m_iEngineSpeed = static_cast<int>(1000000. / m_iPlaybackRate + .5);
+			m_iEngineSpeed = static_cast<unsigned int>(1000000. / m_iPlaybackRate + .5);
 			break;
 		case 0: case 2:
 		default:
@@ -1953,7 +1941,9 @@ void CFamiTrackerDoc::ReadBlock_Header(CDocumentFile *pDocFile, const int Versio
 			for (unsigned int i = 0; i < m_iTrackCount; ++i) {
 				int First = static_cast<unsigned char>(pDocFile->GetBlockChar());
 				int Second = static_cast<unsigned char>(pDocFile->GetBlockChar());
-				if (!i) {
+
+				// we don't have per-track row highlights yet, just use the first track
+				if (i == 0) {
 					m_vHighlight.First = First;
 					m_vHighlight.Second = Second;
 				}
@@ -2347,9 +2337,9 @@ void CFamiTrackerDoc::ReadBlock_Patterns(CDocumentFile *pDocFile, const int Vers
 		CPatternData *pTrack = GetTrack(Track);
 
 		for (unsigned i = 0; i < Items; ++i) try {
-			unsigned Row;
+			unsigned char Row;
 			if (m_iFileVersion == 0x0200 || Version >= 6)
-				Row = static_cast<unsigned char>(pDocFile->GetBlockChar());
+				Row = pDocFile->GetBlockChar();
 			else
 				Row = AssertRange(pDocFile->GetBlockInt(), 0, 0xFF, "Row index");		// // //
 
@@ -2361,7 +2351,7 @@ void CFamiTrackerDoc::ReadBlock_Patterns(CDocumentFile *pDocFile, const int Vers
 					pDocFile->GetBlockChar(), NONE, ECHO, "Note value");
 				Note->Octave = AssertRange<MODULE_ERROR_STRICT>(
 					pDocFile->GetBlockChar(), 0, OCTAVE_RANGE - 1, "Octave value");
-				int Inst = static_cast<unsigned char>(pDocFile->GetBlockChar());
+				int Inst = pDocFile->GetBlockChar();
 				if (Inst != HOLD_INSTRUMENT)		// // // 050B
 					AssertRange<MODULE_ERROR_STRICT>(Inst, 0, m_pInstrumentManager->MAX_INSTRUMENTS, "Instrument index");
 				Note->Instrument = Inst;

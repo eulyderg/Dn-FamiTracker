@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #include "stdafx.h"
@@ -62,6 +58,8 @@ BEGIN_MESSAGE_MAP(CCreateWaveDlg, CDialog)
 	ON_BN_CLICKED(IDC_BEGIN, &CCreateWaveDlg::OnBnClickedBegin)
 	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_LOOP, &CCreateWaveDlg::OnDeltaposSpinLoop)
 	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_TIME, &CCreateWaveDlg::OnDeltaposSpinTime)
+	ON_EN_CHANGE(IDC_TIMES, &CCreateWaveDlg::OnEnChangeLoop)
+	ON_EN_CHANGE(IDC_SECONDS, &CCreateWaveDlg::OnEnChangeSeconds)
 END_MESSAGE_MAP()
 
 int CCreateWaveDlg::GetFrameLoopCount() const
@@ -201,8 +199,10 @@ BOOL CCreateWaveDlg::OnInitDialog()
 	CheckDlgButton(IDC_RADIO_LOOP, BST_CHECKED);
 	CheckDlgButton(IDC_RADIO_TIME, BST_UNCHECKED);
 
+	m_isSetup = true;
 	SetDlgItemText(IDC_TIMES, _T("1"));
 	SetDlgItemText(IDC_SECONDS, _T("01:00"));
+	m_isSetup = false;
 
 	m_ctlChannelList.SubclassDlgItem(IDC_CHANNELS, this);
 
@@ -274,4 +274,18 @@ void CCreateWaveDlg::OnDeltaposSpinTime(NMHDR *pNMHDR, LRESULT *pResult)
 	CheckDlgButton(IDC_RADIO_LOOP, BST_UNCHECKED);
 	CheckDlgButton(IDC_RADIO_TIME, BST_CHECKED);
 	*pResult = 0;
+}
+
+void CCreateWaveDlg::OnEnChangeLoop()
+{
+	if (m_isSetup) return;
+	CheckDlgButton(IDC_RADIO_LOOP, BST_CHECKED);
+	CheckDlgButton(IDC_RADIO_TIME, BST_UNCHECKED);
+}
+
+void CCreateWaveDlg::OnEnChangeSeconds()
+{
+	if (m_isSetup) return;
+	CheckDlgButton(IDC_RADIO_LOOP, BST_UNCHECKED);
+	CheckDlgButton(IDC_RADIO_TIME, BST_CHECKED);
 }

@@ -747,6 +747,9 @@
     <ClCompile Include="Source\ConfigEmulation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\JsonExporter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Exception.h">
@@ -762,9 +765,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\MainFrm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\ChannelMap.h">
@@ -1496,6 +1496,9 @@
     <ClInclude Include="Source\rigtorp\SPSCQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\JsonExporter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Dn-FamiTracker.rc">
@@ -1560,14 +1563,34 @@
     <None Include="res\MainToolbar-256.bmp">
       <Filter>Resource Files\Bitmaps</Filter>
     </None>
-    <None Include="changelog.txt" />
-    <None Include="specs.txt" />
-    <None Include="0CC-readme.txt" />
     <None Include="Source\resampler\resample.inl">
       <Filter>Header Files\Dialog Boxes Headers\Instrument Headers\Related Headers\Resampler Headers</Filter>
     </None>
     <None Include="Dn-FamiTracker.reg" />
     <None Include="res\export_report.htm" />
+    <None Include="Source\drivers\asm\apu.s" />
+    <None Include="Source\drivers\asm\effects.s" />
+    <None Include="Source\drivers\asm\fds.s" />
+    <None Include="Source\drivers\asm\init.s" />
+    <None Include="Source\drivers\asm\instrument.s" />
+    <None Include="Source\drivers\asm\longbranch.mac" />
+    <None Include="Source\drivers\asm\mmc5.s" />
+    <None Include="Source\drivers\asm\n163.s" />
+    <None Include="Source\drivers\asm\periods.s" />
+    <None Include="Source\drivers\asm\player.s" />
+    <None Include="Source\drivers\asm\s5b.s" />
+    <None Include="Source\drivers\asm\vibrato.s" />
+    <None Include="Source\drivers\asm\vrc6.s" />
+    <None Include="Source\drivers\asm\vrc7.s" />
+    <None Include="Source\drivers\build.cmd" />
+    <None Include="Source\drivers\asm\build\build_engine.py" />
+    <None Include="update-changelog-htm.bat">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="resource_version_update.py" />
+    <None Include="compile-chm.bat">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\Dn-FamiTracker.manifest">
@@ -1581,6 +1604,10 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="resource.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Source\drivers\asm\driver.s" />
+    <CustomBuild Include="version.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

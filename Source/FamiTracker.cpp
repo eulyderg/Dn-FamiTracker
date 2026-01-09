@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #include "json/json.hpp"		// // //
@@ -430,7 +426,7 @@ void CFamiTrackerApp::LoadLocalization()
 	WORD Major, Minor, Build, Revision;
 
 	if (GetFileVersion(DLL_NAME, Major, Minor, Revision, Build)) {
-		if (Major != VERSION_API || Minor != VERSION_MAJ || Revision != VERSION_MIN || Build != VERSION_REV)		// // //
+		if (Major != VERSION_API || Minor != VERSION_MAJ || Revision != VERSION_MIN || Build != VERSION_BLD)		// // //
 			return;
 
 		m_hInstResDLL = ::LoadLibrary(DLL_NAME);
@@ -455,10 +451,24 @@ void CFamiTrackerApp::OnRecentFilesClear()		// // //
 	SAFE_RELEASE(m_pRecentFileList);
 	m_pRecentFileList = new CRecentFileList(0, _T("Recent File List"), _T("File%d"), MAX_RECENT_FILES);
 
-	auto pMenu = m_pMainWnd->GetMenu()->GetSubMenu(0)->GetSubMenu(14);
-	for (int i = 0; i < MAX_RECENT_FILES; ++i)
-		pMenu->RemoveMenu(ID_FILE_MRU_FILE1 + i, MF_BYCOMMAND);
-	pMenu->AppendMenu(MF_STRING, ID_FILE_MRU_FILE1, _T("(File)"));
+	// Files menu
+	auto pFilesMenu = m_pMainWnd->GetMenu()->GetSubMenu(0);
+
+	// Try and find Recent Files submenu
+	for (int nPos = 0; nPos < pFilesMenu->GetMenuItemCount(); nPos++)
+		// check if valid menu state
+		if (pFilesMenu->GetMenuState(nPos, MF_BYPOSITION) != UINT(-1)) {
+			// check if it has a submenu and the first item is ID_RECENTFILES_CLEAR
+			auto pSubMenu = pFilesMenu->GetSubMenu(nPos);
+			if (pSubMenu != nullptr && pSubMenu->GetMenuItemID(0) == ID_RECENTFILES_CLEAR) {
+				for (int i = 0; i < MAX_RECENT_FILES; ++i)
+					pSubMenu->RemoveMenu(ID_FILE_MRU_FILE1 + i, MF_BYCOMMAND);
+				pSubMenu->AppendMenu(MF_STRING, ID_FILE_MRU_FILE1, _T("(File)"));
+				return;
+			}
+		}
+
+	throw std::runtime_error("Could not find \"ID_RECENTFILES_CLEAR\"");
 }
 
 void CFamiTrackerApp::OnUpdateRecentFiles(CCmdUI *pCmdUI)		// // //
@@ -559,7 +569,10 @@ void CFamiTrackerApp::UnregisterSingleInstance()
 
 void CFamiTrackerApp::CheckNewVersion(bool StartUp)		// // //
 {
-	//return;
+	// !! !! This member will be overwritten.
+	// we do this so the "no new updates" pop-up will only show if the user checks
+	// also, why do we need to pass this to the version checker thread if we're gonna return it again?
+	m_bStartUp = StartUp;
 	m_pVersionChecker = std::make_unique<CVersionChecker>(StartUp);		// // //
 }
 
@@ -736,15 +749,21 @@ BOOL CFamiTrackerApp::OnIdle(LONG lCount)		// // //
 	if (CWinApp::OnIdle(lCount))
 		return TRUE;
 
-	if (m_pVersionChecker && m_pVersionChecker->IsReady())
-		if (auto pChecker = std::move(m_pVersionChecker); auto result = pChecker->GetVersionCheckResult())
-		{
+	if (m_pVersionChecker && m_pVersionChecker->IsReady()) {
+		if (auto pChecker = std::move(m_pVersionChecker); auto result = pChecker->GetVersionCheckResult()) {
 			m_pVersionURL = result->URL;
 			m_pVerInfo = result->VerInfo;
 			m_pVerDesc = result->VerDesc;
 			m_bStartUp = result->StartUp;
+			m_bNewVersion = true;
 			OnVersionCheck();
 		}
+		else {
+			m_bNewVersion = false;
+			m_pVersionURL = "https://github.com/Dn-Programming-Core-Management/Dn-FamiTracker/releases/latest";
+			if (!m_bStartUp) OnVersionCheck();
+		}
+	}
 	return FALSE;
 }
 

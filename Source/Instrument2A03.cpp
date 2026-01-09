@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #include "stdafx.h"
@@ -71,7 +67,7 @@ void CInstrument2A03::Store(CDocumentFile *pDocFile)
 {
 	CSeqInstrument::Store(pDocFile);		// // //
 
-	int Version = 6;
+	int Version = pDocFile->GetBlockVersion();
 	int Octaves = Version >= 2 ? OCTAVE_RANGE : 6;
 
 	if (Version >= 7)		// // // 050B
@@ -80,7 +76,7 @@ void CInstrument2A03::Store(CDocumentFile *pDocFile)
 		for (int j = 0; j < NOTE_RANGE; ++j) {
 			if (Version >= 7) {		// // // 050B
 				if (!GetSampleIndex(i, j)) continue;
-				pDocFile->WriteBlockChar(i * NOTE_RANGE + j);
+				pDocFile->WriteBlockChar(MIDI_NOTE(i, j)+1);
 			}
 			pDocFile->WriteBlockChar(GetSampleIndex(i, j));
 			pDocFile->WriteBlockChar(GetSamplePitch(i, j));
@@ -99,11 +95,12 @@ bool CInstrument2A03::Load(CDocumentFile *pDocFile)
 
 	const auto ReadAssignment = [&] (int Octave, int Note) {
 		try {
-			int Index = CModuleException::AssertRangeFmt<MODULE_ERROR_STRICT>(
+			char Sample = CModuleException::AssertRangeFmt<MODULE_ERROR_STRICT>(
 				pDocFile->GetBlockChar(), 0, MAX_DSAMPLES, "DPCM sample assignment index", "%i");
-			if (Index > MAX_DSAMPLES)
-				Index = 0;
-			SetSampleIndex(Octave, Note, Index);
+			if (Sample > MAX_DSAMPLES)
+				Sample = 0;
+
+			SetSampleIndex(Octave, Note, Sample);
 			char Pitch = pDocFile->GetBlockChar();
 			CModuleException::AssertRangeFmt<MODULE_ERROR_STRICT>(Pitch & 0x7F, 0, 0xF, "DPCM sample pitch", "%i");
 			SetSamplePitch(Octave, Note, Pitch & 0x8F);
@@ -126,7 +123,7 @@ bool CInstrument2A03::Load(CDocumentFile *pDocFile)
 		for (int i = 0; i < Count; ++i) {
 			int Note = CModuleException::AssertRangeFmt<MODULE_ERROR_STRICT>(
 				pDocFile->GetBlockChar(), 0, NOTE_COUNT - 1, "DPCM sample assignment note index", "%i");
-			ReadAssignment(GET_OCTAVE(Note), GET_NOTE(Note) - 1);
+			ReadAssignment(GET_OCTAVE(Note - 1), GET_NOTE(Note - 1));
 		}
 	}
 	else
@@ -159,10 +156,10 @@ void CInstrument2A03::SaveFile(CInstrumentFile *pFile)
 	memset(UsedSamples, 0, sizeof(bool) * MAX_DSAMPLES);
 
 	int UsedCount = 0;
-	for (int i = 0; i < OCTAVE_RANGE; ++i) {	// octaves
-		for (int j = 0; j < NOTE_RANGE; ++j) {	// notes
+	for (int i = 0; i < OCTAVE_RANGE; ++i) {
+		for (int j = 0; j < NOTE_RANGE; ++j) {
 			if (unsigned char Sample = GetSampleIndex(i, j)) {
-				unsigned char Index = i * NOTE_RANGE + j;
+				unsigned char Index = MIDI_NOTE(i, j) + 1;
 				pFile->WriteChar(Index);
 				pFile->WriteChar(Sample);
 				pFile->WriteChar(GetSamplePitch(i, j));
@@ -193,28 +190,28 @@ void CInstrument2A03::SaveFile(CInstrumentFile *pFile)
 
 bool CInstrument2A03::LoadFile(CInstrumentFile *pFile, int iVersion)
 {
-	char SampleNames[MAX_DSAMPLES][256];
-	
 	if (!CSeqInstrument::LoadFile(pFile, iVersion))		// // //
 		return false;
 
-	unsigned int Count;
-	pFile->Read(&Count, sizeof(int));
-	CModuleException::AssertRangeFmt(Count, 0U, static_cast<unsigned>(NOTE_COUNT), "DPCM assignment count", "%u");
+	unsigned int Count = CModuleException::AssertRangeFmt(pFile->ReadInt(), 0U, static_cast<unsigned>(NOTE_COUNT), "DPCM assignment count", "%u");
 
 	// DPCM instruments
 	for (unsigned int i = 0; i < Count; ++i) {
-		unsigned char InstNote = pFile->ReadChar();
-		int Octave = InstNote / NOTE_RANGE;
-		int Note = InstNote % NOTE_RANGE;
+		unsigned char InstNote = CModuleException::AssertRangeFmt(
+			pFile->ReadChar(), 0, NOTE_COUNT - 1, "DPCM sample assignment note index", "%i");
+		int Octave = GET_OCTAVE(InstNote - 1);
+		int Note = GET_NOTE(InstNote - 1);
 		try {
-			unsigned char Sample = CModuleException::AssertRangeFmt(pFile->ReadChar(), 0U, 0x7FU, "DPCM sample assignment index", "%u");
+			char Sample = CModuleException::AssertRangeFmt(pFile->ReadChar(), 0, MAX_DSAMPLES, "DPCM sample assignment index", "%u");
 			if (Sample > MAX_DSAMPLES)
 				Sample = 0;
-			unsigned char Pitch = pFile->ReadChar();
-			CModuleException::AssertRangeFmt(Pitch & 0x7FU, 0U, 0xFU, "DPCM sample pitch", "%u");
-			SetSamplePitch(Octave, Note, Pitch);
 			SetSampleIndex(Octave, Note, Sample);
+
+			char Pitch = pFile->ReadChar();
+			CModuleException::AssertRangeFmt(Pitch & 0x7F, 0, 0xF, "DPCM sample pitch", "%i");
+
+			SetSamplePitch(Octave, Note, Pitch);
+
 			SetSampleDeltaValue(Octave, Note, CModuleException::AssertRangeFmt(
 				static_cast<char>(iVersion >= 24 ? pFile->ReadChar() : -1), -1, 0x7F, "DPCM sample delta value", "%i"));
 		}
@@ -233,12 +230,16 @@ bool CInstrument2A03::LoadFile(CInstrumentFile *pFile, int iVersion)
 
 	unsigned int SampleCount = pFile->ReadInt();
 	for (unsigned int i = 0; i < SampleCount; ++i) {
+
 		int Index = CModuleException::AssertRangeFmt(
 			pFile->ReadInt(), 0U, static_cast<unsigned>(MAX_DSAMPLES - 1), "DPCM sample index", "%u");
+
 		int Len = CModuleException::AssertRangeFmt(
 			pFile->ReadInt(), 0U, static_cast<unsigned>(CDSample::MAX_NAME_SIZE - 1), "DPCM sample name length", "%u");
-		pFile->Read(SampleNames[Index], Len);
-		SampleNames[Index][Len] = 0;
+
+		char SampleName[256]{};
+		pFile->Read(SampleName, Len);
+
 		int Size = pFile->ReadInt();
 		char *SampleData = new char[Size];
 		pFile->Read(SampleData, Size);
@@ -246,7 +247,7 @@ bool CInstrument2A03::LoadFile(CInstrumentFile *pFile, int iVersion)
 		for (int j = 0; j < MAX_DSAMPLES; ++j) if (const CDSample *pSample = m_pInstManager->GetDSample(j)) {		// // //
 			// Compare size and name to see if identical sample exists
 			if (pSample->GetSize() == Size && !memcmp(pSample->GetData(), SampleData, Size) &&		// // //
-				!strcmp(pSample->GetName(), SampleNames[Index])) {
+				!strcmp(pSample->GetName(), SampleName)) {
 				Found = true;
 				// Assign sample
 				for (int o = 0; o < OCTAVE_RANGE; ++o) {
@@ -274,9 +275,9 @@ bool CInstrument2A03::LoadFile(CInstrumentFile *pFile, int iVersion)
 			e->Raise();
 		}
 		CDSample *pSample = new CDSample();		// // //
-		pSample->SetName(SampleNames[Index]);
+		pSample->SetName(SampleName);
 		pSample->SetData(Size, SampleData);
-		int FreeSample = m_pInstManager->AddDSample(pSample);
+		int FreeSample = m_pInstManager->AddDSample(pSample);		// not off-by-one
 		if (FreeSample == -1) {
 			SAFE_RELEASE(pSample);
 			CModuleException *e = new CModuleException();
@@ -336,6 +337,7 @@ char CInstrument2A03::GetSampleDeltaValue(int Octave, int Note) const
 
 void CInstrument2A03::SetSampleIndex(int Octave, int Note, char Sample)
 {
+	// Sample is off by one; 0 means there is no index assigned to a note
 	m_cSamples[Octave][Note] = Sample;
 	InstrumentChanged();
 }

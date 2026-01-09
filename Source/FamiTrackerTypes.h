@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #pragma once
@@ -141,7 +137,7 @@ enum effect_t : unsigned char {
 	EF_SLIDE_DOWN,      	// Slide down
 	EF_VOLUME_SLIDE,    	// Volume slide
 	EF_NOTE_CUT,        	// Note cut
-	EF_RETRIGGER,       	// DPCM retrigger
+	EF_RETRIGGER,       	// Triangle linear counter / DPCM sample retrigger
 	EF_DELAYED_VOLUME,  	// // // Delayed channel volume
 	EF_FDS_MOD_DEPTH,   	// FDS modulation depth
 	EF_FDS_MOD_SPEED_HI,	// FDS modulation speed hi
@@ -159,7 +155,7 @@ enum effect_t : unsigned char {
 	EF_N163_WAVE_BUFFER,	// // // N163 wave buffer
 	EF_FDS_VOLUME,      	// // // FDS volume envelope
 	EF_FDS_MOD_BIAS,    	// // // FDS auto-FM bias
-	EF_PHASE_RESET,  // Reset waveform phase without retriggering note (VRC6-only so far)
+	EF_PHASE_RESET,  // Reset waveform phase without retriggering note
 	EF_HARMONIC,  // Multiply the note pitch by an integer
 	EF_TARGET_VOLUME_SLIDE,	// // !! Target volume slide
 
@@ -180,6 +176,8 @@ const effect_t S5B_EFFECTS[] = {EF_SUNSOFT_ENV_TYPE, EF_SUNSOFT_ENV_HI, EF_SUNSO
 // Effect checking = bool CTrackerChannel::IsEffectCompatible
 
 // Channel effect letters
+// TODO: unify definition of effects, letters, and descriptions
+// currently descriptions are stored in CFamiTrackerView::GetEffectHint()
 const char EFF_CHAR[] = {
 	'\xff',	// EF_NONE,
 	'F',   	// EF_SPEED,

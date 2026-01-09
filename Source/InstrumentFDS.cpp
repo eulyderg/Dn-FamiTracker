@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #include <vector>
@@ -197,6 +193,7 @@ void CInstrumentFDS::Store(CDocumentFile *pDocFile)
 
 bool CInstrumentFDS::Load(CDocumentFile *pDocFile)
 {
+	const int Version = pDocFile->GetBlockVersion();
 	for (int i = 0; i < WAVE_SIZE; ++i) {
 		SetSample(i, pDocFile->GetBlockChar());
 	}
@@ -209,8 +206,25 @@ bool CInstrumentFDS::Load(CDocumentFile *pDocFile)
 	SetModulationDepth(pDocFile->GetBlockInt());
 	SetModulationDelay(pDocFile->GetBlockInt());
 
-	// hack to fix earlier saved files (remove this eventually)
+	for (int i = 0; i < SEQUENCE_COUNT; ++i) {
+		if (Version > 2)
+			SetSequence(i, LoadSequence(pDocFile));
+		else
+			if (i < SEQ_PITCH)
+				// version 2 apparently does not have Pitch sequences
+				SetSequence(i, LoadSequence(pDocFile));
+	}
+
+	// Older files was 0-15, new is 0-31
+	if (Version <= 3) DoubleVolume();
+
+	return true;
+
+	// ancient code preserved for analysis
+
 /*
+	// hack to fix earlier saved files (remove this eventually)
+
 	if (pDocFile->GetBlockVersion() > 2) {
 		LoadSequence(pDocFile, GetSequence(SEQ_VOLUME));
 		LoadSequence(pDocFile, GetSequence(SEQ_ARPEGGIO));
@@ -219,10 +233,14 @@ bool CInstrumentFDS::Load(CDocumentFile *pDocFile)
 	}
 	else {
 */
+
+/*
+	TODO: investigate Instrument block v2 and FDS
+		- perhaps an release interstice bug fix?
+	
 	unsigned int a = pDocFile->GetBlockInt();
 	unsigned int b = pDocFile->GetBlockInt();
 
-	// TODO: investigate why loading FDS instruments uses RollbackPointer()
 	pDocFile->RollbackPointer(8);
 
 	if (a < 256 && (b & 0xFF) != 0x00) {
@@ -238,13 +256,9 @@ bool CInstrumentFDS::Load(CDocumentFile *pDocFile)
 		if (pDocFile->GetBlockVersion() > 2)
 			SetSequence(SEQ_PITCH, LoadSequence(pDocFile));
 	}
+*/
 
 //	}
-
-	// Older files was 0-15, new is 0-31
-	if (pDocFile->GetBlockVersion() <= 3) DoubleVolume();
-
-	return true;
 }
 
 void CInstrumentFDS::SaveFile(CInstrumentFile *pFile)

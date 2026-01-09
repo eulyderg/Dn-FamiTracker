@@ -131,7 +131,7 @@ public:
 		for (int i = 7, min = 7 - GetNumberOfChannels(); i >= min; i--) {
 			summedOutput += _channelOutput[i];
 		}
-		summedOutput /= (GetNumberOfChannels() + 1);
+		// Adjust the volume range on the blip_synth!
 		return (_mixLinear ? summedOutput : _channelOutput[_currentChannel]);
 	}
 
@@ -164,6 +164,19 @@ public:
 	void SkipClockAudio(uint32_t clocks)
 	{
 		_updateCounter += clocks;
+	}
+
+	Namco163Audio()
+		: _channelOutput{}
+		, _internalRam{}
+	{
+		_ramPosition = 0;
+		_autoIncrement = false;
+		_updateCounter = 0;
+		_currentChannel = 7;
+		_lastOutput = 0;
+		_disableSound = false;
+		_mixLinear = false;
 	}
 
 	void Reset() {

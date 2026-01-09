@@ -1,49 +1,69 @@
-<img src="docs/dn logo.svg">
+# ![Dn-FamiTracker banner logotype](docs/dn_logo.svg)
 
-Dn-Famitracker is a fork of 0CC-FamiTracker that incorporates numerous fixes and features. The meaning of the name "Dn" is "Derivative n", which alludes to this fork being the nth derivative of the original FamiTracker program.
+Dn-FamiTracker is a fork of 0CC-FamiTracker that incorporates numerous fixes and
+features.
+
+---
+
+## About
+
+The meaning of the name "Dn" is "Derivative n", which alludes to this fork being
+the nth derivative of the original FamiTracker program.
 
 ## Notable additions
 
+- New effects: `Nxx`, `=xx`, `Kxx`
+- Support for OPLL-as-VRC7
+- NSF 2.0 and NSFe export support
+- Fixed metadata support on NSF 2.0 and NSFe export
+- Complete text import/export
 - DPCM sample bit order reversal
-- Multitrack per-channel export
+- Multitrack per-channel `.wav` export
 - More accessible DPCM pitch preview
-- More accessible VRC7 envelope editing
+- More accessible VRC7 patch and envelope editing
 - Improved FDS, N163 VRC7 and 2A03 emulation
-- Restored Help manual, now under maintenance at [Dn-help](https://github.com/Dn-Programming-Core-Management/Dn-help)
-- and more to come, see the [release page](https://github.com/Dn-Programming-Core-Management/Dn-FamiTracker/releases) and the [changelog](docs/CHANGELOG.md) for more info
-
-## Contributing
-
-[Contributing and compiling](docs/CONTRIBUTING.md)
+- Restored Help manual, now under maintenance at
+  [Dn-help](https://github.com/Dn-Programming-Core-Management/Dn-help)
+- and more to come, see the
+  [release page](https://github.com/Dn-Programming-Core-Management/Dn-FamiTracker/releases)
+  and the [changelog](Dn-FamiTracker/CHANGELOG.md) for more info
 
 ## Downloads
 
-Download releases: [![GitHub all releases](https://img.shields.io/github/downloads/Dn-Programming-Core-Management/Dn-FamiTracker/total?logo=github&style=flat-square)](https://github.com/Dn-Programming-Core-Management/Dn-FamiTracker/releases)
+- Latest release:
+	- [![Latest release](https://img.shields.io/github/v/release/Dn-Programming-Core-Management/Dn-FamiTracker?sort=semver&display_name=release&logo=github&style=flat-square)](https://github.com/Dn-Programming-Core-Management/Dn-FamiTracker/releases/latest)
+- GitHub Actions automated builds:
+	- [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/Dn-Programming-Core-Management/Dn-FamiTracker/build-artifact.yml?logo=github&style=flat-square)](https://github.com/Dn-Programming-Core-Management/Dn-FamiTracker/actions/workflows/build-artifact.yml)
 
-Development builds: [![AppVeyor](https://img.shields.io/appveyor/build/Gumball2415/dn-famitracker?logo=appveyor&style=flat-square)](https://ci.appveyor.com/project/Gumball2415/dn-famitracker/history)
+### AppVeyor CI build notice
 
-Github Actions automated builds: [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/Dn-Programming-Core-Management/Dn-FamiTracker/build-artifact.yml?style=flat-square)](https://github.com/Dn-Programming-Core-Management/Dn-FamiTracker/actions/workflows/build-artifact.yml)
+- Due to delayed AppVeyor reintegration, builds for commits `dc4c9e86` to
+  `21413603` are not available.
+- Due to delayed AppVeyor branch reconfiguration, builds for commits `bc46c86c`
+  to `a591d154` are not available.
+- Due to less reliability, AppVeyor builds beyond `2c997736` are not available.
 
-Github Actions automated release builds: [![GitHub](https://img.shields.io/github/actions/workflow/status/Dn-Programming-Core-Management/Dn-FamiTracker/build-release-artifact.yml?style=flat-square)](https://github.com/Dn-Programming-Core-Management/Dn-FamiTracker/actions/workflows/build-release-artifact.yml)
+### Legacy AppVeyor automated builds
 
-Legacy Dev Builds: [![AppVeyor](https://img.shields.io/appveyor/build/Gumball2415/dn-famitracker-legacy?logo=appveyor&style=flat-square)](https://ci.appveyor.com/project/Gumball2415/dn-famitracker-legacy/history)
-
-Notice: Due to delayed Appveyor reintegration, builds for commits `dc4c9e8` to `2141360` are not available.
-
-Notice: Due to delayed branch renaming, builds for commits `bc46c86` to `a591d15` are not available.
+- Legacy AppVeyor automated D.P.C.M. builds:
+	- [![AppVeyor](https://img.shields.io/appveyor/build/Gumball2415/dn-famitracker?logo=appveyor&style=flat-square)](https://ci.appveyor.com/project/Gumball2415/dn-famitracker/history)
+- Legacy AppVeyor Gumball2415 builds:
+	- [![AppVeyor](https://img.shields.io/appveyor/build/Gumball2415/dn-famitracker-legacy?logo=appveyor&style=flat-square)](https://ci.appveyor.com/project/Gumball2415/dn-famitracker-legacy/history)
 
 ## Licenses
 
-The application and the source code are distributed under the GNU GPL 2 license or any later version, but depends on FDS and N163 sound emulation only under the GPL v3.
+The application is distributed under the
+[GPLv3+ license](https://www.gnu.org/licenses/gpl-3.0.en.html), or any later
+version.
 
-The original NSF driver source code is unlicensed.
+For more details, view the [license](LICENSE.md).
 
-0CC FT NSF driver changes are licensed under GPL v2.
+## Contributing
 
-Dn-FT NSF driver changes are licensed under MIT-0.
+[Contributing and compiling](CONTRIBUTING.md)
 
-## See also:
+## Program lineage
 
-- nyanpasu64 0CC-FamiTracker (archived): https://github.com/nyanpasu64/j0CC-FamiTracker/
-- 0CC-FamiTracker: https://github.com/HertzDevil/0CC-FamiTracker/
-- FamiTracker: https://famitracker.com/
+- nyanpasu64 0CC-FamiTracker (archived): <https://github.com/nyanpasu64/j0CC-FamiTracker/>
+- 0CC-FamiTracker: <https://github.com/HertzDevil/0CC-FamiTracker/>
+- FamiTracker: <https://famitracker.com/>

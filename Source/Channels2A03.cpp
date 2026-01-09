@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 // This file handles playing of 2A03 channels
@@ -295,7 +291,8 @@ void C2A03Square::resetPhase()
 
 CTriangleChan::CTriangleChan() :		// // //
 	CChannelHandler2A03(),
-	m_iLinearCounter(-1)
+	m_iLinearCounter(-1),
+	m_bRetrigger(false)
 {
 }
 
@@ -305,15 +302,19 @@ void CTriangleChan::RefreshChannel()
 
 	unsigned char HiFreq = (Freq & 0xFF);
 	unsigned char LoFreq = (Freq >> 8);
-	
+
 	if (m_iInstVolume > 0 && m_iVolume > 0 && m_bGate) {
 		WriteRegister(0x4008, (m_bEnvelopeLoop << 7) | (m_iLinearCounter & 0x7F));		// // //
 		WriteRegister(0x400A, HiFreq);
-		if (m_bEnvelopeLoop || m_bResetEnvelope)		// // //
+		if (m_bEnvelopeLoop || m_bResetEnvelope || m_bRetrigger)		// // //
 			WriteRegister(0x400B, LoFreq + (m_iLengthCounter << 3));
 	}
-	else
+	else {
 		WriteRegister(0x4008, 0);
+		// interrupt linear counter on note cuts when retrigerring
+		if (m_bRetrigger)
+			WriteRegister(0x400B, (m_iLengthCounter << 3));
+	}
 
 	m_bResetEnvelope = false;		// // //
 }
@@ -322,6 +323,7 @@ void CTriangleChan::ResetChannel()
 {
 	CChannelHandler2A03::ResetChannel();
 	m_iLinearCounter = -1;
+	m_bRetrigger = false;
 }
 
 int CTriangleChan::GetChannelVolume() const
@@ -332,31 +334,49 @@ int CTriangleChan::GetChannelVolume() const
 bool CTriangleChan::HandleEffect(effect_t EffNum, unsigned char EffParam)
 {
 	switch (EffNum) {
-	case EF_VOLUME:
-		if (EffParam < 0x20) {		// // //
-			m_iLengthCounter = EffParam;
-			m_bEnvelopeLoop = false;
-			m_bResetEnvelope = true;
-			if (m_iLinearCounter == -1)	m_iLinearCounter = 0x7F;
-		}
-		else if (EffParam >= 0xE0 && EffParam < 0xE4) {
-			if (!m_bEnvelopeLoop)
+		case EF_VOLUME:
+			if (EffParam < 0x20) {		// // //
+				m_iLengthCounter = EffParam;
+				m_bEnvelopeLoop = false;
 				m_bResetEnvelope = true;
-			m_bEnvelopeLoop = ((EffParam & 0x01) != 0x01);
-		}
-		break;
-	case EF_NOTE_CUT:
-		if (EffParam >= 0x80) {
-			m_iLinearCounter = EffParam - 0x80;
-			m_bEnvelopeLoop = false;
-			m_bResetEnvelope = true;
-		}
-		else {
-			m_bEnvelopeLoop = true;
-			return CChannelHandler2A03::HandleEffect(EffNum, EffParam); // true
-		}
-		break;
-	default: return CChannelHandler2A03::HandleEffect(EffNum, EffParam);
+				if (m_iLinearCounter == -1)	m_iLinearCounter = 0x7F;
+			}
+			else if (EffParam >= 0xE0 && EffParam < 0xE4) {
+				if (!m_bEnvelopeLoop)
+					m_bResetEnvelope = true;
+				m_bEnvelopeLoop = ((EffParam & 0x01) != 0x01);
+			}
+			break;
+		case EF_NOTE_CUT:
+			if (EffParam >= 0x80) {
+				m_iLinearCounter = EffParam - 0x80;
+				m_bEnvelopeLoop = false;
+				m_bResetEnvelope = true;
+			}
+			else {
+				// Avoid touching the envelope loop flag if under a retrigger effect
+				if (!m_bRetrigger)
+					m_bEnvelopeLoop = true;
+				return CChannelHandler2A03::HandleEffect(EffNum, EffParam); // true
+			}
+			break;
+		case EF_RETRIGGER:
+			if (EffParam > 0x7f)
+				return false;
+			else if (EffParam == 0) {
+				// disable retrigger when xx=00
+				m_iLinearCounter = -1;
+				m_bEnvelopeLoop = true;
+				m_bRetrigger = false;
+			}
+			else {
+				m_iLinearCounter = EffParam;
+				m_bEnvelopeLoop = false;
+				m_bResetEnvelope = true;
+				m_bRetrigger = true;
+			}
+			break;
+		default: return CChannelHandler2A03::HandleEffect(EffNum, EffParam);
 	}
 
 	return true;
@@ -379,6 +399,8 @@ CString CTriangleChan::GetCustomEffectString() const		// // //
 		str.AppendFormat(_T(" E%02X"), m_iLengthCounter);
 	if (!m_bEnvelopeLoop)
 		str.AppendFormat(_T(" EE%X"), !m_bEnvelopeLoop);
+	if (m_bRetrigger)
+		str.AppendFormat(_T(" X%02X"), m_iLinearCounter);
 
 	return str;
 }

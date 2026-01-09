@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #include "stdafx.h"
@@ -1353,41 +1349,6 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 	const char *NOTES_A = m_bDisplayFlat ? NOTES_A_FLAT : NOTES_A_SHARP;
 	const char *NOTES_B = m_bDisplayFlat ? NOTES_B_FLAT : NOTES_B_SHARP;
 
-	const CTrackerChannel *pTrackerChannel = m_pDocument->GetChannel(Channel);
-
-	effect_t EffNumber = Column >= 4 ? pNoteData->EffNumber[(Column - 4) / 3] : EF_NONE;		// // //
-	int EffParam  = Column >= 4 ? pNoteData->EffParam[(Column - 4) / 3] : 0;
-
-	// Detect invalid note data
-	if (pNoteData->Note > ECHO ||		// // //
-		pNoteData->Octave > 8 ||
-		EffNumber >= EF_COUNT || 
-		pNoteData->Instrument > MAX_INSTRUMENTS && pNoteData->Instrument != HOLD_INSTRUMENT) {		// // // 050B
-		if (Column == C_NOTE/* || Column == 4*/) {
-			CString Text;
-			Text.Format(_T("(invalid)"));
-			pDC->SetTextColor(RGB(255, 0, 0));
-			pDC->TextOut(PosX, -1, Text);
-		}
-		return;
-	}
-
-	COLORREF InstColor = pColorInfo->Instrument;
-	COLORREF EffColor = pColorInfo->Effect;
-	COLORREF DimInst = pColorInfo->Compact;		// // //
-	COLORREF DimEff = pColorInfo->Compact;		// // //
-
-	// Make non-available instruments red in the pattern editor
-	if (pNoteData->Instrument < MAX_INSTRUMENTS && 
-		(!m_pDocument->IsInstrumentUsed(pNoteData->Instrument) ||
-		!pTrackerChannel->IsInstrumentCompatible(pNoteData->Instrument, m_pDocument->GetInstrumentType(pNoteData->Instrument)))) { // // //
-		DimInst = InstColor = RGB(255, 0, 0);
-	}
-
-	// // // effects too
-	if (EffNumber != EF_NONE) if (!pTrackerChannel->IsEffectCompatible(EffNumber, EffParam))
-		DimEff = EffColor = RGB(255, 0, 0);		// // //
-
 	// Compute font vertical position
 	// TODO resize font about center = avg(cap, base + descender/2)?
 
@@ -1410,6 +1371,92 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 	};
 
 	pDC->SetTextAlign(TA_CENTER | TA_BASELINE);		// // //
+
+	const CTrackerChannel *pTrackerChannel = m_pDocument->GetChannel(Channel);
+
+	effect_t EffNumber = Column >= 4 ? pNoteData->EffNumber[(Column - 4) / 3] : EF_NONE;		// // //
+	int EffParam  = Column >= 4 ? pNoteData->EffParam[(Column - 4) / 3] : 0;
+
+	COLORREF WarningColor = RGB(255, 0, 0);
+	COLORREF ErrorColor = RGB(255, 0, 255);
+
+	// Detect invalid note data
+	if (pNoteData->Note > ECHO ||		// // //
+		pNoteData->Octave > 8 ||
+		pNoteData->Vol > MAX_VOLUME ||
+		EffNumber >= EF_COUNT ||
+		pNoteData->Instrument > MAX_INSTRUMENTS && pNoteData->Instrument != HOLD_INSTRUMENT) {		// // // 050B
+		switch (Column) {
+		case C_NOTE:
+			if (pNoteData->Note > ECHO || pNoteData->Octave > 8) {
+				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, '?', ErrorColor);		// // //
+				DrawChar(pDC, PosX + m_iCharWidth * 3 / 2, PosY, '?', ErrorColor);
+				if (pNoteData->Octave > 8)
+					DrawChar(pDC, PosX + m_iCharWidth * 5 / 2, PosY, '?', ErrorColor);
+				else
+					DrawChar(pDC, PosX + m_iCharWidth * 5 / 2, PosY, NOTES_C[pNoteData->Octave], WarningColor);
+				break;
+			}
+			else {
+				BAR(PosX);
+				BAR(PosX + m_iCharWidth);
+				BAR(PosX + m_iCharWidth * 2);
+			}
+			break;
+		case C_INSTRUMENT1: case C_INSTRUMENT2:
+			if (pNoteData->Instrument > MAX_INSTRUMENTS && pNoteData->Instrument != HOLD_INSTRUMENT)
+				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, '?', ErrorColor);		// // //
+			else
+				BAR(PosX);
+			break;
+		case C_VOLUME:
+			if (pNoteData->Vol > MAX_VOLUME)
+				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, '?', ErrorColor);		// // //
+			else
+				BAR(PosX);
+			break;
+		case C_EFF1_NUM: case C_EFF2_NUM: case C_EFF3_NUM: case C_EFF4_NUM:
+			if (EffNumber >= EF_COUNT)
+				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, '?', ErrorColor);		// // //
+			else if (EffNumber == 0)
+				BAR(PosX);
+			else
+				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, EFF_CHAR[EffNumber], WarningColor);		// // //
+			break;
+		// draw effect param as normal
+		case C_EFF1_PARAM1: case C_EFF2_PARAM1: case C_EFF3_PARAM1: case C_EFF4_PARAM1:
+			// Effect param x
+			if (EffNumber == EF_NONE)
+				BAR(PosX);
+			else
+				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, HEX[(EffParam >> 4) & 0x0F], pColorInfo->Note);		// // //
+			break;
+		case C_EFF1_PARAM2: case C_EFF2_PARAM2: case C_EFF3_PARAM2: case C_EFF4_PARAM2:
+			// Effect param y
+			if (EffNumber == EF_NONE)
+				BAR(PosX);
+			else
+				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, HEX[EffParam & 0x0F], pColorInfo->Note);		// // //
+			break;
+		}
+		return;
+	}
+
+	COLORREF InstColor = pColorInfo->Instrument;
+	COLORREF EffColor = pColorInfo->Effect;
+	COLORREF DimInst = pColorInfo->Compact;		// // //
+	COLORREF DimEff = pColorInfo->Compact;		// // //
+
+	// Make non-available instruments red in the pattern editor
+	if (pNoteData->Instrument < MAX_INSTRUMENTS && 
+		(!m_pDocument->IsInstrumentUsed(pNoteData->Instrument) ||
+		!pTrackerChannel->IsInstrumentCompatible(pNoteData->Instrument, m_pDocument->GetInstrumentType(pNoteData->Instrument)))) { // // //
+		DimInst = InstColor = WarningColor;
+	}
+
+	// // // effects too
+	if (EffNumber != EF_NONE) if (!pTrackerChannel->IsEffectCompatible(EffNumber, EffParam))
+		DimEff = EffColor = WarningColor;		// // //
 
 	switch (Column) {
 		case C_NOTE:
@@ -1486,16 +1533,16 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 						if (((pTrackerChannel->GetID() <= CHANID_TRIANGLE || pTrackerChannel->GetChip() == SNDCHIP_MMC5) && (pNoteData->Note-1+pNoteData->Octave*12 < 9-m_pDocument->GetMachine())) ||
 							(pTrackerChannel->GetChip() == SNDCHIP_FDS && pNoteData->Note-1+pNoteData->Octave*12 > 92) ||
 							(pTrackerChannel->GetChip() == SNDCHIP_N163 && pNoteData->Note-1+pNoteData->Octave*12 > N163limits[m_pDocument->GetNamcoChannels()-1]))
-							noteCol = RGB(255, 0, 0);
+							noteCol = WarningColor;
 						if (pNoteData->Instrument != MAX_INSTRUMENTS && pNoteData->Instrument != HOLD_INSTRUMENT && pTrackerChannel->GetID() == CHANID_DPCM) {
 							if (auto pDPCMInst = std::dynamic_pointer_cast<const CInstrument2A03>(m_pDocument->GetInstrument(pNoteData->Instrument))) {
 								if (pDPCMInst->GetDSample(pNoteData->Octave, pNoteData->Note - 1) == nullptr)
-									noteCol = RGB(255, 0, 0);
+									noteCol = WarningColor;
 							}
 							else if (m_pDocument->GetInstrument(pNoteData->Instrument) == nullptr || m_pDocument->GetInstrument(pNoteData->Instrument)->GetType() != INST_2A03)
-								noteCol = RGB(255, 0, 0);
+								noteCol = WarningColor;
 						} else if (pNoteData->Instrument == HOLD_INSTRUMENT && pTrackerChannel->GetID() == CHANID_DPCM)
-							noteCol = RGB(255, 0, 0);
+							noteCol = WarningColor;
 					
 						
 						DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, NOTES_A[pNoteData->Note - 1], noteCol);		// // //
@@ -1743,10 +1790,10 @@ void CPatternEditor::DrawMeters(CDC *pDC)
 	pDC->SelectObject(pOldFont);
 }
 
-static double NoteFromFreq(double Freq)
+static float NoteFromFreq(float Freq)
 {
 	// Convert frequency to note number
-	return 45.0 + 12.0 * (std::log(Freq / 440.0) / log(2.0));
+	return 45.0f + 12.0f * (std::log(Freq / 440.0f) / log(2.0f));
 }
 
 static CString NoteToStr(int Note)
@@ -1762,11 +1809,6 @@ static CString NoteToStr(int Note)
 	str.AppendFormat("%i", Octave);
 	return str;
 }
-
-static const COLORREF DECAY_COLOR[CRegisterState::DECAY_RATE + 1] = {		// // //
-	0xFFFF80, 0xE6F993, 0xCCF3A6, 0xB3ECB9, 0x99E6CC, 0x80E0E0, 0x80D9E3, 0x80D3E6,
-	0x80CCE9, 0x80C6EC, 0x80C0F0, 0x80B9F3, 0x80B3F6, 0x80ACF9, 0x80A6FC, 0x80A0FF,
-}; // BLEND has lower precision
 
 void CPatternEditor::DrawRegisters(CDC *pDC)
 {
@@ -1801,148 +1843,167 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		m_pDocument->ExpansionEnabled(SNDCHIP_S5B) * 8);		// // //
 	int vis_line = 0;
 
+	// TODO: custom regview palettes
+
+	static const COLORREF DECAY_COLOR[CRegisterState::DECAY_RATE + 1] = {		// // //
+		0xFFFF80, 0xE6F993, 0xCCF3A6, 0xB3ECB9, 0x99E6CC, 0x80E0E0, 0x80D9E3, 0x80D3E6,
+		0x80CCE9, 0x80C6EC, 0x80C0F0, 0x80B9F3, 0x80B3F6, 0x80ACF9, 0x80A6FC, 0x80A0FF,
+	}; // BLEND has lower precision
+
+	// !! !!
+	static const COLORREF UPDATE_STALE_COLOR = 0xC0C0C0;
+	static const COLORREF UPDATE_FRESH_COLOR = 0xFFAFAF;
+	static const COLORREF BORDER_COLOR = 0x808080;
+	static const COLORREF SUBBORDER_COLOR = 0x303030;
+
+	// Note color tints
+	static const float CTINT_FDS_MOD[3] = { 1, 0.5, 0 };
+	static const float CTINT_FDS[3] = { 0, 0.5, 1 };
+	static const float CTINT_PNOISE[3] = { 0.5, 0, 1 };
+	static const float CTINT_S5B_T[3] = { 0, 1, 1 };
+	static const float CTINT_S5B_N[3] = { 1, 0, 1 };
+	static const float CTINT_S5B_E[3] = { 1, 1, 0 };
+
+	bool PrecisePitch = theApp.GetSettings()->GUI.bPreciseRegPitch;
+
 	const auto DrawHeaderFunc = [&] (CString Text) {
 		line += 2; y += LINE_HEIGHT * 2;
 		pDC->MoveTo(x, y);
 		pDC->SetBkColor(m_colEmptyBg);
-		pDC->SetTextColor(0xFFAFAF);
+		pDC->SetTextColor(UPDATE_FRESH_COLOR);
 		pDC->TextOut(x, y, Text + _T(" registers"));
 	};
 
 	const auto DrawRegFunc = [&] (CString Header, int Count) {
 		++line; y += LINE_HEIGHT;
 		pDC->SetBkColor(m_colEmptyBg);
-		pDC->SetTextColor(0xFFAFAF);
+		pDC->SetTextColor(UPDATE_FRESH_COLOR);
 		pDC->SetTextAlign(TA_UPDATECP);
 		pDC->MoveTo(x, y);
 		pDC->TextOut(0, 0, Header);
 		for (int j = 0; j < Count; j++) {
 			CString str;
 			str.Format(_T(" $%02X"), reg[j]);
-			pDC->SetTextColor(BLEND(0xC0C0C0, DECAY_COLOR[update[j] >> 4], 100 * (update[j] & 0x0F) / CRegisterState::DECAY_RATE));
+			pDC->SetTextColor(BLEND(UPDATE_STALE_COLOR, DECAY_COLOR[update[j] >> 4], 100 * (update[j] & 0x0F) / CRegisterState::DECAY_RATE));
 			pDC->TextOut(0, 0, str);
 		}
 	};
 
-	const auto DrawVolFunc = [&] (double Freq, int Volume) {
-		pDC->FillSolidRect(x - 1, BAR_OFFSET + vis_line * 10 - 1, 6 * 108 + 3, 9, 0x808080);
+	const auto DrawVolBar = [&]() {
+		pDC->FillSolidRect(x - 1, BAR_OFFSET + vis_line * 10 - 1, 6 * 108 + 3, 9, BORDER_COLOR);
 		pDC->FillSolidRect(x, BAR_OFFSET + vis_line * 10, 6 * 108 + 1, 7, 0);
+		// C note indicators
 		for (int i = 0; i < 10; i++)
-			pDC->SetPixelV(x + 72 * i, BAR_OFFSET + vis_line * 10 + 3, i == 4 ? 0x808080 : 0x303030);
+			pDC->SetPixelV(x + 72 * i, BAR_OFFSET + vis_line * 10 + 3, i == 4 ? BORDER_COLOR : SUBBORDER_COLOR);
+	};
 
-		const double note = NoteFromFreq(Freq);
+	const auto DrawVolNote = [&](const float note, BYTE Volume, float r = 1.f, float g = 1.f, float b = 1.f) {
+		ASSERT(Volume <= 255);
+		pDC->FillSolidRect(
+			(int)(29.0 + 6.0 * (note + 12)),
+			BAR_OFFSET + vis_line * 10, 3, 7,
+			RGB(Volume * r, Volume * g, Volume * b)
+		);
+	};
+
+	// // !! apply OETF gamma 2.2 so we can see lower values better
+	const auto OETF_gamma_vol = [&](const float Volume) -> BYTE {
+		return BYTE(max(min(powf(Volume, (1.f / 2.2f)), 1.0f), 0.0f) * 255);
+	};
+
+	const auto DrawVolFunc = [&] (float Freq, float Volume, int Range=0, int Period=0, bool IsLength = true, float r=1.f, float g=1.f, float b=1.f) {
+		DrawVolBar();
+		float note = 0;
+		if (Range!=0)
+			note = ((108.0f / float(Range)) * float(IsLength ? (Range - Period) : Period)) - 12.0f;
+		else
+			note = NoteFromFreq(Freq);
 		const int note_conv = note >= 0 ? int(note + 0.5) : int(note - 0.5);
-		if (Volume > 0xFF) Volume = 0xFF;
+
+		BYTE vol_scaled = OETF_gamma_vol(Volume);
 		if (note_conv >= -12 && note_conv <= 96 && Volume) {		// // //
-			if (theApp.GetSettings()->GUI.bPreciseRegPitch)
-				pDC->FillSolidRect((int)(29.0 + 6.0 * (note + 12)), BAR_OFFSET + vis_line * 10, 3, 7, RGB(Volume, Volume, Volume));
-			else
-				pDC->FillSolidRect(29 + 6 * (note_conv + 12), BAR_OFFSET + vis_line * 10, 3, 7, RGB(Volume, Volume, Volume));
+			DrawVolNote((PrecisePitch || Range != 0) ? note : note_conv, vol_scaled, r, g, b);
 		}
 		++vis_line;
 	};
 
-	const auto DrawVolFuncRate = [&](int Period, int Volume, int Range, bool IsLength = true) {
-		pDC->FillSolidRect(x - 1, BAR_OFFSET + vis_line * 10 - 1, 6 * 108 + 3, 9, 0x808080);
-		pDC->FillSolidRect(x, BAR_OFFSET + vis_line * 10, 6 * 108 + 1, 7, 0);
-		for (int i = 0; i < 10; i++)
-			pDC->SetPixelV(x + 72 * i, BAR_OFFSET + vis_line * 10 + 3, i == 4 ? 0x808080 : 0x303030);
-
-		const double note = ((108.0 / double(Range)) * double(IsLength ? (Range - Period) : Period)) - 12.0;
-		const int note_conv = note >= 0 ? int(note + 0.5) : int(note - 0.5);
-		if (Volume > 0xFF) Volume = 0xFF;
-		if (note_conv >= -12 && note_conv <= 96 && Volume)		// // //
-				pDC->FillSolidRect((int)(29.0 + 6.0 * (note + 12)), BAR_OFFSET + vis_line * 10, 3, 7, RGB(Volume, Volume, Volume));
-		++vis_line;
-	};
-
-	const auto DrawVolFDSMod = [&](double Freq, int Volume, double ModFreq, int Depth, double OutFreq) {
-		pDC->FillSolidRect(x - 1, BAR_OFFSET + vis_line * 10 - 1, 6 * 108 + 3, 9, 0x808080);
-		pDC->FillSolidRect(x, BAR_OFFSET + vis_line * 10, 6 * 108 + 1, 7, 0);
-		for (int i = 0; i < 10; i++)
-			pDC->SetPixelV(x + 72 * i, BAR_OFFSET + vis_line * 10 + 3, i == 4 ? 0x808080 : 0x303030);
+	const auto DrawVolFuncFDS = [&](float Freq, float Volume, float ModFreq, int Depth, float OutFreq) {
+		DrawVolBar();
 		
-		
-		const double note = NoteFromFreq(Freq);
+		const float note = NoteFromFreq(Freq);
 		const int note_conv = note >= 0 ? int(note + 0.5) : int(note - 0.5);
-		const double outnote = NoteFromFreq(OutFreq);
+		const float outnote = NoteFromFreq(OutFreq);
 		const int outnote_conv = outnote >= 0 ? int(outnote + 0.5) : int(outnote - 0.5);
 
-		if (Volume > 0xFF) Volume = 0xFF;
-		if (Depth > 0xFF) Depth = 0xFF;
+		BYTE vol_scaled = OETF_gamma_vol(Volume);
 
-		// modulated note
 		if (note_conv >= -12 && note_conv <= 96 && Volume) {		// // //
-			if (theApp.GetSettings()->GUI.bPreciseRegPitch) {
-				pDC->FillSolidRect((int)(29.0 + 6.0 * (note + 12)),
-					BAR_OFFSET + vis_line * 10,
-					(int)(3 + ((29.0 + 6.0 * (outnote + 12)) - (29.0 + 6.0 * (note + 12)))),
-					7,
-					RGB((int)(Volume * 0.5),
-						(int)(Volume * 0.5),
-						(int)(Volume * 0.5)));
+			if (Depth != 0) {
+				// modulated note
+				DrawVolNote(PrecisePitch ? outnote : outnote_conv, vol_scaled,
+					CTINT_FDS_MOD[0], CTINT_FDS_MOD[1], CTINT_FDS_MOD[2]);
+				DrawVolNote(PrecisePitch ? note : note_conv, vol_scaled,
+					CTINT_FDS[0], CTINT_FDS[1], CTINT_FDS[2]);
 			}
-			else {
-				pDC->FillSolidRect(29 + 6 * (note_conv + 12),
-					BAR_OFFSET + vis_line * 10,
-					3 + (int)((29.0 + 6.0 * (note_conv + 12)) - (29.0 + 6.0 * (outnote_conv + 12))),
-					7,
-					RGB((int)(Volume * 0.5),
-						(int)(Volume * 0.5),
-						(int)(Volume * 0.5)));
-			}
-		}
-		// unmodulated note
-		if (note_conv >= -12 && note_conv <= 96 && Volume) {		// // //
-			if (theApp.GetSettings()->GUI.bPreciseRegPitch) {
-				pDC->FillSolidRect((int)(29.0 + 6.0 * (note + 12)),
-					BAR_OFFSET + vis_line * 10,
-					3,
-					7,
-					RGB(Volume, Volume, Volume));
-			}
-			else {
-				pDC->FillSolidRect(29 + 6 * (note_conv + 12),
-					BAR_OFFSET + vis_line * 10,
-					3,
-					7,
-					RGB(Volume, Volume, Volume));
-			}
+			else
+				// unmodulated note
+				DrawVolNote(PrecisePitch ? note : note_conv, vol_scaled);
 		}
 		++vis_line;
 	};
 
 	// Draw envelope and noise pitch
-	const auto DrawVolFuncS5B = [&](double Freq, double EnvelopeFreq, int NoisePeriod, int Volume, bool envelope_enable, bool noise_enable) {
-		pDC->FillSolidRect(x - 1, BAR_OFFSET + vis_line * 10 - 1, 6 * 108 + 3, 9, 0x808080);
-		pDC->FillSolidRect(x, BAR_OFFSET + vis_line * 10, 6 * 108 + 1, 7, 0);
-		for (int i = 0; i < 10; i++)
-			pDC->SetPixelV(x + 72 * i, BAR_OFFSET + vis_line * 10 + 3, i == 4 ? 0x808080 : 0x303030);
+	const auto DrawVolFuncS5B = [&](float Freq, float EnvelopeFreq, int NoisePeriod, int Volume, bool envelope_enable, bool noise_enable) {
+		DrawVolBar();
 		
-		int vol = int(0xFF * (std::pow(10.0, (((Volume + 1.0) * 3.0) / 20.0)) / 251.18864315095801110850320677993));		// 3db per step
-		const double note = NoteFromFreq(Freq);
-		const double note_envelope = NoteFromFreq(EnvelopeFreq);
-		const double note_noise = ((108.0 / double(0x1F)) * double(0x1F - NoisePeriod)) - 12.0;
-		const int note_conv = note >= 0 ? int(note + 0.5) : int(note - 0.5);
-		if (vol > 0xFF) vol = 0xFF;
+		// 3db per step
+		float vol = envelope_enable ? 1 : (std::powf(10.0f, (float)(((Volume + 1.0) * 3.0) / 20.0)) / 251.18864315095801110850320677993f);
 
-		if (note_conv >= -12 && note_conv <= 96 && (vol || envelope_enable)) {		// // //
-			if (theApp.GetSettings()->GUI.bPreciseRegPitch) {
-				pDC->FillSolidRect((int)(29.0 + 6.0 * (note + 12)), BAR_OFFSET + vis_line * 10, 3, 7, RGB(envelope_enable ? 0xFF : vol, envelope_enable ? 0xFF : vol, envelope_enable ? 0xFF : vol));
-			}
-			else {
-				pDC->FillSolidRect(29 + 6 * (note_conv + 12), BAR_OFFSET + vis_line * 10, 3, 7, RGB(envelope_enable ? 0xFF : vol, envelope_enable ? 0xFF : vol, envelope_enable ? 0xFF : vol));
-			}
-		}
+		const BYTE vol_scaled = OETF_gamma_vol(vol);
+		
+		const float note = NoteFromFreq(Freq);
+		const float note_envelope = NoteFromFreq(EnvelopeFreq);
+		const float note_noise = ((108.0f / float(0x1F)) * float(0x1F - NoisePeriod)) - 12.0f;
+		const int note_conv = note >= 0 ? int(note + 0.5) : int(note - 0.5);
+
+
+		if (note_conv >= -12 && note_conv <= 96 && (Volume || envelope_enable))		// // //
+			if (noise_enable || envelope_enable)
+				DrawVolNote(PrecisePitch ? note : note_conv, vol_scaled,		// !! !!
+					CTINT_S5B_T[0], CTINT_S5B_T[1], CTINT_S5B_T[2]);
+			else
+				DrawVolNote(PrecisePitch ? note : note_conv, vol_scaled);
+
 		if (note_noise >= -12.0 && note_noise <= 96.0 && noise_enable)
-			pDC->FillSolidRect((int)(29.0 + 6.0 * (note_noise + 12)), BAR_OFFSET + vis_line * 10, 3, 7, RGB(envelope_enable ? 0xFF : vol, 0, envelope_enable ? 0xFF : vol));
+			DrawVolNote(note_noise, vol_scaled,
+				CTINT_S5B_N[0], CTINT_S5B_N[1], CTINT_S5B_N[2]);
+
 		if (note_envelope >= -12.0 && note_envelope <= 96.0 && envelope_enable)
-			pDC->FillSolidRect((int)(29.0 + 6.0 * (note_envelope + 12)), BAR_OFFSET + vis_line * 10, 3, 7, RGB(0xFF, 0xFF, 0));
+			DrawVolNote(note_envelope, vol_scaled,
+				CTINT_S5B_E[0], CTINT_S5B_E[1], CTINT_S5B_E[2]);
 		++vis_line;
 	};
 
+	// Draw envelope and noise pitch
+	const auto DrawVolFuncVRC7 = [&](float Freq, int Volume) {
+		DrawVolBar();
+
+		// 3db per step
+		const float vol = std::powf(10.0f, (float)(((Volume + 1.0) * 3.0) / 20.0)) / 251.18864315095801110850320677993f;
+
+		const BYTE vol_scaled = OETF_gamma_vol(vol);
+
+		const float note = NoteFromFreq(Freq);
+		const int note_conv = note >= 0 ? int(note + 0.5) : int(note - 0.5);
+
+
+		if (note_conv >= -12 && note_conv <= 96 && vol_scaled)		// // //
+			DrawVolNote(PrecisePitch ? note : note_conv, vol_scaled);
+		++vis_line;
+		};
+
 	const auto DrawTextFunc = [&] (int xOffsNoDPI, CString text) {
-		pDC->SetTextColor(0x808080);
+		pDC->SetTextColor(BORDER_COLOR);
 		pDC->SetTextAlign(TA_NOUPDATECP);
 		pDC->TextOut(x + DPI::SX(xOffsNoDPI), y, text);
 	};
@@ -1955,11 +2016,11 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		}
 	};
 
-	const auto GetPitchTextFunc = [] (int digits, int periodReg, double freq, LPCTSTR pitchText = _T("pitch")) {
+	const auto GetPitchTextFunc = [] (int digits, int periodReg, float freq, LPCTSTR pitchText = _T("pitch")) {
 		const CString fmt = _T("%s = $%0*X (%7.2fHz %-4s %+03i)");
-		const double note = NoteFromFreq(freq);
+		const float note = NoteFromFreq(freq);
 		const int note_conv = note >= 0 ? int(note + 0.5) : int(note - 0.5);
-		const int cents = int((note - double(note_conv)) * 100.0);
+		const int cents = int((note - float(note_conv)) * 100.0);
 		
 		CString str;
 		if (freq != 0.)
@@ -1970,10 +2031,10 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 	};
 
 	// For noise and DPCM.
-	const auto GetPitchTextFuncLong = [](int digits, int pitchReg, double freq, bool rate) {
-		const double note = NoteFromFreq(freq);
+	const auto GetPitchTextFuncLong = [](int digits, int pitchReg, float freq, bool rate) {
+		const float note = NoteFromFreq(freq);
 		const int note_conv = note >= 0 ? int(note + 0.5) : int(note - 0.5);
-		int cents = int((note - double(note_conv)) * 100.0);
+		int cents = int((note - float(note_conv)) * 100.0);
 
 		CString str;
 		CString noteNameBuf;
@@ -2005,7 +2066,7 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		DrawRegFunc(text, 4);
 
 		unsigned int period, vol;
-		double freq = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_NONE, i);		// // //
+		float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_NONE, i);		// // //
 //		pDC->FillSolidRect(x + 200, y, x + 400, y + 18, m_colEmptyBg);
 
 		switch (i) {
@@ -2036,11 +2097,16 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		DrawTextFunc(180, text);
 		switch (i) {
 		case 0: case 1: case 2:
-			DrawVolFunc(freq, vol << 4); break;
+			DrawVolFunc(freq, (float)vol/ (float)0xF); break;
 		case 3:
-			DrawVolFuncRate(period, vol << 4, 0x0F); break;
+			if (reg[2] >> 7 == 1)
+				DrawVolFunc(freq, (float)vol/(float)0x0F, 0, 0, false,
+					CTINT_PNOISE[0], CTINT_PNOISE[1], CTINT_PNOISE[2]);
+			else
+				DrawVolFunc(0, (float)vol/(float)0x0F, 0x0F, period, true);
+			break;
 		case 4:
-			DrawVolFuncRate(period, vol << 4, 0x0F, false); break;
+			DrawVolFunc(0, (float)vol/(float)0x0F, period, false); break;
 		}
 
 	}
@@ -2060,13 +2126,13 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 
 			int period = (reg[1] | ((reg[2] & 15) << 8));
 			int vol = (reg[0] & (i == 2 ? 0x3F : 0x0F));
-			double freq = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_VRC6, i);		// // //
+			float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_VRC6, i);		// // //
 
 			text.Format(_T("%s, vol = %02i"), GetPitchTextFunc(3, period, freq), vol);
 			if (i != 2)
 				text.AppendFormat(_T(", duty = %i"), (reg[0] >> 4) & 0x07);
 			DrawTextFunc(180, text);
-			DrawVolFunc(freq, vol << (i == 2 ? 3 : 4));
+			DrawVolFunc(freq, (float)vol/(float)(i == 2 ? 0x3F : 0x0F));
 		}
 	}
 
@@ -2081,11 +2147,11 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 			
 			int period = (reg[2] | ((reg[3] & 7) << 8));
 			int vol = (reg[0] & 0x10) ? reg[0] & 0x0F : 0x15;
-			double freq = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_MMC5, i);		// // //
+			float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_MMC5, i);		// // //
 
 			text.Format(_T("%s, vol = %02i, duty = %i"), GetPitchTextFunc(3, period, freq), vol, reg[0] >> 6);
 			DrawTextFunc(180, text);
-			DrawVolFunc(freq, vol << 4);
+			DrawVolFunc(freq, (float)vol/(float)0x0F);
 		}
 	}
 
@@ -2099,14 +2165,14 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		const int Length = 0x80 - 8 * N163_CHANS;
 
 		y += 18;
-		pDC->FillSolidRect(wave_x - 1, y - 1, 2 * Length + 2, 17, 0x808080);
+		pDC->FillSolidRect(wave_x - 1, y - 1, 2 * Length + 2, 17, BORDER_COLOR);
 		pDC->FillSolidRect(wave_x, y, 2 * Length, 15, 0);
 		for (int i = 0; i < Length; i++) {
 			auto pState = pSoundGen->GetRegState(SNDCHIP_N163, i);
 			const int Hi = (pState->GetValue() >> 4) & 0x0F;
 			const int Lo = pState->GetValue() & 0x0F;
 			COLORREF Col = BLEND(
-				0xC0C0C0, DECAY_COLOR[pState->GetNewValueTime()], 100 * pState->GetLastUpdatedTime() / CRegisterState::DECAY_RATE
+				UPDATE_STALE_COLOR, DECAY_COLOR[pState->GetNewValueTime()], 100 * pState->GetLastUpdatedTime() / CRegisterState::DECAY_RATE
 			);
 			pDC->FillSolidRect(wave_x + i * 2    , y + 15 - Lo, 1, Lo, Col);
 			pDC->FillSolidRect(wave_x + i * 2 + 1, y + 15 - Hi, 1, Hi, Col);
@@ -2120,11 +2186,11 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 			const int UpdateTime = std::min(pPosState->GetLastUpdatedTime(), pLenState->GetLastUpdatedTime());
 			pDC->FillSolidRect(wave_x, y + 20 + i * 5, Length * 2, 3, 0);
 			pDC->FillSolidRect(wave_x + WavePos, y + 20 + i * 5, WaveLen, 3,
-							   BLEND(0xC0C0C0, DECAY_COLOR[NewTime], 100 * UpdateTime / CRegisterState::DECAY_RATE));
+							   BLEND(UPDATE_STALE_COLOR, DECAY_COLOR[NewTime], 100 * UpdateTime / CRegisterState::DECAY_RATE));
 		}
 		y -= 18;
 
-		double FreqCache[8] = { };
+		float FreqCache[8] = { };
 		int VolCache[8] = { };
 
 		// N163
@@ -2136,18 +2202,18 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 
 			int period = (reg[0] | (reg[2] << 8) | ((reg[4] & 0x03) << 16));
 			int vol = (reg[7] & 0x0F);
-			double freq = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_N163, 15 - i);		// // //
+			float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_N163, 15 - i);		// // //
 			
 			if (i >= 16 - N163_CHANS) {
 				text.Format(_T("%s, vol = %02i"), GetPitchTextFunc(5, period, freq), vol);
 				DrawTextFunc(300, text);
 				FreqCache[15 - i] = freq;
-				VolCache[15 - i] = vol << 4;
+				VolCache[15 - i] = vol;
 			}
 		}
 		
 		for (int i = 0; i < N163_CHANS; ++i)		// // //
-			DrawVolFunc(FreqCache[i], VolCache[i]);
+			DrawVolFunc(FreqCache[i], (float)VolCache[i]/(float)0x0F);
 	}
 
 	if (m_pDocument->ExpansionEnabled(SNDCHIP_FDS)) {
@@ -2155,14 +2221,14 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 
 		// // // FDS wave
 		const int wave_x = x + DPI::SX(300);
-		const double xScale = 1, yScale = 0.5;
+		const float xScale = 1, yScale = 0.5;
 		const int wave_width = (int)(64 * xScale);
 		const int wave_height = (int)(64 * yScale);
 
 		y += 18;
 
-		pDC->FillSolidRect(wave_x-1, y-1, wave_width+2, wave_height+2, 0x808080);	// draw box
-		pDC->FillSolidRect(wave_x, y, wave_width, wave_height-1, 0);              // fill box
+		pDC->FillSolidRect(wave_x-1, y-1, wave_width+2, wave_height+2, BORDER_COLOR);	// draw box
+		pDC->FillSolidRect(wave_x, y, wave_width, wave_height-1, 0);				// fill box
 		for (int i = 0; i < wave_width; i++) {
 			// get register state
 			auto pState = pSoundGen->GetRegState(SNDCHIP_FDS, 0x4040 + ((int)(i/xScale) & 0x3F));
@@ -2179,13 +2245,13 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		// other
 		int period = (pSoundGen->GetReg(SNDCHIP_FDS, 0x4082) & 0xFF) | ((pSoundGen->GetReg(SNDCHIP_FDS, 0x4083) & 0x0F) << 8);
 		int vol = (pSoundGen->GetReg(SNDCHIP_FDS, 0x4080) & 0x3F);
-		double freq = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_FDS, 0);		// // //
+		float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_FDS, 0);		// // //
 
 		// hacky implementation of FDS modulation pitch view
 		int modperiod = (pSoundGen->GetReg(SNDCHIP_FDS, 0x4086) & 0xFF) | ((pSoundGen->GetReg(SNDCHIP_FDS, 0x4087) & 0x0F) << 8);
 		int moddepth = (pSoundGen->GetReg(SNDCHIP_FDS, 0x4084) & 0x3F);
 		int modcounter = (pSoundGen->GetFDSModCounter() & 0x7F);
-		double outfreq = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_FDS, 1);		// // //
+		float outfreq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_FDS, 1);		// // //
 
 		CString FDStext;
 		CString Modtext;
@@ -2194,6 +2260,7 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		Modtext.Format(_T("%s, depth = %02i, counter = %02i"), GetPitchTextFunc(3, modperiod, outfreq, _T("mod  ")), moddepth, modcounter);
 
 		for (int i = 0; i < 11; ++i) {
+			// TODO: get the rest of the registers
 			GetRegsFunc(SNDCHIP_FDS, [&](int x) { return 0x4040 + i * 8 + x; }, 8);
 			if (i < 8) {
 				text.Format(_T("$%04X:"), 0x4040 + i * 8);
@@ -2209,7 +2276,7 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 			case 9: DrawTextFunc(180, Modtext); break;
 			}
 		}
-		DrawVolFDSMod(freq, vol << 3, outfreq, moddepth << 3, outfreq);
+		DrawVolFuncFDS(freq, (float)vol/(float)0x1F, outfreq, moddepth, outfreq);
 	}
 
 	if (m_pDocument->ExpansionEnabled(SNDCHIP_VRC7)) {		// // //
@@ -2225,12 +2292,12 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 
 			int period = reg[0] | ((reg[1] & 0x01) << 8);
 			int vol = 0x0F - (pSoundGen->GetReg(SNDCHIP_VRC7, i + 0x30) & 0x0F);
-			double freq = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_VRC7, i);		// // //
+			float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_VRC7, i);		// // //
 
 			text.Format(_T("%s, vol = %02i, patch = $%01X"), GetPitchTextFunc(3, period, freq), vol, reg[2] >> 4);
 			DrawTextFunc(180, text);
 			
-			DrawVolFunc(freq, vol << 4);
+			DrawVolFuncVRC7(freq, vol);
 		}
 	}
 
@@ -2246,8 +2313,8 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 			int period = reg[0] | ((reg[1] & 0x0F) << 8);
 			int period_noise = pSoundGen->GetReg(SNDCHIP_S5B, 0x06) & 0x1F;
 			int vol = pSoundGen->GetReg(SNDCHIP_S5B, 8 + i) & 0x0F;
-			double freq = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_S5B, i);		// // //
-			double freq_env = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_S5B, 3);		// // //
+			float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_S5B, i);		// // //
+			float freq_env = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_S5B, 3);		// // //
 			bool enable_tone = !(pSoundGen->GetReg(SNDCHIP_S5B, 7) & (1 << i));
 			bool enable_noise = !(pSoundGen->GetReg(SNDCHIP_S5B, 7) & (8 << i));
 			bool enable_env = pSoundGen->GetReg(SNDCHIP_S5B, 8 + i) & 0x10;
@@ -2271,7 +2338,7 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 			
 			if (i == 1) {
 				int period = (reg[0] | (reg[1] << 8));
-				double freq = theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_S5B, 3);		// // //
+				float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_S5B, 3);		// // //
 				if (freq != 0. && reg[1] == 0)
 					text.Format(_T("%s, shape = $%01X"), GetPitchTextFunc(4, period, freq, "pitch "), reg[2]);
 				else
@@ -3870,10 +3937,10 @@ void CPatternEditor::AutoScroll(const CPoint &point, UINT nFlags)
 
 	int Row = (point.y - HEADER_HEIGHT) / m_iRowHeight - (m_iLinesVisible / 2);		// // //
 
-	if (Row > (m_iLinesFullVisible / 2) - 3) {
+	if (Row > (m_iLinesFullVisible / 2) + 1) {
 		m_iScrolling |= SCROLL_DOWN;		// // //
 	}
-	else if (Row <= -(m_iLinesFullVisible / 2)) {
+	else if (Row <= -(m_iLinesFullVisible / 2) - 1) {
 		m_iScrolling |= SCROLL_UP;		// // //
 	}
 

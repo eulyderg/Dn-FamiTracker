@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #include "../stdafx.h"
@@ -54,6 +50,7 @@ void CN163::Reset()
 	m_N163.Reset();
 	m_N163.SetMixing(m_bUseLinearMixing);
 
+	m_iTime = 0;
 	m_SynthN163.clear();
 	m_BlipN163.clear();
 }
@@ -87,11 +84,16 @@ uint8_t CN163::Read(uint16_t Address, bool &Mapped)
 void CN163::Process(uint32_t Time, Blip_Buffer& Output)
 {
 	// Mix level will dynamically change based on number of channels
-	if (!m_UseSurveyMix) {
-		int channels = m_N163.GetNumberOfChannels();
+	auto channels = m_N163.GetNumberOfChannels();
+	auto scale = m_bUseLinearMixing ? (channels + 1) : 1;
+
+	if (m_UseSurveyMix) {
+		m_SynthN163.volume(m_Attenuation, 225 * scale);
+	}
+	else {
 		double N163_volume = (channels == 0) ? 1.3f : (1.5f + float(channels) / 1.5f);
 		N163_volume *= m_Attenuation;
-		m_SynthN163.volume(N163_volume * 1.1, 1600);
+		m_SynthN163.volume(N163_volume * 1.1, 1600 * scale);
 	}
 
 	uint32_t now = 0;
@@ -202,9 +204,8 @@ void CN163::UpdateMixLevel(double v, bool UseSurveyMix)
 {
 	m_Attenuation = v;
 	m_UseSurveyMix = UseSurveyMix;
-	if (UseSurveyMix)
-		m_SynthN163.volume(m_Attenuation, 225);
-	// Legacy mixing recalculates chip levels at runtime
+	// Recalculate chip levels at runtime; this is dependent on the amount of
+	// N163 channels at execution.
 }
 
 void CN163::Log(uint16_t Address, uint8_t Value)		// // //

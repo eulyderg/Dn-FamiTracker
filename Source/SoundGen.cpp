@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 //
@@ -36,7 +32,6 @@
 #include "FamiTracker.h"
 #include "FamiTrackerTypes.h"
 #include "FTMComponentInterface.h"		// // //
-#include "ChannelState.h"		// // //
 #include "FamiTrackerDoc.h"
 #include "FamiTrackerView.h"
 #include "VisualizerWnd.h"
@@ -54,6 +49,9 @@
 #include "MIDI.h"
 #include "ChannelFactory.h"		// // // test
 #include "DetuneTable.h"		// // //
+#include <array>
+#include <cstdio>
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
 
@@ -74,6 +72,111 @@
 
 // Enable audio dithering
 //#define DITHERING
+
+struct LogEntry {
+	DWORD child_tid;
+	const char /*'static*/* event;
+};
+
+namespace {
+class Log {
+	static constexpr size_t LOG_SIZE = 256;
+
+public:
+	explicit Log() {}
+
+	void log(const char /*'static*/* event) {
+		auto lock = std::unique_lock(_mtx);
+		return log_(event);
+	}
+
+private:
+	void log_(const char /*'static*/* event) {
+		const auto tid = GetCurrentThreadId();
+		const auto child_tid = (tid == theApp.m_nThreadID)
+			? 0
+			: tid;
+
+		_log[wrap(_end2)] = LogEntry{
+			/*.child_tid = */ child_tid,
+			/*.event = */ event,
+		};
+		_end2++;
+		if (_end2 - _begin2 > LOG_SIZE) {
+			_begin2 = _end2 - LOG_SIZE;
+			if (_begin2 >= LOG_SIZE) {
+				_begin2 -= LOG_SIZE;
+				_end2 -= LOG_SIZE;
+			}
+		}
+	}
+
+public:
+	void dump(const char /*'static*/* event = nullptr) {
+		// there should be no possiblity of deadlock since we never block while owning _mtx.
+		auto lock = std::unique_lock(_mtx);
+
+		if (event) {
+			log_(event);
+		}
+
+		// the children yearn for the ~~mines~~ std::format
+		char fname[99];
+		while (true) {
+			snprintf(fname, sizeof(fname), "wavlog-%d.txt", _generation);
+			if (!std::filesystem::exists(fname)) {
+				break;
+			}
+			_generation++;
+		}
+
+		auto f = fopen(fname, "w");
+		if (!f) {
+			lock.unlock();
+			MessageBoxA(nullptr,
+				"WAV export error, failed to dump logs.",
+				"WAV export error",
+				MB_OK | MB_ICONERROR);
+			return;
+		}
+
+		std::string s;
+		for (unsigned index2 = _begin2; index2 != _end2; index2++) {
+			LogEntry const& entry = _log[wrap(index2)];
+			
+			// pray it works. if not, nothing we can do.
+			fprintf(f, "(%d) %s\n", entry.child_tid, entry.event);
+		}
+		// nothing we can do with an error.
+		fclose(f);
+
+		_generation++;
+
+		log_("dump()");
+		lock.unlock();
+		MessageBoxA(nullptr,
+			"WAV export error, please report and attach wavlog-*.txt",
+			"WAV export error",
+			MB_OK | MB_ICONERROR);
+	}
+
+private:
+	unsigned wrap(unsigned index) const {
+		return index % LOG_SIZE;
+	}
+
+	// fields
+private:
+	std::mutex _mtx;
+	std::array<LogEntry, LOG_SIZE> _log{};
+	unsigned _begin2 = 0;
+	unsigned _end2 = 0;
+
+	int _generation = 0;
+};
+
+Log LOGGER;
+}
 
 // The depth of each vibrato level
 const double CSoundGen::NEW_VIBRATO_DEPTH[] = {
@@ -148,6 +251,10 @@ CSoundGen::CSoundGen() :
 	m_iMachineType(NTSC),
 	m_bRequestRenderStart(false),
 	m_bRendering(false),
+	m_bRequestRenderStop(false),
+	m_bStoppingRender(false),
+	m_iDelayedStart(0),
+	m_iDelayedEnd(0),
 	m_iBPMCachePosition(0),
 	m_iRegisterStream(),
 	m_bWaveChanged(0),		// // //
@@ -815,6 +922,10 @@ bool CSoundGen::PostGuiMessage(GuiMessageId message, WPARAM wParam, LPARAM lPara
 	// Called from main thread
 	ASSERT(GetCurrentThreadId() == theApp.m_nThreadID);
 
+	if (message == WM_USER_STOP_RENDER) {
+		LOGGER.log("CSoundGen::GuiPostMessage(WM_USER_STOP_RENDER)");
+	}
+
 	return m_MessageQueue.try_push(GuiMessage{
 		message,
 		wParam,
@@ -1136,6 +1247,9 @@ void CSoundGen::FillBuffer(int16_t const * pBuffer, uint32_t Size)
 
 	if (m_bRendering) {
 		// Output to file
+		if (!m_pWaveFile) {
+			LOGGER.dump("CSoundGen::FillBuffer: ASSERT(m_pWaveFile) failed");
+		}
 		ASSERT(m_pWaveFile);		// // //
 		// This code needs to be changed if we add stereo support.
 		m_pWaveFile->WriteWave((char *) pBuffer, 2 * Size);
@@ -1412,29 +1526,38 @@ void CSoundGen::ApplyGlobalState()		// // //
 	int Frame = IsPlaying() ? GetPlayerFrame() : m_pTrackerView->GetSelectedFrame();
 	int Row = IsPlaying() ? GetPlayerRow() : m_pTrackerView->GetSelectedRow();
 	if (stFullState *State = m_pDocument->RetrieveSoundState(GetPlayerTrack(), Frame, Row, -1)) {
-		if (State->Tempo != -1)
-			m_iTempo = State->Tempo;
-		if (State->GroovePos >= 0) {
-			m_iGroovePosition = State->GroovePos;
-			if (State->Speed >= 0)
-				m_iGrooveIndex = State->Speed;
-			if (m_pDocument->GetGroove(m_iGrooveIndex) != NULL)
-				m_iSpeed = m_pDocument->GetGroove(m_iGrooveIndex)->GetEntry(m_iGroovePosition);
-		}
-		else {
-			if (State->Speed >= 0)
-				m_iSpeed = State->Speed;
-			m_iGrooveIndex = -1;
-		}
-		m_iLastHighlight = m_pDocument->GetHighlightAt(GetPlayerTrack(), Frame, Row).First;
+		ApplyGlobalTempoState(State);
 		SetupSpeed();
+		m_iLastHighlight = m_pDocument->GetHighlightAt(GetPlayerTrack(), Frame, Row).First;
+
 		for (int i = 0; i < m_pDocument->GetChannelCount(); i++) {
 			for (int j = 0; j < sizeof(m_pTrackerChannels) / sizeof(CTrackerChannel*); ++j)		// // // pick this out later
 				if (m_pChannels[j] && m_pTrackerChannels[j]->GetID() == State->State[i].ChannelIndex) {
 					m_pChannels[j]->ApplyChannelState(&State->State[i]); break;
 				}
 		}
+
 		delete State;
+	}
+}
+
+// Separate updating groove, tempo and speed
+// to allow ResetTempo() to get the most recent state without updating the channel state
+void CSoundGen::ApplyGlobalTempoState(stFullState *pState)
+{
+	if (pState->Tempo != -1)
+		m_iTempo = pState->Tempo;
+	if (pState->GroovePos >= 0) {
+		m_iGroovePosition = pState->GroovePos;
+		if (pState->Speed >= 0)
+			m_iGrooveIndex = pState->Speed;
+		if (m_pDocument->GetGroove(m_iGrooveIndex) != NULL)
+			m_iSpeed = m_pDocument->GetGroove(m_iGrooveIndex)->GetEntry(m_iGroovePosition);
+	}
+	else {
+		if (pState->Speed >= 0)
+			m_iSpeed = pState->Speed;
+		m_iGrooveIndex = -1;
 	}
 }
 
@@ -1743,16 +1866,34 @@ void CSoundGen::ResetTempo()
 
 	m_iTempoAccum = 0;
 
-	if (m_pDocument->GetSongGroove(m_iPlayTrack) && m_pDocument->GetGroove(m_iSpeed) != NULL) {		// // //
-		m_iGrooveIndex = m_iSpeed;
-		m_iGroovePosition = 0;
-		if (m_pDocument->GetGroove(m_iGrooveIndex) != NULL)
-			m_iSpeed = m_pDocument->GetGroove(m_iGrooveIndex)->GetEntry(m_iGroovePosition);
+	if (theApp.GetSettings()->General.bRetrieveChanState) {		// !! !!
+		// Calling on ApplyGlobalState() causes crackly audio on FDS
+		// May have something to do with conflicting stFullState pointers? haven't investigated
+		// So we do a reduced version here where we don't update the channel handlers.
+		int Frame = IsPlaying() ? GetPlayerFrame() : m_pTrackerView->GetSelectedFrame();
+		int Row = IsPlaying() ? GetPlayerRow() : m_pTrackerView->GetSelectedRow();
+		if (stFullState *State = m_pDocument->RetrieveSoundState(GetPlayerTrack(), Frame, Row, -1)) {
+			ApplyGlobalTempoState(State);
+			// Set m_iSpeed to avoid division by zero in SetupSpeed()
+			if (m_pDocument->GetSongGroove(m_iPlayTrack) && m_pDocument->GetGroove(m_iSpeed) == NULL)
+				m_iSpeed = DEFAULT_SPEED;
+			m_iLastHighlight = m_pDocument->GetHighlightAt(GetPlayerTrack(), Frame, Row).First;
+			delete State;
+		}
 	}
 	else {
-		m_iGrooveIndex = -1;
-		if (m_pDocument->GetSongGroove(m_iPlayTrack))
-			m_iSpeed = DEFAULT_SPEED;
+		// Legacy behavior
+		if (m_pDocument->GetSongGroove(m_iPlayTrack) && m_pDocument->GetGroove(m_iSpeed) != NULL) {		// // //
+			m_iGrooveIndex = m_iSpeed;
+			m_iGroovePosition = 0;
+			if (m_pDocument->GetGroove(m_iGrooveIndex) != NULL)
+				m_iSpeed = m_pDocument->GetGroove(m_iGrooveIndex)->GetEntry(m_iGroovePosition);
+		}
+		else {
+			m_iGrooveIndex = -1;
+			if (m_pDocument->GetSongGroove(m_iPlayTrack))
+				m_iSpeed = DEFAULT_SPEED;
+		}
 	}
 	SetupSpeed();
 
@@ -2068,6 +2209,8 @@ void CSoundGen::EvaluateGlobalEffects(stChanNote *NoteData, int EffColumns)
 
 bool CSoundGen::RenderToFile(LPTSTR pFile, render_end_t SongEndType, int SongEndParam, int Track)
 {
+	LOGGER.log("{ CSoundGen::RenderToFile");
+
 	// Called from main thread
 	ASSERT(GetCurrentThreadId() == theApp.m_nThreadID);
 	ASSERT(m_pDocument != NULL);
@@ -2095,38 +2238,62 @@ bool CSoundGen::RenderToFile(LPTSTR pFile, render_end_t SongEndType, int SongEnd
 		m_iRenderRowCount = m_iRenderEndParam;
 	}
 
+	if (m_bRendering) {
+		LOGGER.dump("ASSERT(!m_bRendering) failed");
+	}
 	ASSERT(!m_bRendering);
+	if (m_pWaveFile) {
+		LOGGER.dump("ASSERT(m_pWaveFile == nullptr) failed");
+	}
 	ASSERT(m_pWaveFile == nullptr);
+	LOGGER.log("m_pWaveFile = std::make_unique<CWaveFile>();");
 	m_pWaveFile = std::make_unique<CWaveFile>();
 	// Unfortunately, destructor doesn't cleanup object. Only CloseFile() does.
 	if (!m_pWaveFile ||
 		!m_pWaveFile->OpenFile(pFile, theApp.GetSettings()->Sound.iSampleRate, 16, 1)) {
-		m_pTrackerView->PostAudioMessage(AM_ERROR, IDS_FILE_OPEN_ERROR);
+		AfxMessageBox(IDS_FILE_OPEN_ERROR);
+
+		// When writing to a locked file, hmmioOut is nullptr so we don't need to call
+		// m_pWaveFile->CloseFile().
+		m_pWaveFile.reset();
+
+		LOGGER.log("} RenderToFile error");
 		return false;
 	}
 	else {
 		m_bRequestRenderStart = true;
+		LOGGER.log("CSoundGen::GuiPostMessage(WM_USER_START_RENDER)");
 		PostGuiMessage(WM_USER_START_RENDER, 0, 0);
 	}
 
+	LOGGER.log("} CSoundGen::RenderToFile");
 	return true;
 }
 
 void CSoundGen::StopRendering()
 {
+	LOGGER.log("{ CSoundGen::StopRendering");
+
 	// Called from player thread
 	ASSERT(std::this_thread::get_id() == m_audioThreadID);
+	if (!m_bRendering) {
+		LOGGER.dump("ASSERT(m_bRendering) failed");
+	}
 	ASSERT(m_bRendering);
 
 	auto l = Lock();
 
-	if (!IsRendering())
+	if (!IsRendering()) {
+		LOGGER.log("} !IsRendering(), CSoundGen::StopRendering");
 		return;
+	}
 
 	m_bPlaying = false;
 	m_bRendering = false;
 	m_bStoppingRender = false;		// // //
 	m_bRequestRenderStop = false;		// // //
+	m_iDelayedStart = 0;
+	m_iDelayedEnd = 0;
 	m_iPlayFrame = 0;
 	m_iPlayRow = 0;
 	m_pWaveFile->CloseFile();		// // //
@@ -2135,6 +2302,7 @@ void CSoundGen::StopRendering()
 	ResetBuffer();
 	ResetAPU();		// // //
 	HaltPlayer();
+	LOGGER.log("} CSoundGen::StopRendering");
 }
 
 void CSoundGen::GetRenderStat(int &Frame, int &Time, bool &Done, int &FramesToRender, int &Row, int &RowCount) const
@@ -2355,6 +2523,7 @@ void CSoundGen::OnIdle()
 	if (m_iDelayedStart > 0) {
 		--m_iDelayedStart;
 		if (!m_iDelayedStart) {
+			LOGGER.log("!m_iDelayedStart -> WM_USER_PLAY");
 			PostSelfMessage(WM_USER_PLAY, MODE_PLAY_START, m_iRenderTrack);
 		}
 	}
@@ -2530,7 +2699,9 @@ void CSoundGen::OnResetPlayer(WPARAM wParam, LPARAM lParam)
 
 void CSoundGen::OnStartRender(WPARAM wParam, LPARAM lParam)
 {
+	LOGGER.log("{ CSoundGen::OnStartRender");
 	auto l = Lock();
+	LOGGER.log("{} Lock()");
 	ResetBuffer();
 	m_bRequestRenderStart = false;
 	m_bRequestRenderStop = false;
@@ -2538,6 +2709,7 @@ void CSoundGen::OnStartRender(WPARAM wParam, LPARAM lParam)
 	m_bRendering = true;
 	m_iDelayedStart = 5;	// Wait 5 frames until player starts
 	m_iDelayedEnd = 5;
+	LOGGER.log("} CSoundGen::OnStartRender");
 }
 
 void CSoundGen::OnStopRender(WPARAM wParam, LPARAM lParam)

@@ -1,25 +1,21 @@
 /*
-** FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2005-2020 Jonathan Liss
+** Dn-FamiTracker - NES/Famicom sound tracker
+** Copyright (C) 2020-2025 D.P.C.M.
+** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
-** 0CC-FamiTracker is (C) 2014-2018 HertzDevil
-**
-** Dn-FamiTracker is (C) 2020-2024 D.P.C.M.
-**
-** This program is free software; you can redistribute it and/or modify
+** This program is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** the Free Software Foundation, either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-** Library General Public License for more details. To obtain a
-** copy of the GNU Library General Public License, write to the Free
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
 **
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** You should have received a copy of the GNU General Public License
+** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
 #include "VersionChecker.h"
@@ -93,14 +89,14 @@ namespace {
 	using ft_version_t = std::tuple<int, int, int, int>;
 
 	std::pair<nlohmann::json, ft_version_t> FindBestVersion(const nlohmann::json& j) {
-		ft_version_t current = { VERSION_API, VERSION_MAJ, VERSION_MIN, VERSION_REV };
+		ft_version_t current = { VERSION_API, VERSION_MAJ, VERSION_MIN, VERSION_BLD };
 		const nlohmann::json* jPtr = nullptr;
 
 		for (const auto& i : j) {
 			ft_version_t ver = { };
-			auto& [api, maj, min, rev] = ver;
+			auto& [api, maj, min, bld] = ver;
 			const std::string& tag = i["tag_name"];
-			::sscanf_s(tag.data(), "Dn%u.%u.%u%*1[.r]%u", &api, &maj, &min, &rev);
+			::sscanf_s(tag.data(), "Dn%u.%u.%u%*1[.r]%u", &api, &maj, &min, &bld);
 			if (ver > current) {
 				current = ver;
 				jPtr = &i;
@@ -166,10 +162,8 @@ void CVersionChecker::ThreadFn(bool startup, std::promise<std::optional<stVersio
 			desc.insert(pos + 1, "\r\n - ");
 			pos += t.size();
 		}
-		int StartUp = 0;
+		int StartUp = int(startup);
 		std::string VerInfo = "Version " + verStr + " (released on " + s + ")\n\n";
-		if (startup)
-			StartUp = 1;
 		std::string url = json["html_url"];
 
 		p.set_value(stVersionCheckResult{ std::move(StartUp), std::move(VerInfo), std::move(desc), std::move(url) });
