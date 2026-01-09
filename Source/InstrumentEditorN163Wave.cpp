@@ -378,6 +378,8 @@ void CInstrumentEditorN163Wave::OnWaveSizeChange()
 	m_pWaveEditor->SetLength(size);
 	m_pWaveEditor->WaveChanged();
 	PopulateWaveBox();		// // //
+
+	m_pWaveListCtrl->SetColumnWidth(0, max(64, size + 8)); // // //
 }
 
 void CInstrumentEditorN163Wave::OnWavePosChange()
@@ -441,6 +443,8 @@ void CInstrumentEditorN163Wave::PopulateWaveBox()		// // //
 	}
 	m_pWaveListCtrl->RedrawWindow();
 	SelectWave(m_iWaveIndex);
+
+	m_pWaveListCtrl->SetColumnWidth(0, max(64, Width + 8)); // // //
 }
 
 void CInstrumentEditorN163Wave::UpdateWaveBox(int Index)		// // //
