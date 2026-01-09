@@ -144,8 +144,33 @@ BOOL CInstrumentEditorN163Wave::OnInitDialog()
 
 BOOL CInstrumentEditorN163Wave::PreTranslateMessage(MSG* pMsg)		// // //
 {
+	HWND FocusedControl = m_pWaveEditor->GetFocus()->m_hWnd;
 	if (pMsg->message == WM_KEYDOWN) {
-		if (m_pWaveEditor->GetFocus()->m_hWnd != GetDlgItem(IDC_MML)->m_hWnd) {
+		// // // new shortcuts :D
+		if (FocusedControl == m_pWaveListCtrl->m_hWnd) {
+			switch (pMsg->wParam) {
+			case VK_INSERT:
+				AddWave();
+				return TRUE;
+			case VK_BACK:
+				m_iWaveIndex = max(0, m_iWaveIndex-1);
+			case VK_DELETE:
+				DeleteWave();
+				return TRUE;
+			case VK_HOME:
+				SelectWaveVisible(0);
+				return TRUE;
+			case VK_END:
+				SelectWaveVisible(m_pInstrument->GetWaveCount()-1);
+				return TRUE;
+			case VK_NEXT:
+				SelectWaveVisible(m_iWaveIndex + 8);
+				return TRUE;
+			case VK_PRIOR:
+				SelectWaveVisible(m_iWaveIndex - 8);
+				return TRUE;
+			}
+		} else if (FocusedControl != GetDlgItem(IDC_MML)->m_hWnd) {
 			if ((::GetKeyState(VK_CONTROL) & 0x80) == 0x80) {
 				switch (pMsg->wParam) {
 				case VK_LEFT:
@@ -161,9 +186,6 @@ BOOL CInstrumentEditorN163Wave::PreTranslateMessage(MSG* pMsg)		// // //
 					m_pWaveEditor->WaveChanged();
 					return TRUE;
 				}
-			}
-			if (pMsg->wParam == VK_DELETE) {
-				DeleteWave();
 			}
 		}
 	}
@@ -470,10 +492,7 @@ void CInstrumentEditorN163Wave::SelectWave(int Index)		// // //
 
 void CInstrumentEditorN163Wave::OnBnClickedN163Add()		// // //
 {
-	if (m_pInstrument->InsertNewWave(m_iWaveIndex + 1)) {
-		PopulateWaveBox();
-		m_pWaveListCtrl->SetItemState(++m_iWaveIndex, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-	}
+	AddWave();
 }
 
 void CInstrumentEditorN163Wave::OnBnClickedN163Delete()		// // //
@@ -481,12 +500,30 @@ void CInstrumentEditorN163Wave::OnBnClickedN163Delete()		// // //
 	DeleteWave();
 }
 
-void CInstrumentEditorN163Wave::DeleteWave()
+void CInstrumentEditorN163Wave::AddWave()					// // //
+{
+	if (m_pInstrument->InsertNewWave(m_iWaveIndex + 1)) {
+		PopulateWaveBox();
+		m_pWaveListCtrl->SetItemState(++m_iWaveIndex, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+		m_pWaveListCtrl->EnsureVisible(m_iWaveIndex, FALSE);
+	}
+}
+
+void CInstrumentEditorN163Wave::DeleteWave()				// // //
 {
 	if (m_pInstrument->RemoveWave(m_iWaveIndex)) {
 		PopulateWaveBox();
 		if (m_iWaveIndex == m_pInstrument->GetWaveCount())
 			m_iWaveIndex--;
 		m_pWaveListCtrl->SetItemState(m_iWaveIndex, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+		m_pWaveListCtrl->EnsureVisible(m_iWaveIndex, FALSE);
 	}
+}
+
+void CInstrumentEditorN163Wave::SelectWaveVisible(int Index)		// // //
+{
+	Index = clamp(Index, 0, m_pInstrument->GetWaveCount()-1);
+	SelectWave(Index);
+	m_pWaveListCtrl->SetItemState(m_iWaveIndex, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+	m_pWaveListCtrl->EnsureVisible(m_iWaveIndex, FALSE);
 }
