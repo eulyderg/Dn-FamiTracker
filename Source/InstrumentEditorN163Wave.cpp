@@ -149,15 +149,15 @@ BOOL CInstrumentEditorN163Wave::PreTranslateMessage(MSG* pMsg)		// // //
 			switch (pMsg->wParam) {
 			case VK_LEFT:
 				m_pWaveEditor->PhaseShift(1);
-				UpdateWaveBox(m_iWaveIndex);
+				m_pWaveEditor->WaveChanged();
 				return TRUE;
 			case VK_RIGHT:
 				m_pWaveEditor->PhaseShift(-1);
-				UpdateWaveBox(m_iWaveIndex);
+				m_pWaveEditor->WaveChanged();
 				return TRUE;
 			case VK_DOWN:
 				m_pWaveEditor->Invert(15);
-				UpdateWaveBox(m_iWaveIndex);
+				m_pWaveEditor->WaveChanged();
 				return TRUE;
 			}
 		}
