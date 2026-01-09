@@ -162,6 +162,9 @@ BOOL CInstrumentEditorN163Wave::PreTranslateMessage(MSG* pMsg)		// // //
 					return TRUE;
 				}
 			}
+			if (pMsg->wParam == VK_DELETE) {
+				DeleteWave();
+			}
 		}
 	}
 
@@ -474,6 +477,11 @@ void CInstrumentEditorN163Wave::OnBnClickedN163Add()		// // //
 }
 
 void CInstrumentEditorN163Wave::OnBnClickedN163Delete()		// // //
+{
+	DeleteWave();
+}
+
+void CInstrumentEditorN163Wave::DeleteWave()
 {
 	if (m_pInstrument->RemoveWave(m_iWaveIndex)) {
 		PopulateWaveBox();
