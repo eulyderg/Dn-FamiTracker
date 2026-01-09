@@ -225,7 +225,8 @@ bool CInstrumentN163::InsertNewWave(int Index)		// // //
 		return false;
 
 	memmove(m_iSamples[Index + 1], m_iSamples[Index], CInstrumentN163::MAX_WAVE_SIZE * (m_iWaveCount - Index) * sizeof(int));
-	memset(m_iSamples[Index], 0, CInstrumentN163::MAX_WAVE_SIZE * sizeof(int));
+	//memset(m_iSamples[Index], 0, CInstrumentN163::MAX_WAVE_SIZE * sizeof(int));
+	memcpy(m_iSamples[Index], m_iSamples[Index - 1], CInstrumentN163::MAX_WAVE_SIZE * sizeof(int)); // // //
 	m_iWaveCount++;
 	InstrumentChanged();
 	return true;
