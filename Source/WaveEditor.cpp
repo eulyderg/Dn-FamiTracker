@@ -21,6 +21,7 @@
 #include <iterator> 
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include "stdafx.h"
 #include "FamiTracker.h"
 #include "APU/Types.h"		// // //
@@ -61,6 +62,7 @@ CWaveEditor::CWaveEditor(int sx, int sy, int lx, int ly)
  : m_iSX(sx), m_iSY(sy), m_iLX(lx), m_iLY(ly)
 {
 	m_bDrawLine = false;
+	m_bPan = false;
 }
 
 CWaveEditor::~CWaveEditor()
@@ -259,21 +261,32 @@ void CWaveEditor::OnMButtonUp(UINT nFlags, CPoint point)
 
 void CWaveEditor::EditWave(CPoint pt1, CPoint pt2)
 {
-	int x1 = min(pt2.x, pt1.x);
-	int x2 = max(pt2.x, pt1.x);
+	RECT ClientRect;
+	GetClientRect(&ClientRect);
+
+	int x1 = clamp((int)pt1.x, (int)ClientRect.left, (int)ClientRect.right);
+	int x2 = clamp((int)pt2.x, (int)ClientRect.left, (int)ClientRect.right);
 
 	float dx = float(pt2.x - pt1.x);
 	float dy = float(pt2.y - pt1.y) / dx;
 
-	float y = float( (pt2.x < pt1.x) ? pt2.y : pt1.y);
+	float y = (float)pt1.y;
 
 	if (x1 == x2)
 		EditWave(CPoint(x1, int(y)));
 
-	for (int x = x1; x < x2; ++x) {
-		EditWave(CPoint(x, int(y)));
-		y += dy;
+	if (x1 < x2) {
+		for (int x = x1; x < x2; ++x) {
+			EditWave(CPoint(x, int(y)));
+			y += dy;
+		}
+	} else {
+		for (int x = x1; x > x2; --x) {
+			EditWave(CPoint(x, int(y)));
+			y -= dy;
+		}
 	}
+
 	// // //
 	if (GetLineMode() || m_bDrawLine) {
 		Invalidate();
