@@ -53,6 +53,11 @@ protected:
 	CPoint m_ptLineStart, m_ptLineEnd;
 
 	bool m_bDrawLine;
+	bool m_bDrawingLine; // // //
+
+	CPoint m_ptPanStart;
+	
+	bool m_bPan;
 
 //	static virtual bool m_bLineMode;
 
@@ -68,6 +73,8 @@ public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);

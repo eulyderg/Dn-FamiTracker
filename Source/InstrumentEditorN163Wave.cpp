@@ -175,15 +175,12 @@ BOOL CInstrumentEditorN163Wave::PreTranslateMessage(MSG* pMsg)		// // //
 				switch (pMsg->wParam) {
 				case VK_LEFT:
 					m_pWaveEditor->PhaseShift(1);
-					m_pWaveEditor->WaveChanged();
 					return TRUE;
 				case VK_RIGHT:
 					m_pWaveEditor->PhaseShift(-1);
-					m_pWaveEditor->WaveChanged();
 					return TRUE;
 				case VK_DOWN:
 					m_pWaveEditor->Invert(15);
-					m_pWaveEditor->WaveChanged();
 					return TRUE;
 				}
 			}
@@ -379,7 +376,7 @@ void CInstrumentEditorN163Wave::OnWaveSizeChange()
 	m_pWaveEditor->WaveChanged();
 	PopulateWaveBox();		// // //
 
-	m_pWaveListCtrl->SetColumnWidth(0, max(64, size + 8)); // // //
+	m_pWaveListCtrl->SetColumnWidth(0, max(64, size + 4)); // // //
 }
 
 void CInstrumentEditorN163Wave::OnWavePosChange()
@@ -444,7 +441,7 @@ void CInstrumentEditorN163Wave::PopulateWaveBox()		// // //
 	m_pWaveListCtrl->RedrawWindow();
 	SelectWave(m_iWaveIndex);
 
-	m_pWaveListCtrl->SetColumnWidth(0, max(64, Width + 8)); // // //
+	m_pWaveListCtrl->SetColumnWidth(0, max(64, Width + 4)); // // //
 }
 
 void CInstrumentEditorN163Wave::UpdateWaveBox(int Index)		// // //

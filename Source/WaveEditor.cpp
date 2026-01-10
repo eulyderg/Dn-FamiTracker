@@ -95,6 +95,7 @@ void CWaveEditor::PhaseShift(int x)		// // //
 	SAFE_RELEASE_ARRAY(buffer);
 	Invalidate();
 	RedrawWindow();
+	GetParent()->PostMessage(WM_USER_WAVE_CHANGED);
 }
 
 void CWaveEditor::Invert(int x)		// // //
@@ -104,6 +105,7 @@ void CWaveEditor::Invert(int x)		// // //
 		SetSample(i, x - GetSample(i));
 	Invalidate();
 	RedrawWindow();
+	GetParent()->PostMessage(WM_USER_WAVE_CHANGED);
 }
 
 void CWaveEditor::OnPaint()
@@ -169,9 +171,20 @@ void CWaveEditor::OnMouseMove(UINT nFlags, CPoint point)
 		EditWave(point, last_point);
 		last_point = point;
 	}
-	else if ((nFlags & MK_MBUTTON) && m_bDrawLine) {
-		m_ptLineEnd = point;
-		EditWave(m_ptLineStart, m_ptLineEnd);
+	else if ((nFlags & MK_MBUTTON) && m_bPan) {
+		int steps = (int)trunc((float)(point.x - m_ptPanStart.x) / (float)m_iSY);
+		if (steps != 0) {
+			PhaseShift(-steps);
+			m_ptPanStart.x += m_iSY * steps;
+		}
+	}
+	// // //
+	else if ((nFlags & MK_RBUTTON) && m_bDrawLine) {
+		if (abs((point - m_ptLineStart).cx) >= m_iSY || m_bDrawingLine) {
+			m_bDrawingLine = true;
+			m_ptLineEnd = point;
+			EditWave(m_ptLineStart, m_ptLineEnd);
+		}
 	}
 	else
 		last_point = point;
@@ -199,11 +212,34 @@ void CWaveEditor::OnLButtonUp(UINT nFlags, CPoint point)
 	CWnd::OnLButtonUp(nFlags, point);
 }
 
-void CWaveEditor::OnMButtonDown(UINT nFlags, CPoint point)
+void CWaveEditor::OnRButtonDown(UINT nFlags, CPoint point)
 {
 	SetCapture();
 	m_ptLineStart = m_ptLineEnd = point;
 	m_bDrawLine = true;
+	m_bDrawingLine = false;
+
+	CWnd::OnRButtonDown(nFlags, point);
+}
+
+void CWaveEditor::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	ReleaseCapture();
+	m_ptLineStart = m_ptLineEnd = CPoint(0, 0);
+	m_bDrawLine = false;
+	Invalidate();
+	RedrawWindow();
+
+	CWnd::OnRButtonUp(nFlags, point);
+}
+
+void CWaveEditor::OnMButtonDown(UINT nFlags, CPoint point)
+{
+	SetCapture();
+	m_ptPanStart = point;
+	m_bPan = true;
+	
+	SetCursor(LoadCursorA(NULL, IDC_SIZEWE));
 
 	CWnd::OnMButtonDown(nFlags, point);
 }
@@ -211,10 +247,12 @@ void CWaveEditor::OnMButtonDown(UINT nFlags, CPoint point)
 void CWaveEditor::OnMButtonUp(UINT nFlags, CPoint point)
 {
 	ReleaseCapture();
-	m_ptLineStart = m_ptLineEnd = CPoint(0, 0);
-	m_bDrawLine = false;
+	m_ptPanStart = CPoint(0, 0);
+	m_bPan = false;
 	Invalidate();
 	RedrawWindow();
+
+	SetCursor(LoadCursorA(NULL, IDC_ARROW));
 
 	CWnd::OnMButtonUp(nFlags, point);
 }
@@ -236,8 +274,8 @@ void CWaveEditor::EditWave(CPoint pt1, CPoint pt2)
 		EditWave(CPoint(x, int(y)));
 		y += dy;
 	}
-
-	if (GetLineMode()) {
+	// // //
+	if (GetLineMode() || m_bDrawLine) {
 		Invalidate();
 		RedrawWindow();
 	}
@@ -258,7 +296,7 @@ void CWaveEditor::EditWave(CPoint point)
 	if (index > GetMaxSamples() - 1)
 		index = GetMaxSamples() - 1;
 
-	if (!GetLineMode()) {
+	if (!GetLineMode() && !m_bDrawLine) {
 		CDC *pDC = GetDC();
 		if (pDC != NULL) {
 			// Erase old sample
@@ -302,28 +340,30 @@ void CWaveEditor::WaveChanged()
 
 void CWaveEditor::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 {
-	CMenu menu;
-	
-	menu.CreatePopupMenu();
-	menu.AppendMenu(MF_STRING, 1, _T("&Steps"));
-	menu.AppendMenu(MF_STRING, 2, _T("&Lines"));
+	if (!m_bDrawingLine) {
+		CMenu menu;
 
-	if (GetLineMode())
-		menu.CheckMenuItem(1, MF_BYPOSITION | MF_CHECKED);
-	else
-		menu.CheckMenuItem(0, MF_BYPOSITION | MF_CHECKED);
+		menu.CreatePopupMenu();
+		menu.AppendMenu(MF_STRING, 1, _T("&Steps"));
+		menu.AppendMenu(MF_STRING, 2, _T("&Lines"));
 
-	switch (menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, point.x, point.y, this)) {
-		case 1: 
+		if (GetLineMode())
+			menu.CheckMenuItem(1, MF_BYPOSITION | MF_CHECKED);
+		else
+			menu.CheckMenuItem(0, MF_BYPOSITION | MF_CHECKED);
+
+		switch (menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, point.x, point.y, this)) {
+		case 1:
 			SetLineMode(false);
 			break;
-		case 2: 
+		case 2:
 			SetLineMode(true);
 			break;
-	}
+		}
 
-	Invalidate();
-	RedrawWindow();
+		Invalidate();
+		RedrawWindow();
+	}
 }
 
 // FDS wave
