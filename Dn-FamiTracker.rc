@@ -472,7 +472,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Delete\tDel",                 IDC_DELETE
         MENUITEM "Tilt",                        IDC_TILT
-        MENUITEM "Flip",                        ID_POPUP_FLIP
+        MENUITEM "Flip",                        IDC_BIT_INVERT
     END
 END
 
