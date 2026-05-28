@@ -69,4 +69,5 @@ public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	afx_msg void OnBnClickedBitReverse();
+	afx_msg void OnBnClickedInvert();
 };

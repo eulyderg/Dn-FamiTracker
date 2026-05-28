@@ -468,10 +468,11 @@ IDR_SAMPLE_EDITOR_POPUP MENU
 BEGIN
     POPUP "Popup"
     BEGIN
-        MENUITEM "Play\tP",                     IDC_PLAY
+        MENUITEM "Play\tEnter",                 IDC_PLAY
         MENUITEM SEPARATOR
         MENUITEM "Delete\tDel",                 IDC_DELETE
         MENUITEM "Tilt",                        IDC_TILT
+        MENUITEM "Flip",                        ID_POPUP_FLIP
     END
 END
 
@@ -1798,11 +1799,12 @@ BEGIN
     CONTROL         "",IDC_PITCH,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,240,228,130,12
     PUSHBUTTON      "Tilt",IDC_TILT,86,212,37,14
     LTEXT           "Pitch (15)",IDC_STATIC_PITCH,185,229,33,11
-    CONTROL         "Center wave",IDC_DELTASTART,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,228,57,10
+    CONTROL         "Center wave",IDC_DELTASTART,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,229,57,10
     CONTROL         "",IDC_ZOOM,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,240,213,181,12
     LTEXT           "Zoom (1.00x)",IDC_STATIC_DPCM_ZOOM,185,214,54,8
     PUSHBUTTON      "Bit Reverse",IDC_BIT_REVERSE,124,212,47,14
     CONTROL         "",IDC_DELTA_START,"msctls_trackbar32",TBS_VERT | WS_TABSTOP,0,0,17,204
+    PUSHBUTTON      "Flip",IDC_BIT_INVERT,124,227,47,14
 END
 
 IDD_DETUNE DIALOGEX 0, 0, 293, 272
@@ -2484,7 +2486,8 @@ BEGIN
     0, 100, 100, 0,
     0, 100, 0, 0,
     0, 100, 0, 0,
-    0, 0, 0, 100
+    0, 0, 0, 100,
+    0, 100, 0, 0
 END
 
 IDD_INSTRUMENT_DPCM AFX_DIALOG_LAYOUT

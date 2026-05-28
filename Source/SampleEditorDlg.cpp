@@ -81,6 +81,7 @@ BEGIN_MESSAGE_MAP(CSampleEditorDlg, CDialog)
 	ON_WM_VSCROLL()
 	ON_WM_GETMINMAXINFO()
 	ON_BN_CLICKED(IDC_BIT_REVERSE, &CSampleEditorDlg::OnBnClickedBitReverse)
+	ON_BN_CLICKED(IDC_BIT_INVERT, &CSampleEditorDlg::OnBnClickedInvert)
 END_MESSAGE_MAP()
 
 
@@ -327,6 +328,7 @@ void CSampleEditorDlg::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			m_pSampleEditorView->OnLeft();
 			break;
 		case 'P':
+		case VK_RETURN:
 			OnBnClickedPlay();
 			break;
 	}
@@ -392,4 +394,20 @@ void CSampleEditorDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 	lpMMI->ptMinTrackSize.x = 738;
 	lpMMI->ptMinTrackSize.y = 456;
 	CDialog::OnGetMinMaxInfo(lpMMI);
+}
+
+void CSampleEditorDlg::OnBnClickedInvert()
+{
+	m_pSoundGen->CancelPreviewSample();
+	char* InputData = new char[m_pSample->GetSize()];
+	memcpy(InputData, m_pSample->GetData(), m_pSample->GetSize());
+	char* DataCache = new char[m_pSample->GetSize()];
+	// bit reverse each byte of InputData and save it to DataCache
+	for (int i = 0; i != m_pSample->GetSize(); i++) {
+		DataCache[i] = 0xFF^InputData[i];
+	}
+	m_pSample->SetData(m_pSample->GetSize(), DataCache);
+
+	UpdateSampleView();
+	SelectionChanged();
 }

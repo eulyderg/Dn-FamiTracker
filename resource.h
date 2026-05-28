@@ -613,6 +613,7 @@
 #define IDC_BIT_REVERSE                 1467
 #define IDC_APU2_OFFSET_EDIT            1467
 #define IDC_S5B_OFFSET_SLIDER           1468
+#define IDC_BIT_INVERT                  1468
 #define IDC_SEPERATE_CHANNEL_EXPORT     1469
 #define IDC_VRC6_OFFSET_SLIDER          1469
 #define IDC_VRC6_OFFSET_EDIT            1470
@@ -889,6 +890,7 @@
 #define ID_CONTROLPANEL_LEFT            33212
 #define ID_CONTROLPANEL_RIGHT           33213
 #define ID_CONTROLPANEL_POPUP           33214
+#define ID_POPUP_FLIP                   33215
 #define ID_INSTRUMENT_ADD_2A03          36864
 #define ID_INSTRUMENT_ADD_FDS           36865
 #define ID_INSTRUMENT_ADD_MMC5          36866
@@ -912,7 +914,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        381
-#define _APS_NEXT_COMMAND_VALUE         33215
+#define _APS_NEXT_COMMAND_VALUE         33216
 #define _APS_NEXT_CONTROL_VALUE         1544
 #define _APS_NEXT_SYMED_VALUE           179
 #endif
