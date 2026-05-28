@@ -255,10 +255,9 @@ void CSampleEditorView::OnLButtonUp(UINT nFlags, CPoint point)
 
 	m_bClicked = false;
 
-	double Sample = double(point.x + int(m_iViewStart / m_dSampleStep)) * m_dSampleStep;
-	int Offset = int(Sample / (8.0 * 64.0));
-
 	if (m_iSelEnd == m_iSelStart) {
+		double Sample = double(point.x + (m_iBlockSize * 2) + int(m_iViewStart / m_dSampleStep)) * m_dSampleStep;
+		int Offset = int(Sample / (8.0 * 64.0));
 		m_iStartCursor = Offset;
 		m_iSelStart = m_iSelEnd = -1;
 		DrawStartCursor();
