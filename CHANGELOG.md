@@ -4,13 +4,17 @@ Change Log
 
 Written by D.P.C.M.
 
-Version 0.5.2.9
+Version 0.5.3.9
 
-Last updated: January 07, 2026
+Last updated: 2026-05-26
 
 ---
 
-## Unreleased - 2026-01-07
+## Unreleased - 2026-05-26
+
+### Breaking changes
+
+- ...
 
 ### Important changes
 
@@ -22,11 +26,31 @@ Last updated: January 07, 2026
 
 ### Bug fixes
 
+- ...
+
+### Internal
+
+- ...
+
+
+
+## Dn0.5.3 - 2026-05-25
+
+### Improvements
+
+- Clarify NSF driver licensing (@Gumball2415 #401)
+- Replace addition loop to the actual multiplication (@HeeminTV #400)
+	- This worked before 0CC, which had table-per-instrument limit of 16, but as it's now 64, the usage of CPU cycles in this loop became massive
+- Slighly unroll the loop for writing to `$4800` (@HeeminTV #400)
+
+### Bug fixes
+
 - Revert "Fix C-0 not previewing DPCM sample" (@damifortune @Gumball2415 #383 #394)
 	- This reverts commit ac2648491c25473f0cc8c01ce8ef4cb09e9332c1.
 	- There doesn't seem to be any bug at the time of its writing upon further scrutiny.
 - Separate tempo state updating from channel state updating (@JG540 @Gumball2415 #382 #384 #394)
 - Set `m_iSpeed` to default when groove is enabled (@TakuikaNinja @Gumball2415 #379 #394)
+- Specify `byteorder` argument in `build_engine.py` for Python 3.10 compatibility (@HeeminTV #400)
 
 ### Internal
 
@@ -42,6 +66,16 @@ Last updated: January 07, 2026
 - Refactor custom build commands in `.vcxproj`s (@Gumball2415 #398)
 - Update CMake build scripts (@Gumball2415 #398)
 - Update CMake source list in `exe.cmake` (@Gumball2415 #398)
+- Update NSF driver licensing (@Gumball2415 #401)
+	- Add MIT-0 license for NSF driver license
+	- Fix `LICENSE.md` links
+- Update guidelines and version documentation (@Gumball2415 #410)
+	- This removes the need to update the copyright years of all source files.
+	- Instead, update the copyright year if the author has touched the source.
+- Update guidelines and version documentation (@Gumball2415 #410)
+- Update changelog and add commit format (@Gumball2415 #405 #410)
+- Update PR change log format (@Gumball2415 #410)
+- Reorder version checklist (@Gumball2415 #410)
 
 
 

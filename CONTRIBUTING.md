@@ -1,10 +1,12 @@
 # Contribution Guide
 
-Welcome! Thank you for considering to contribute to Dn-FamiTracker. We really need all the help we can get, since there aren't many people who help maintain FamiTracker and its forks. The following serves as a guide to those who want to get started with contributing.
+- Last updated: 2026-05-25
+
+Welcome! Thank you for contributing to Dn-FamiTracker. The following serves as a guide to those who want to get started.
 
 ---
 
-## Dependencies and Building
+## Dependencies and building
 
 To edit and/or build the source, you may use Visual Studio 2022, or alternatively, any IDE that supports CMake. You will need the following dependencies:
 
@@ -12,14 +14,15 @@ To edit and/or build the source, you may use Visual Studio 2022, or alternativel
 	- Note that HTML Help Workshop is no longer supported and thus no longer available to download on Microsoft's website.
 	- [Link to archived download.](https://web.archive.org/web/20200720082840/http://download.microsoft.com/download/0/A/9/0A939EF6-E31C-430F-A3DF-DFAE7960D564/htmlhelp.exe)
 - [Pandoc](https://pandoc.org), for markdown document conversion.
-	- Currently used for HTMLHelp manual changelog compiling.
-- For NSF driver compiling:
-	- [CC65 build tools](https://cc65.github.io/), make sure `ld65` and `ca65` is available in environment path.
+	- Currently used for templated pages for the HTMLHelp manual.
+- [CC65 build tools](https://cc65.github.io/)
+	- Used for NSF driver compiling.
+	- Make sure `ld65` and `ca65` is available in environment path.
 - For miscellaneous custom build scripts:
 	- [Python 3.10+](https://www.python.org/)
 - For any IDE that supports building via CMake:
 	- CMake version 3.16+
-	- The latest MSVC build tools 
+	- The latest MSVC build tools
 		- may be installed by VS Installer or by other sources
 	- Windows 11 SDK (10.0.26100.0)
 		- may be installed through VS Installer or by other sources
@@ -39,7 +42,7 @@ To edit and/or build the source, you may use Visual Studio 2022, or alternativel
 
 ---
 
-## Code Guidelines and Formatting
+## Code guidelines and formatting
 
 - The code mostly follows Unix style (LF) line endings and TAB indentation format.
 	- Remove trailing whitespace whenever you edit nearby lines.
@@ -49,13 +52,34 @@ To edit and/or build the source, you may use Visual Studio 2022, or alternativel
 - If implementing a new feature that affects tracker behavior (such as effects, UI), please ***update documentation*** in Dn-help and other areas of the tracker.
 - If implementing a new feature that affects file formats (such as envelopes, new data format storage), ***please increment the respective file block version***.
 	- if this necessitates a new file block, please increment the module file version.
+- When making changes to a file, be sure to ***update the copyright year***:
+
+```
+Dn-FamiTracker - NES/Famicom sound tracker
+Copyright (C) 2020-<CURRENT_YEAR> D.P.C.M.
+FamiTracker Copyright (C) 2005-2020 Jonathan Liss
+0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see https://www.gnu.org/licenses/.
+```
 
 ---
 
 ## Git guidelines
 
 - Write pull requests that passes CI builds and tests.
-- Make sure to adhere to the [pull request template](Dn-FamiTracker/docs/pull_request_template.md) message guidelines.
+- Make sure to adhere to the [pull request template](Dn-FamiTracker/.github/pull_request_template.md) message guidelines.
 - Base your pull request on the `main` branch.
 - If a merge conflict happens due to not being updated in a long time, resolve merge conflicts and rebase your pull request to the latest compatible version of the `main` branch.
 - Be sure to update [Dn-help](https://github.com/Dn-Programming-Core-Management/Dn-help) on your pull request as needed.
@@ -64,19 +88,24 @@ To edit and/or build the source, you may use Visual Studio 2022, or alternativel
 
 ---
 
-## Important Things to Note
+## File extension case sensitivity
 
 - When committing changes, ***file extension case must be the same as the original file!***
 	- This might result in merge conflicts, because Git is case sensitive, but in Windows systems, the file system is case insensitive by default.
-- Additionally, case sensitivity in Windows can be enabled through WSL, but it **must only be enabled to resolve merge conflicts regarding file extension case sensitivity**.
+- Additionally, case sensitivity in Windows can be enabled through WSL, but it must only be enabled to **resolve merge conflicts** regarding file extension case sensitivity.
 	- If case sensitivity is left enabled, Visual Studio throws a lot of errors due to the way IntelliSense capitalizes paths internally.
 
 ---
 
 ## For D.P.C.M. maintainers
 
-- ***Do not push directly to the `main` branch***. Instead, push your changes to a branch first before writing a pull request.
-- These branches are designated to be reoccurring may be used for the following:
+- ***Do not push directly to the `main` branch***.
+	- Sometimes, a `main` branch push is unavoidable when adding a patch fix, this is fine if it's only one or two commits.
+	- But as much as possible, push your changes to a branch first before writing a pull request.
+
+### Branch categories
+
+- These branches are designated to be of reoccurring use for the following:
 	- `app-emu-module-nsf_driver-dev`
 		- This branch is for modifying the application itself, such as the NSF driver, the module format, loading and saving code, emulator core, audio drivers, etc.
 	- `docs-license-ver-meta-dev`

@@ -3,7 +3,7 @@
  /  | |) | ' \|___|| _/ _ | |\/| || |  | | |   / / _ | (__| ' <| _||   /  /
 /===|___/|_||_|    |_/_/ _|_|  |_|___| |_| |_|_\/_/ _|\___|_|\_\___|_|_\=/
 
-Version 0.5.2 - August 18, 2025
+Version 0.5.3 - May 25, 2025
 
 --------------------------------------------------------------------------------
 
@@ -21,14 +21,13 @@ Notable additions
 - New effects: `Nxx`, `=xx`, `Kxx`
 - Support for OPLL-as-VRC7
 - NSF 2.0 and NSFe export support
-- Fixed metadata support on NSF 2.0 and NSFe export
-- Complete text import/export
+- Complete format text import/export
 - DPCM sample bit order reversal
 - Multitrack per-channel .wav export
 - More accessible DPCM pitch preview
 - More accessible VRC7 patch and envelope editing
 - Improved FDS, N163 VRC7 and 2A03 emulation
-- Restored Help manual, now under maintenance at Dn-help
+- Restored Help manual, now at Dn-help
     - <https://github.com/Dn-Programming-Core-Management/Dn-help>
 
 
