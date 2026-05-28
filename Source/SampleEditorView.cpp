@@ -153,7 +153,7 @@ void CSampleEditorView::OnPaint()
 	int LastPos = -1;
 	int Steps = 0;
 	int Min = 255, Max = 0;
-	int LastValue = y;
+	int LastMin = m_pSamples[m_iViewStart], LastMax = m_pSamples[m_iViewStart];
 
 	for (int i = m_iViewStart + 1; i < m_iViewEnd; ++i) {
 		if (m_pSamples[i] < Min)
@@ -162,24 +162,21 @@ void CSampleEditorView::OnPaint()
 			Max = m_pSamples[i];
 
 		Pos += Step2;
-		++Steps;
 
+		++Steps;
 		int x = int(Pos);
 		if (x != LastPos) {
 			if (Steps == 1) {
-				int y = (Min * Height) / 127;
-				m_dcCopy.LineTo(x, Height - LastValue);
-				m_dcCopy.LineTo(x, Height - y);
-				LastValue = y;
+				m_dcCopy.LineTo(x, Height - (LastMin * Height) / 127);
+				m_dcCopy.LineTo(x, Height - (LastMax * Height) / 127);
 			}
-			else {
-				m_dcCopy.LineTo(x, Height - (Min * Height) / 127);
-				m_dcCopy.LineTo(x, Height - (Max * Height) / 127);
-			}
-			Min = 255;
-			Max = 0;
-			Steps = 0;
+			m_dcCopy.LineTo(x, Height - (Min * Height) / 127);
+			m_dcCopy.LineTo(x, Height - (Max * Height) / 127);
+			LastMin = Min;
+			LastMax = Max;
 			LastPos = x;
+			Min = 255, Max = 0;
+			Steps = 0;
 		}
 	}
 
