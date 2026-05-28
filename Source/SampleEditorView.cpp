@@ -144,7 +144,7 @@ void CSampleEditorView::OnPaint()
 
 	// Draw the sample
 	int y = (m_pSamples[m_iViewStart] * Height) / 127;
-	m_dcCopy.MoveTo(0, y);
+	m_dcCopy.MoveTo(0, Height - y);
 	m_dcCopy.SelectObject(m_pSolidPen);
 
 	float Step2 = float(Width) / float(Size);
@@ -167,13 +167,13 @@ void CSampleEditorView::OnPaint()
 		if (x != LastPos) {
 			if (Steps == 1) {
 				int y = (Min * Height) / 127;
-				m_dcCopy.LineTo(x, LastValue);
-				m_dcCopy.LineTo(x, y);
+				m_dcCopy.LineTo(x, Height - LastValue);
+				m_dcCopy.LineTo(x, Height - y);
 				LastValue = y;
 			}
 			else {
-				m_dcCopy.LineTo(x, (Min * Height) / 127);
-				m_dcCopy.LineTo(x, (Max * Height) / 127);
+				m_dcCopy.LineTo(x, Height - (Min * Height) / 127);
+				m_dcCopy.LineTo(x, Height - (Max * Height) / 127);
 			}
 			Min = 255;
 			Max = 0;
@@ -183,7 +183,7 @@ void CSampleEditorView::OnPaint()
 	}
 
 	y = (m_pSamples[m_iViewEnd - 1] * Height) / 127;
-	m_dcCopy.LineTo(Width - 1, y);
+	m_dcCopy.LineTo(Width - 1, Height - y);
 
 	m_dcCopy.SetViewportOrg(0, 0);
 	m_dcCopy.SelectObject(oldPen);

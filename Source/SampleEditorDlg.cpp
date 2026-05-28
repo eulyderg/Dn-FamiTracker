@@ -107,9 +107,8 @@ BOOL CSampleEditorDlg::OnInitDialog()
 
 	CSliderCtrl* pDeltaStart = static_cast<CSliderCtrl*>(GetDlgItem(IDC_DELTA_START));
 	pDeltaStart->SetRange(0, 127);
-	pDeltaStart->SetPos(0);		// // //
-	pDeltaStart->ClearTics();
-	pDeltaStart->SetTic(64);
+	pDeltaStart->SetPos(127);		// // 
+	pDeltaStart->SetTic(63);
 
 	// A timer for the flashing start cursor
 	SetTimer(TMR_START_CURSOR, 500, NULL);
@@ -139,7 +138,7 @@ void CSampleEditorDlg::OnBnClickedPlay()
 	CSliderCtrl* pDeltaStart = static_cast<CSliderCtrl*>(GetDlgItem(IDC_DELTA_START)); // // //
 
 	int Pitch = static_cast<CSliderCtrl*>(GetDlgItem(IDC_PITCH))->GetPos();
-	m_pSoundGen->WriteAPU(0x4011, pDeltaStart->GetPos()); // // //
+	m_pSoundGen->WriteAPU(0x4011, 127-pDeltaStart->GetPos()); // // //
 	m_pSoundGen->PreviewSample(m_pSample, m_pSampleEditorView->GetStartOffset(), Pitch);
 	// Wait for sample to play (at most 400ms)
 	DWORD time = GetTickCount() + 400;
@@ -288,7 +287,7 @@ void CSampleEditorDlg::OnBnClickedDeltastart()
 	CSliderCtrl* pDeltaStart = static_cast<CSliderCtrl*>(GetDlgItem(IDC_DELTA_START));
 	// // //
 	if (IsDlgButtonChecked(IDC_DELTASTART)) {
-		pDeltaStart->SetPos(64);
+		pDeltaStart->SetPos(63);
 		pDeltaStart->EnableWindow(false);
 	} else {
 		pDeltaStart->EnableWindow(true);
@@ -300,7 +299,7 @@ void CSampleEditorDlg::UpdateSampleView()
 {
 	CSliderCtrl* pDeltaStart = static_cast<CSliderCtrl*>(GetDlgItem(IDC_DELTA_START)); // // //
 
-	m_pSampleEditorView->ExpandSample(m_pSample, pDeltaStart->GetPos()); // // //
+	m_pSampleEditorView->ExpandSample(m_pSample, 127-pDeltaStart->GetPos()); // // //
 	m_pSampleEditorView->UpdateInfo();
 	m_pSampleEditorView->Invalidate();
 	m_pSampleEditorView->RedrawWindow();
