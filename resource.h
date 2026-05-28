@@ -686,6 +686,9 @@
 #define IDC_STATIC_PATCH5               1542
 #define IDC_VERSION_STATIC2             1542
 #define IDC_STATIC_PATCH6               1543
+#define IDC_SLIDER1                     1543
+#define IDC_DC_SLIDER                   1543
+#define IDC_DELTA_START                 1543
 #define IDC_STATIC_PATCH7               1544
 #define IDC_STATIC_PATCH8               1545
 #define IDC_STATIC_PATCH9               1546
@@ -910,7 +913,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        381
 #define _APS_NEXT_COMMAND_VALUE         33215
-#define _APS_NEXT_CONTROL_VALUE         1543
+#define _APS_NEXT_CONTROL_VALUE         1544
 #define _APS_NEXT_SYMED_VALUE           179
 #endif
 #endif

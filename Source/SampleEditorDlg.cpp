@@ -78,6 +78,7 @@ BEGIN_MESSAGE_MAP(CSampleEditorDlg, CDialog)
 	ON_WM_KEYDOWN()
 	ON_BN_CLICKED(IDC_TILT, &CSampleEditorDlg::OnBnClickedTilt)
 	ON_WM_HSCROLL()
+	ON_WM_VSCROLL()
 	ON_WM_GETMINMAXINFO()
 	ON_BN_CLICKED(IDC_BIT_REVERSE, &CSampleEditorDlg::OnBnClickedBitReverse)
 END_MESSAGE_MAP()
@@ -104,6 +105,12 @@ BOOL CSampleEditorDlg::OnInitDialog()
 	pitch->SetRange(0, 15);
 	pitch->SetPos(15);
 
+	CSliderCtrl* pDeltaStart = static_cast<CSliderCtrl*>(GetDlgItem(IDC_DELTA_START));
+	pDeltaStart->SetRange(0, 127);
+	pDeltaStart->SetPos(0);		// // //
+	pDeltaStart->ClearTics();
+	pDeltaStart->SetTic(64);
+
 	// A timer for the flashing start cursor
 	SetTimer(TMR_START_CURSOR, 500, NULL);
 
@@ -129,8 +136,10 @@ void CSampleEditorDlg::OnBnClickedPlay()
 {
 	if (!m_pSample) return;
 
+	CSliderCtrl* pDeltaStart = static_cast<CSliderCtrl*>(GetDlgItem(IDC_DELTA_START)); // // //
+
 	int Pitch = static_cast<CSliderCtrl*>(GetDlgItem(IDC_PITCH))->GetPos();
-	m_pSoundGen->WriteAPU(0x4011, IsDlgButtonChecked(IDC_DELTASTART) ? 64 : 0);
+	m_pSoundGen->WriteAPU(0x4011, pDeltaStart->GetPos()); // // //
 	m_pSoundGen->PreviewSample(m_pSample, m_pSampleEditorView->GetStartOffset(), Pitch);
 	// Wait for sample to play (at most 400ms)
 	DWORD time = GetTickCount() + 400;
@@ -276,12 +285,22 @@ void CSampleEditorDlg::OnBnClickedBitReverse()
 
 void CSampleEditorDlg::OnBnClickedDeltastart()
 {
+	CSliderCtrl* pDeltaStart = static_cast<CSliderCtrl*>(GetDlgItem(IDC_DELTA_START));
+	// // //
+	if (IsDlgButtonChecked(IDC_DELTASTART)) {
+		pDeltaStart->SetPos(64);
+		pDeltaStart->EnableWindow(false);
+	} else {
+		pDeltaStart->EnableWindow(true);
+	}
 	UpdateSampleView();
 }
 
 void CSampleEditorDlg::UpdateSampleView()
 {
-	m_pSampleEditorView->ExpandSample(m_pSample, IsDlgButtonChecked(IDC_DELTASTART) ? 64 : 0);
+	CSliderCtrl* pDeltaStart = static_cast<CSliderCtrl*>(GetDlgItem(IDC_DELTA_START)); // // //
+
+	m_pSampleEditorView->ExpandSample(m_pSample, pDeltaStart->GetPos()); // // //
 	m_pSampleEditorView->UpdateInfo();
 	m_pSampleEditorView->Invalidate();
 	m_pSampleEditorView->RedrawWindow();
@@ -332,6 +351,14 @@ void CSampleEditorDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar
 	SetDlgItemText(IDC_STATIC_DPCM_ZOOM, text);
 
 	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+void CSampleEditorDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) // // //
+{
+	//int DeltaStart = static_cast<CSliderCtrl*>(GetDlgItem(IDC_DELTA_START))->GetPos();
+	UpdateSampleView();
+
+	CDialog::OnVScroll(nSBCode, nPos, pScrollBar);
 }
 
 BOOL CSampleEditorDlg::PreTranslateMessage(MSG* pMsg)
