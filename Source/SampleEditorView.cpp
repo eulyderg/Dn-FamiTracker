@@ -40,6 +40,7 @@ BEGIN_MESSAGE_MAP(CSampleEditorView, CStatic)
 	ON_WM_SIZE()
 	ON_WM_CONTEXTMENU()
 	ON_WM_HSCROLL()
+	ON_WM_MOUSEWHEEL()
 END_MESSAGE_MAP()
 
 CSampleEditorView::CSampleEditorView() : 
@@ -223,6 +224,27 @@ void CSampleEditorView::OnMouseMove(UINT nFlags, CPoint point)
 	static_cast<CSampleEditorDlg*>(GetParent())->UpdateStatus(0, Text);
 
 	CStatic::OnMouseMove(nFlags, point);
+}
+
+BOOL CSampleEditorView::OnMouseWheel(UINT nFlags, short zDelta, CPoint point)
+{
+	if (!(nFlags & MK_SHIFT)) {
+		CString text;
+		auto pZoom = static_cast<CSliderCtrl*>(GetParent()->GetDlgItem(IDC_ZOOM));		// // //
+		if (zDelta > 0) {
+			pZoom->SetPos(std::min(pZoom->GetPos()+1, pZoom->GetRangeMax()));
+		} else {
+			pZoom->SetPos(std::max(pZoom->GetPos()-1, pZoom->GetRangeMin()));
+		}
+		float Zoom = static_cast<float>(pZoom->GetPos()) / pZoom->GetRangeMax();
+		SetZoom(1.0f - Zoom);
+		Invalidate();
+		text.Format(_T("Zoom (%.2fx)"), 1. / GetZoom());		// // //
+		GetParent()->SetDlgItemTextA(IDC_STATIC_DPCM_ZOOM, text);
+	}
+
+	CStatic::OnMouseWheel(nFlags, zDelta, point);
+	return TRUE;
 }
 
 void CSampleEditorView::OnLButtonDown(UINT nFlags, CPoint point)
