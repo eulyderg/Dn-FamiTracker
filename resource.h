@@ -682,6 +682,7 @@
 #define IDC_STATIC_PATCH4               1541
 #define IDC_VERSION_STATIC4             1541
 #define IDC_VERSION_STATIC3             1541
+#define IDC_SPEED_EDIT                  1541
 #define IDC_STATIC_PATCH5               1542
 #define IDC_VERSION_STATIC2             1542
 #define IDC_STATIC_PATCH6               1543
@@ -907,7 +908,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        380
+#define _APS_NEXT_RESOURCE_VALUE        381
 #define _APS_NEXT_COMMAND_VALUE         33215
 #define _APS_NEXT_CONTROL_VALUE         1543
 #define _APS_NEXT_SYMED_VALUE           179
