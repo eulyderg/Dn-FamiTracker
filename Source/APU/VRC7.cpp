@@ -25,7 +25,6 @@
 #include "VRC7.h"
 #include "../RegisterState.h"		// // //
 
-const float  CVRC7::AMPLIFY = 4.6f;		// Mixing amplification, VRC7 patch 14 is 4, 88 times stronger than a 50 % square @ v = 15
 const uint32_t CVRC7::OPLL_CLOCK = CAPU::BASE_FREQ_VRC7;	// Clock frequency
 
 CVRC7::CVRC7()
@@ -196,7 +195,7 @@ void CVRC7::UpdateMixLevel(double v, bool UseSurveyMix)
 	// TODO: replace emu2413 with Nuked-OPLL for better multiplexing accuracy?
 
 	// hacky solution, since VRC7 uses asynchronous direct buffer writes
-	SetDirectVolume(UseSurveyMix ? v : (v * AMPLIFY));
+	SetDirectVolume(v);
 	
 	// emu2413's waveform output ranges from -4095...4095
 	m_SynthVRC7.volume(v, UseSurveyMix ? 8191 : 10000);

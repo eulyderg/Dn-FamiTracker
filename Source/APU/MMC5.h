@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -22,30 +22,37 @@
 #pragma once
 
 #include "SoundChip.h"
-#include "Channel.h"
+#include "ChannelLevelState.h"
 
-class CSquare;		// // //
+#include "APU/nsfplay/xgm/devices/Sound/nes_mmc5.h"
 
 class CMMC5 : public CSoundChip {
 public:
-	CMMC5(CMixer *pMixer);
-	virtual ~CMMC5();
+	CMMC5();
 
-	void Reset();
-	void Write(uint16_t Address, uint8_t Value);
-	uint8_t Read(uint16_t Address, bool &Mapped);
-	void EndFrame();
-	void Process(uint32_t Time);
-	double GetFreq(int Channel) const override;		// // //
+	void	Reset() override;
+	void	UpdateFilter(blip_eq_t eq) override;
+	void	SetClockRate(uint32_t Rate) override;
+	void	Write(uint16_t Address, uint8_t Value) override;
+	uint8_t Read(uint16_t Address, bool &Mapped) override;
+	void	Process(uint32_t Time, Blip_Buffer& Output) override;
+	void	EndFrame(Blip_Buffer& Output, gsl::span<int16_t> TempBuffer) override;
+	double	GetFreq(int Channel) const override;
+	int		GetChannelLevel(int Channel) override;
+	int		GetChannelLevelRange(int Channel) const override;
+	void	UpdateMixLevel(double v, bool UseSurveyMix);
 
-	void LengthCounterUpdate();
-	void EnvelopeUpdate();
-	void ClockSequence();		// // //
+	// Report some basic information about the chip
+	uint8_t GetChannelCount() const override { return 2; };							// TODO: Dynamically calculate this?
+	chan_id_t GetFirstChannelID() const override { return CHANID_MMC5_SQUARE1; };	//
 
-private:	
-	CSquare	*m_pSquare1;
-	CSquare	*m_pSquare2;
-	uint8_t	*m_pEXRAM;
-	uint8_t	m_iMulLow;
-	uint8_t	m_iMulHigh;
+private:
+	xgm::NES_MMC5 m_MMC5;
+
+	Blip_Buffer m_BlipMMC5;
+	Blip_Synth<blip_good_quality> m_SynthMMC5;
+
+	ChannelLevelState<uint8_t> m_ChannelLevels[2];
+
+	uint32_t m_iTime = 0;
 };

@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -20,238 +20,100 @@
 
 #include "APU.h"
 #include "VRC6.h"
-#include "../RegisterState.h"		// // //
+#include "../RegisterState.h"
 
 // Konami VRC6 external sound chip emulation
 
-CVRC6_Pulse::CVRC6_Pulse(CMixer *pMixer, int ID) : CChannel(pMixer, SNDCHIP_VRC6, ID) 
+CVRC6::CVRC6()
 {
-	Reset();
-}
-
-void CVRC6_Pulse::Reset()
-{
-	m_iDutyCycle = m_iVolume = m_iGate = m_iEnabled = 0;
-	m_iPeriod = m_iPeriodLow = m_iPeriodHigh = 0;
-	m_iCounter = 0;
-	m_iDutyCycleCounter = 0;
-	
-	Mix(0);		// // //
-	EndFrame();
-}
-
-void CVRC6_Pulse::Write(uint16_t Address, uint8_t Value)
-{
-	switch (Address) {
-		case 0x00:
-			m_iGate = Value & 0x80;
-			m_iDutyCycle = ((Value & 0x70) >> 4) + 1;
-			m_iVolume = Value & 0x0F;
-			if (m_iGate)
-				Mix(static_cast<int32_t>(m_iVolume * -1));
-			break;
-		case 0x01:
-			m_iPeriodLow = Value;
-			m_iPeriod = m_iPeriodLow + (m_iPeriodHigh << 8);
-			break;
-		case 0x02:
-			// Continuously reset phase when disabled.
-			if (!this->m_iEnabled) {
-				m_iDutyCycleCounter = 0;	// Coarse counter, period=32
-				// For hardware-accuracy, do not reset fine counter `m_iCounter = 0`.
-			}
-			m_iEnabled = (Value & 0x80);
-			m_iPeriodHigh = (Value & 0x0F);
-			m_iPeriod = m_iPeriodLow + (m_iPeriodHigh << 8);
-			break;
-	}
-}
-
-void CVRC6_Pulse::Process(int Time)
-{
-	if (!m_iEnabled || m_iPeriod == 0) {
-		m_iTime += Time;
-		return;
-	}
-
-	while (Time >= m_iCounter) {
-		Time      -= m_iCounter;
-		m_iTime	  += m_iCounter;
-		m_iCounter = m_iPeriod + 1;
-	
-		m_iDutyCycleCounter = (m_iDutyCycleCounter + 1) & 0x0F;
-		Mix(static_cast<int32_t>(((m_iGate || m_iDutyCycleCounter >= m_iDutyCycle) ? m_iVolume : 0) * -1));
-	}
-
-	m_iCounter -= Time;
-	m_iTime += Time;
-}
-
-double CVRC6_Pulse::GetFrequency() const		// // //
-{
-	if (m_iGate || !m_iEnabled || !m_iPeriod)
-		return 0.;
-	return CAPU::BASE_FREQ_NTSC / 16. / (m_iPeriod + 1.);
-}
-
-CVRC6_Sawtooth::CVRC6_Sawtooth(CMixer *pMixer, int ID) : CChannel(pMixer, SNDCHIP_VRC6, ID) 
-{
-	Reset();
-}
-
-void CVRC6_Sawtooth::Reset()
-{
-	m_iPhaseAccumulator = m_iPhaseInput = m_iEnabled = m_iResetReg = 0;
-	m_iPeriod = 0;
-	m_iPeriodLow = m_iPeriodHigh = 0;
-	m_iCounter = 0;
-	
-	Mix(0);		// // //
-	EndFrame();
-}
-
-void CVRC6_Sawtooth::Write(uint16_t Address, uint8_t Value)
-{
-	switch (Address) {
-		case 0x00:
-			m_iPhaseInput = (Value & 0x3F);
-			break;
-		case 0x01:
-			m_iPeriodLow = Value;
-			m_iPeriod = m_iPeriodLow + (m_iPeriodHigh << 8);
-			break;
-		case 0x02:
-			// Continuously reset phase when disabled.
-			if (!this->m_iEnabled) {
-				m_iResetReg = 0;			// Coarse counter, period=14. (NSFPlay: `count14 = 0`)
-				m_iPhaseAccumulator = 0;	// sawtooth numeric output.
-
-				// For hardware-accuracy, do not reset fine counter `m_iCounter = 0`.
-				// Also, assigning to 0 would be wrong since it counts *down*, so 0 triggers an immediate step.
-
-				// Not resetting m_iCounter creates deliberate jitter of up to 1/7 cycle.
-			}
-			m_iEnabled = (Value & 0x80);
-			m_iPeriodHigh = (Value & 0x0F);
-			m_iPeriod = m_iPeriodLow + (m_iPeriodHigh << 8);
-			break;
-	}
-}
-
-void CVRC6_Sawtooth::Process(int Time)
-{
-	if (!m_iEnabled || !m_iPeriod) {
-		m_iTime += Time;
-		return;
-	}
-
-	while (Time >= m_iCounter) {
-		Time 	  -= m_iCounter;
-		m_iTime	  += m_iCounter;
-		m_iCounter = m_iPeriod + 1;
-
-		if (m_iResetReg & 1)
-			m_iPhaseAccumulator = (m_iPhaseAccumulator + m_iPhaseInput) & 0xFF;
-
-		m_iResetReg++;
-
-		if (m_iResetReg == 14) {
-			m_iPhaseAccumulator = 0;
-			m_iResetReg = 0;
-		}
-
-		// The 5 highest bits of accumulator are sent to the mixer
-		Mix(static_cast<int32_t>(m_iPhaseAccumulator >> 3) * -1);
-	}
-
-	m_iCounter -= Time;
-	m_iTime += Time;
-}
-
-double CVRC6_Sawtooth::GetFrequency() const		// // //
-{
-	if (!m_iEnabled || !m_iPeriod)
-		return 0.;
-	return CAPU::BASE_FREQ_NTSC / 14. / (m_iPeriod + 1.);
-}
-
-CVRC6::CVRC6(CMixer *pMixer) :
-	CSoundChip(pMixer),		// // //
-	m_pPulse1(new CVRC6_Pulse(pMixer, CHANID_VRC6_PULSE1)),
-	m_pPulse2(new CVRC6_Pulse(pMixer, CHANID_VRC6_PULSE2)),
-	m_pSawtooth(new CVRC6_Sawtooth(pMixer, CHANID_VRC6_SAWTOOTH))
-{
-	m_pRegisterLogger->AddRegisterRange(0x9000, 0x9003);		// // //
+	// VRC6 mapped registers
+	m_pRegisterLogger->AddRegisterRange(0x9000, 0x9003);
 	m_pRegisterLogger->AddRegisterRange(0xA000, 0xA002);
 	m_pRegisterLogger->AddRegisterRange(0xB000, 0xB002);
 }
 
-CVRC6::~CVRC6()
-{
-	if (m_pPulse1)
-		delete m_pPulse1;
-
-	if (m_pPulse2)
-		delete m_pPulse2;
-
-	if (m_pSawtooth)
-		delete m_pSawtooth;
-}
-
 void CVRC6::Reset()
 {
-	m_pPulse1->Reset();
-	m_pPulse2->Reset();
-	m_pSawtooth->Reset();
+	m_VRC6.Reset();
+
+	m_SynthVRC6.clear();
+	m_BlipVRC6.clear();
+}
+
+void CVRC6::UpdateFilter(blip_eq_t eq)
+{
+	m_SynthVRC6.treble_eq(eq);
+	m_BlipVRC6.set_sample_rate(eq.sample_rate);
+}
+
+void CVRC6::SetClockRate(uint32_t Rate)
+{
+	m_BlipVRC6.clock_rate(Rate);
 }
 
 void CVRC6::Write(uint16_t Address, uint8_t Value)
 {
-	switch (Address) {
-		case 0x9000:
-		case 0x9001:
-		case 0x9002:
-			m_pPulse1->Write(Address & 3, Value);
-			break;			
-		case 0xA000:
-		case 0xA001:
-		case 0xA002:
-			m_pPulse2->Write(Address & 3, Value);
-			break;
-		case 0xB000:
-		case 0xB001:
-		case 0xB002:
-			m_pSawtooth->Write(Address & 3, Value);
-			break;
-	}
+	// VRC6 internal audio registers are freely exposed and mapped to memory.
+	m_VRC6.Write(Address, Value);
 }
 
-uint8_t CVRC6::Read(uint16_t Address, bool &Mapped)
+uint8_t CVRC6::Read(uint16_t Address, bool& Mapped)
 {
+	// VRC6 internal audio registers are write-only.
+	// Reading from this area is reading from mapped cartridge ROM instead.
 	Mapped = false;
 	return 0;
 }
 
-void CVRC6::EndFrame()
+void CVRC6::EndFrame(Blip_Buffer& Output, gsl::span<int16_t> TempBuffer)
 {
-	m_pPulse1->EndFrame();
-	m_pPulse2->EndFrame();
-	m_pSawtooth->EndFrame();
+	m_iTime = 0;
 }
 
-void CVRC6::Process(uint32_t Time)
+// Clock the emulation core and output to the buffer.
+void CVRC6::Process(uint32_t Time, Blip_Buffer& Output)
 {
-	m_pPulse1->Process(Time);
-	m_pPulse2->Process(Time);
-	m_pSawtooth->Process(Time);
+	uint32_t now = 0;
+
+	auto get_output = [this](uint32_t dclocks, uint32_t now, Blip_Buffer& blip_buf) {
+		m_VRC6.Tick(dclocks);
+
+		int32_t out[2];
+		m_VRC6.Render(out);
+		m_SynthVRC6.update(m_iTime + now, out[0], &blip_buf);
+
+		assert(out[0] >= -(15 + 15 + 31));
+
+		m_ChannelLevels[0].update(m_VRC6.out[0]);
+		m_ChannelLevels[1].update(m_VRC6.out[1]);
+	};
+
+	while (now < Time) {
+		auto dclocks = vmin(m_VRC6.ClocksUntilLevelChange(), Time - now);
+		get_output(dclocks, now, Output);
+		now += dclocks;
+	}
+
+	m_iTime += Time;
 }
 
 double CVRC6::GetFreq(int Channel) const		// // //
 {
-	switch (Channel) {
-	case 0: return m_pPulse1->GetFrequency();
-	case 1: return m_pPulse2->GetFrequency();
-	case 2: return m_pSawtooth->GetFrequency();
-	}
-	return 0.;
+	return m_VRC6.GetFreq(Channel);
+}
+
+int CVRC6::GetChannelLevel(int Channel)
+{
+	//     Pulse volumes                                        Sawtooth volume
+	return Channel <= 1 ? m_ChannelLevels[Channel].getLevel() : m_VRC6.volume[2] >> 1;
+}
+
+int CVRC6::GetChannelLevelRange(int Channel) const
+{
+	return 15;
+}
+
+void CVRC6::UpdateMixLevel(double v, bool UseSurveyMix)
+{
+	m_SynthVRC6.volume(v, UseSurveyMix ? (15 + 15 + 31) : 500);
 }

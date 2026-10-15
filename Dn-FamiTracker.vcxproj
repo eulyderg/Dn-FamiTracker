@@ -519,18 +519,20 @@
     <Manifest />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\APU\digital-sound-antiques\emu2149.c" />
     <ClCompile Include="Source\APU\digital-sound-antiques\emu2413.c" />
+    <ClCompile Include="Source\APU\nsfplay\xgm\devices\Sound\nes_mmc5.cpp" />
+    <ClCompile Include="Source\APU\nsfplay\xgm\devices\Sound\nes_vrc6.cpp" />
     <ClCompile Include="Source\ConfigEmulation.cpp" />
     <ClCompile Include="Source\ConfigGUI.cpp" />
     <ClCompile Include="Source\APU\FDS.cpp" />
     <ClCompile Include="Source\APU\nsfplay\xgm\devices\Sound\nes_apu.cpp" />
     <ClCompile Include="Source\APU\nsfplay\xgm\devices\Sound\nes_dmc.cpp" />
-    <ClCompile Include="Source\APU\SoundChip2.cpp" />
+    <ClCompile Include="Source\APU\SoundChip.cpp" />
     <ClCompile Include="Source\NoNotifyEdit.cpp" />
     <ClCompile Include="Source\HistoryFileDlg.cpp" />
     <ClCompile Include="Source\APU\2A03.cpp" />
     <ClCompile Include="Source\APU\S5B.cpp" />
-    <ClCompile Include="Source\APU\SoundChip.cpp" />
     <ClCompile Include="Source\Bookmark.cpp" />
     <ClCompile Include="Source\BookmarkCollection.cpp" />
     <ClCompile Include="Source\BookmarkDlg.cpp" />
@@ -655,7 +657,6 @@
     <ClCompile Include="Source\TrackerChannel.cpp" />
     <ClCompile Include="Source\APU\APU.cpp" />
     <ClCompile Include="Source\APU\Mixer.cpp" />
-    <ClCompile Include="Source\APU\Square.cpp" />
     <ClCompile Include="Source\APU\MMC5.cpp" />
     <ClCompile Include="Source\APU\N163.cpp" />
     <ClCompile Include="Source\APU\VRC6.cpp" />
@@ -695,6 +696,9 @@
       <Outputs>Dn-help\hlp\HTMLDefines.h;%(Outputs)</Outputs>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
+    <ClInclude Include="Source\APU\digital-sound-antiques\emu2149.h" />
+    <ClInclude Include="Source\APU\nsfplay\xgm\devices\Sound\nes_mmc5.h" />
+    <ClInclude Include="Source\APU\nsfplay\xgm\devices\Sound\nes_vrc6.h" />
     <ClInclude Include="Source\ConfigEmulation.h" />
     <ClInclude Include="Source\ConfigGUI.h" />
     <ClInclude Include="Source\APU\ChannelLevelState.h" />
@@ -711,11 +715,10 @@
     <ClInclude Include="Source\APU\nsfplay\xgm\devices\Sound\nes_dmc.h" />
     <ClInclude Include="Source\APU\nsfplay\xgm\devices\Sound\nsfplay_math.h" />
     <ClInclude Include="Source\APU\nsfplay\xgm\xtypes.h" />
-    <ClInclude Include="Source\APU\SoundChip2.h" />
+    <ClInclude Include="Source\APU\SoundChip.h" />
     <ClInclude Include="Source\NoNotifyEdit.h" />
     <ClInclude Include="Source\HistoryFileDlg.h" />
     <ClInclude Include="Source\APU\2A03.h" />
-    <ClInclude Include="Source\APU\2A03Chan.h" />
     <ClInclude Include="Source\APU\S5B.h" />
     <ClInclude Include="Source\Bookmark.h" />
     <ClInclude Include="Source\BookmarkCollection.h" />
@@ -855,11 +858,8 @@
     <ClInclude Include="Source\SoundGen.h" />
     <ClInclude Include="Source\TrackerChannel.h" />
     <ClInclude Include="Source\APU\APU.h" />
-    <ClInclude Include="Source\APU\Channel.h" />
     <ClInclude Include="Source\APU\Mixer.h" />
     <ClInclude Include="Source\APU\Types.h" />
-    <ClInclude Include="Source\APU\Square.h" />
-    <ClInclude Include="Source\APU\SoundChip.h" />
     <ClInclude Include="Source\APU\MMC5.h" />
     <ClInclude Include="Source\APU\N163.h" />
     <ClInclude Include="Source\APU\VRC6.h" />

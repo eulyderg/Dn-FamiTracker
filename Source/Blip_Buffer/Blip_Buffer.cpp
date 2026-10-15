@@ -401,7 +401,7 @@ void Blip_Synth_::volume_unit( double new_unit )
                 adjust_impulse();
             }
         }
-        delta_factor = (int) floor( factor + 0.5 );
+        delta_factor = factor;//(int) floor( factor + 0.5 );
         //printf( "delta_factor: %d, kernel_unit: %d\n", delta_factor, kernel_unit );
     }
 }

@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -162,17 +162,13 @@ public:
 	int		ReadBuffer(void *Buffer);
 
 	int32_t	GetChanOutput(uint8_t Chan) const;
-	void	SetChipLevel(chip_level_t Chip, float Level);
+	void	SetChipLevel(chip_level_t Chip, double Level);
 	uint32_t	ResampleDuration(uint32_t Time) const;
 
 	int		GetMeterDecayRate() const;		// // // 050B
 	void	SetMeterDecayRate(int Rate);		// // // 050B
 
 private:
-	void MixVRC6(int Value, int Time);
-	void MixMMC5(int Value, int Time);
-	void MixS5B(int Value, int Time);
-
 	void StoreChannelLevel(int Channel, int Value);
 	void ClearChannelLevels();
 
@@ -181,28 +177,6 @@ private:
 private:
 	// Pointer to parent/owning CAPU object.
 	CAPU * m_APU;
-
-	// Blip buffer synths
-
-	// Should never be null during playback. CAPU creates all expansion chips,
-	// even if chips are not active in current module.
-	Blip_Synth<blip_good_quality> SynthVRC6;
-	Blip_Synth<blip_good_quality> SynthMMC5;
-	Blip_Synth<blip_good_quality> SynthS5B;		// // // 050B
-
-	/// Only used by CMixer::ClearBuffer(), which clears the global Blip_Buffer
-	/// and all Blip_Synth owned by CMixer.
-	///
-	/// What about CSoundChip2 which owns its own Blip_Synth?
-	/// I've decided that CMixer should not be responsible for clearing those Blip_Synth,
-	/// but rather CSoundChip2::Reset() should do so.
-	///
-	/// This works because CMixer::ClearBuffer() is only called by CAPU::Reset(),
-	/// which also calls CSoundChip2::Reset() on each sound chip.
-	#define FOREACH_SYNTH(X, SEP) \
-		X(SynthVRC6) SEP \
-		X(SynthMMC5) SEP \
-		X(SynthS5B)
 
 	// Blip buffer object
 	Blip_Buffer	BlipBuffer;
@@ -226,14 +200,8 @@ private:
 
 	// device level gain multipliers, in linear scale
 	// default level (0dB) is at 1.0
-	float		m_fLevelAPU1;
-	float		m_fLevelAPU2;
-	float		m_fLevelVRC6;
-	float		m_fLevelVRC7;
-	float		m_fLevelMMC5;
-	float		m_fLevelFDS;
-	float		m_fLevelN163;
-	float		m_fLevelS5B;		// // // 050B
+	// TODO: merge this with the one in CAPU
+	double		m_ChipLevels[CHIP_LEVEL_COUNT];
 
 	friend class CAPU;
 };

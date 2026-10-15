@@ -41,10 +41,6 @@ CN163::CN163()
 	Reset();
 }
 
-CN163::~CN163()
-{
-}
-
 void CN163::Reset()
 {
 	m_N163.Reset();
@@ -91,7 +87,7 @@ void CN163::Process(uint32_t Time, Blip_Buffer& Output)
 		m_SynthN163.volume(m_Attenuation, 225 * scale);
 	}
 	else {
-		double N163_volume = (channels == 0) ? 1.3f : (1.5f + float(channels) / 1.5f);
+		double N163_volume = (channels == 0) ? 1.3 : (1.5 + double(channels) / 1.5);
 		N163_volume *= m_Attenuation;
 		m_SynthN163.volume(N163_volume * 1.1, 1600 * scale);
 	}

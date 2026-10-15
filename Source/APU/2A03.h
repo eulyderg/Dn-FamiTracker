@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "SoundChip2.h"
+#include "SoundChip.h"
 #include "ChannelLevelState.h"
 
 #include "APU/nsfplay/xgm/devices/Sound/nes_apu.h"
@@ -77,7 +77,7 @@ private:
 	uint16_t m_iMemSize;
 };
 
-class C2A03 : public CSoundChip2
+class C2A03 : public CSoundChip
 {
 public:
 	C2A03();
@@ -106,6 +106,10 @@ public:
 	uint8_t	GetSamplePos() const;
 	uint8_t	GetDeltaCounter() const;
 	bool	DPCMPlaying() const;
+
+	// Report some basic information about the chip
+	uint8_t GetChannelCount() const override { return 5; };						// TODO: Dynamically calculate this?
+	chan_id_t GetFirstChannelID() const override { return CHANID_SQUARE1; };	//
 
 private:
 	/// Referenced by m_Apu2.

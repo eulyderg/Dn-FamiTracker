@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -341,6 +341,7 @@ private:
 	int		m_iCharWidth;					// // // no longer static const
 	int		m_iColumnSpacing;				// // //
 	int		m_iRowColumnWidth;				// // //
+	int		m_iHeaderFontSize;				// Size of pattern font
 
 	int		m_iChannelWidths[MAX_CHANNELS];	// Cached width in pixels of each channel
 	int		m_iChannelOffsets[MAX_CHANNELS];// Cached x position of channels
@@ -364,6 +365,7 @@ private:
 	COLORREF m_colHead3;
 	COLORREF m_colHead4;
 	COLORREF m_colHead5;		// // //
+	COLORREF m_iColHeaderFont;
 
 	// Meters and DPCM
 	stDPCMState m_DPCMState;

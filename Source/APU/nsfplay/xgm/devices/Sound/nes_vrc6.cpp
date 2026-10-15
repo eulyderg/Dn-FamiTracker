@@ -153,17 +153,17 @@ namespace xgm
 
   void NES_VRC6::Tick (UINT32 clocks)
   {
-    out[0] = calc_sqr(0,clocks);
-    out[1] = calc_sqr(1,clocks);
-    out[2] = calc_saw(clocks);
+    out[0] = calc_sqr(0,clocks); // 15
+    out[1] = calc_sqr(1,clocks); // 15
+    out[2] = calc_saw(clocks);   // 31
   }
 
   UINT32 NES_VRC6::Render (INT32 b[2])
   {
     INT32 m[3];
-    m[0] = out[0];
-    m[1] = out[1];
-    m[2] = out[2];
+    m[0] = out[0]; // 15
+    m[1] = out[1]; // 15
+    m[2] = out[2]; // 31
 
     // note: signal is inverted compared to 2A03
 
@@ -174,17 +174,12 @@ namespace xgm
     b[0]  = m[0] * sm[0][0];
     b[0] += m[1] * sm[0][1];
     b[0] += m[2] * sm[0][2];
-    //b[0] >>= (7 - 7);
+    b[0] >>= 7;
 
     b[1]  = m[0] * sm[1][0];
     b[1] += m[1] * sm[1][1];
     b[1] += m[2] * sm[1][2];
-    //b[1] >>= (7 - 7);
-
-    // master volume adjustment
-    const INT32 MASTER = INT32(256.0 * 1223.0 / 1920.0);
-    b[0] = (b[0] * MASTER) >> 8;
-    b[1] = (b[1] * MASTER) >> 8;
+    b[1] >>= 7;
 
     return 2;
   }
@@ -260,5 +255,13 @@ namespace xgm
     return false;
   }
 
-
+  double NES_VRC6::GetFreq(int Channel) const
+  {
+      // pulse frequency
+      if (Channel <= 1) {
+          return freq2[Channel] ? clock / 16 / (freq2[Channel] + 1) : 0;
+      }
+      // saw frequency
+      return freq2[Channel] ? clock / 14 / (freq2[Channel] + 1) : 0;
+  }
 }                               // namespace

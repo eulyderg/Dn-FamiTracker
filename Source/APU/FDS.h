@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -21,29 +21,31 @@
 
 #pragma once
 
-#include "SoundChip2.h"
+#include "SoundChip.h"
 #include "ChannelLevelState.h"
-#include "Blip_Buffer/Blip_Buffer.h"
 #include "APU/mesen/FdsAudio.h"
 #include "FamiTracker.h"
 #include "Settings.h"
 
 class CMixer;
 
-class CFDS : public CSoundChip2 {
+class CFDS : public CSoundChip {
 public:
 	CFDS();
-	virtual ~CFDS();
 	void	Reset() override;
-	void UpdateFilter(blip_eq_t eq) override;
-	void SetClockRate(uint32_t Rate) override;
+	void	UpdateFilter(blip_eq_t eq) override;
+	void	SetClockRate(uint32_t Rate) override;
 	void	Write(uint16_t Address, uint8_t Value) override;
 	uint8_t	Read(uint16_t Address, bool &Mapped) override;
 	void	Process(uint32_t Time, Blip_Buffer& Output) override;
 	void	EndFrame(Blip_Buffer& Output, gsl::span<int16_t> TempBuffer) override;
 	double	GetFreq(int Channel) const override;		// // //
-	int GetChannelLevel(int Channel) override;
-	int GetChannelLevelRange(int Channel) const override;
+	int		GetChannelLevel(int Channel) override;
+	int		GetChannelLevelRange(int Channel) const override;
+
+	// Report some basic information about the chip
+	uint8_t GetChannelCount() const override { return 1; };					// TODO: Dynamically calculate this?
+	chan_id_t GetFirstChannelID() const override { return CHANID_FDS; };	//
 
 	int CFDS::GetModCounter() const;
 
@@ -51,9 +53,8 @@ public:
 	void UpdateMixLevel(double v, bool UseSurveyMix = false);
 
 private:
-	void RecomputeFdsFilter();
+	void	RecomputeFdsFilter();
 	double	GetModFreq() const;
-	double	GetOutPrevFreq() const;
 	double	GetOutputFreq() const;
 
 private:

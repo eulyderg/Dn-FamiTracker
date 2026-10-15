@@ -3,7 +3,7 @@
 // DIY min/max compiles faster than including all of <algorithm> for std::min/max
 #include "utils/variadic_minmax.h"
 
-/// Used for CSoundChip2::GetChannelLevel().
+/// Used for CSoundChip::GetChannelLevel().
 template<typename T>
 class ChannelLevelState {
 	T m_CurrLevel = 0;

@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -18,147 +18,98 @@
 ** along with this program. If not, see https://www.gnu.org/licenses/.
 */
 
-//#include "APU.h"
-#include "../Common.h"
 #include "Types.h"
-#include "Mixer.h"
 #include "MMC5.h"
-#include "Square.h"
 #include "../RegisterState.h"		// // //
 
 // MMC5 external sound
 
-CMMC5::CMMC5(CMixer *pMixer) :
-	CSoundChip(pMixer),		// // //
-	m_pEXRAM(new uint8_t[0x400]),
-	m_pSquare1(new CSquare(pMixer, CHANID_MMC5_SQUARE1, SNDCHIP_MMC5)),
-	m_pSquare2(new CSquare(pMixer, CHANID_MMC5_SQUARE2, SNDCHIP_MMC5)),
-	m_iMulLow(0),
-	m_iMulHigh(0)
+CMMC5::CMMC5()
 {
-	m_pRegisterLogger->AddRegisterRange(0x5000, 0x5007);		// // //
+	// MMC5 mapped registers
+	m_pRegisterLogger->AddRegisterRange(0x5000, 0x5007);
 	m_pRegisterLogger->AddRegisterRange(0x5015, 0x5015);
-}
-
-CMMC5::~CMMC5()
-{
-	if (m_pSquare1)
-		delete m_pSquare1;
-
-	if (m_pSquare2)
-		delete m_pSquare2;
-
-	if (m_pEXRAM)
-		delete [] m_pEXRAM;
 }
 
 void CMMC5::Reset()
 {
-	m_pSquare1->Reset();
-	m_pSquare2->Reset();
+	m_MMC5.Reset();
 
-	m_pSquare1->Write(0x01, 0x08);
-	m_pSquare2->Write(0x01, 0x08);
+	m_SynthMMC5.clear();
+	m_BlipMMC5.clear();
+}
+
+void CMMC5::UpdateFilter(blip_eq_t eq)
+{
+	m_SynthMMC5.treble_eq(eq);
+	m_BlipMMC5.set_sample_rate(eq.sample_rate);
+}
+
+void CMMC5::SetClockRate(uint32_t Rate)
+{
+	m_BlipMMC5.clock_rate(Rate);
 }
 
 void CMMC5::Write(uint16_t Address, uint8_t Value)
 {
-	if (Address >= 0x5C00 && Address <= 0x5FF5) {
-		m_pEXRAM[Address & 0x3FF] = Value;
-		return;
-	}
-
-	switch (Address) {
-		// Channel 1
-		case 0x5000:
-			m_pSquare1->Write(0, Value);
-			break;
-		case 0x5002:
-			m_pSquare1->Write(2, Value);
-			break;
-		case 0x5003:
-			m_pSquare1->Write(3, Value);
-			break;
-		// Channel 2
-		case 0x5004:
-			m_pSquare2->Write(0, Value);
-			break;
-		case 0x5006:
-			m_pSquare2->Write(2, Value);
-			break;
-		case 0x5007:
-			m_pSquare2->Write(3, Value);
-			break;
-		// Channel 3... (doesn't exist)
-		// Control
-		case 0x5015:
-			m_pSquare1->WriteControl(Value & 1);
-			m_pSquare2->WriteControl((Value >> 1) & 1);
-			break;
-		// Hardware multiplier
-		case 0x5205:
-			m_iMulLow = Value;
-			break;
-		case 0x5206:
-			m_iMulHigh = Value;
-			break;
-	}
+	// MMC5 audio registers are exposed for writing
+	m_MMC5.Write(Address, Value);
 }
 
 uint8_t CMMC5::Read(uint16_t Address, bool &Mapped)
 {
-	if (Address >= 0x5C00 && Address <= 0x5FF5) {
-		Mapped = true;
-		return m_pEXRAM[Address & 0x3FF];
+	// MMC5 audio registers are available for reading
+	xgm::UINT32 value;
+	Mapped = m_MMC5.Read(Address, value);
+	return value;
+}
+
+void CMMC5::EndFrame(Blip_Buffer& Output, gsl::span<int16_t> TempBuffer)
+{
+	m_iTime = 0;
+}
+
+// Clock the emulation core and output to the buffer.
+void CMMC5::Process(uint32_t Time, Blip_Buffer& Output)
+{
+	uint32_t now = 0;
+
+	auto get_output = [this](uint32_t dclocks, uint32_t now, Blip_Buffer& blip_buf) {
+		m_MMC5.Tick(dclocks);
+
+		int32_t out[2];
+		m_MMC5.Render(out);
+		m_SynthMMC5.update(m_iTime + now, out[0], &blip_buf);
+
+		m_ChannelLevels[0].update(m_MMC5.out[0]);
+		m_ChannelLevels[1].update(m_MMC5.out[1]);
+	};
+
+	while (now < Time) {
+		auto dclocks = vmin(m_MMC5.ClocksUntilLevelChange(), Time - now);
+		get_output(dclocks, now, Output);
+		now += dclocks;
 	}
-	
-	switch (Address) {
-		case 0x5205:
-			Mapped = true;
-			return (m_iMulLow * m_iMulHigh) & 0xFF;
-		case 0x5206:
-			Mapped = true;
-			return (m_iMulLow * m_iMulHigh) >> 8;
-	}
 
-	return 0;
+	m_iTime += Time;
 }
 
-void CMMC5::EndFrame()
+double CMMC5::GetFreq(int Channel) const
 {
-	m_pSquare1->EndFrame();
-	m_pSquare2->EndFrame();
+	return m_MMC5.GetFreq(Channel);
 }
 
-void CMMC5::Process(uint32_t Time)
+int CMMC5::GetChannelLevel(int Channel)
 {
-	m_pSquare1->Process(Time);
-	m_pSquare2->Process(Time);
+	return m_ChannelLevels[Channel].getLevel();
 }
 
-double CMMC5::GetFreq(int Channel) const		// // //
+int CMMC5::GetChannelLevelRange(int Channel) const
 {
-	switch (Channel) {
-	case 0: return m_pSquare1->GetFrequency();
-	case 1: return m_pSquare2->GetFrequency();
-	}
-	return 0.;
+	return 15;
 }
 
-void CMMC5::LengthCounterUpdate()
+void CMMC5::UpdateMixLevel(double v, bool UseSurveyMix)
 {
-	m_pSquare1->LengthCounterUpdate();
-	m_pSquare2->LengthCounterUpdate();
-}
-
-void CMMC5::EnvelopeUpdate()
-{
-	m_pSquare1->EnvelopeUpdate();
-	m_pSquare2->EnvelopeUpdate();
-}
-
-void CMMC5::ClockSequence()
-{
-	EnvelopeUpdate();		// // //
-	LengthCounterUpdate();		// // //
+	m_SynthMMC5.volume(v, UseSurveyMix ? 8191 : 10000);
 }
