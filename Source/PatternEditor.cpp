@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -58,7 +58,6 @@ static constexpr int ROW_HEIGHT = 12;
 
 // Pattern header font
 static constexpr LPCTSTR DEFAULT_HEADER_FONT = _T("Tahoma");
-
 static constexpr int DEFAULT_HEADER_FONT_SIZE = 11;
 
 // // //
@@ -255,9 +254,16 @@ void CPatternEditor::ApplyColorScheme()
 
 	LOGFONT LogFont;
 	LPCTSTR FontName = settings->Appearance.strFont;		// // //
-	LPCTSTR HeaderFace = DEFAULT_HEADER_FONT;
+	LPCTSTR HeaderFont = settings->Appearance.strFontHeader;
+	COLORREF iColorHeaderFont = settings->Appearance.iColPatternTextHilite;
 
 	COLORREF ColBackground = settings->Appearance.iColBackground;
+
+	COLORREF tmpColHeaderBackGnd	= settings->Appearance.iColHeaderBackGnd;
+	COLORREF tmpColHeaderCorner		= settings->Appearance.iColHeaderCorner;
+	COLORREF tmpColHeaderFont			= settings->Appearance.iColHeaderFont;
+
+	m_iColHeaderFont = tmpColHeaderFont;
 
 	// Grid size
 	// FIXME
@@ -290,9 +296,11 @@ void CPatternEditor::ApplyColorScheme()
 
 	// Create header font
 	memset(&LogFont, 0, sizeof(LOGFONT));
-	memcpy(LogFont.lfFaceName, HeaderFace, _tcslen(HeaderFace));
+	memcpy(LogFont.lfFaceName, HeaderFont, _tcslen(HeaderFont));
+	
+	m_iHeaderFontSize = settings->Appearance.iHeaderFontHeight;
 
-	LogFont.lfHeight = -DPI::SY(DEFAULT_HEADER_FONT_SIZE);
+	LogFont.lfHeight = -m_iHeaderFontSize;
 	//LogFont.lfWeight = 550;
 	LogFont.lfPitchAndFamily = VARIABLE_PITCH | FF_SWISS;
 
@@ -310,8 +318,8 @@ void CPatternEditor::ApplyColorScheme()
 	m_colSeparator	= BLEND(ColBackground, (ColBackground ^ 0xFFFFFF), SHADE_LEVEL.SEPARATOR);
 	m_colEmptyBg	= DIM(theApp.GetSettings()->Appearance.iColBackground, SHADE_LEVEL.EMPTY_BG);
 
-	m_colHead1 = GetSysColor(COLOR_3DFACE);
-	m_colHead2 = GetSysColor(COLOR_BTNHIGHLIGHT);
+	m_colHead1 = tmpColHeaderCorner;
+	m_colHead2 = tmpColHeaderBackGnd;
 	m_colHead3 = GetSysColor(COLOR_APPWORKSPACE);
 	m_colHead4 = BLEND(m_colHead3, 0x4040F0, 80);
 	m_colHead5 = BLEND(m_colHead3, 0x40F040, 60);		// // //
@@ -1608,8 +1616,6 @@ void CPatternEditor::DrawHeader(CDC *pDC)
 {
 	// Draw the pattern header (channel names, meters...)
 
-	const COLORREF TEXT_COLOR = 0x404040;
-
 	CPoint ArrowPoints[3];
 
 	CBrush HoverBrush((COLORREF)0xFFFFFF);
@@ -1655,7 +1661,7 @@ void CPatternEditor::DrawHeader(CDC *pDC)
 		CString pChanName = (m_bCompactMode && m_iCharWidth < 6) ? _T("") :
 			(m_bCompactMode || m_iCharWidth < 9) ? pChannel->GetShortName() : pChannel->GetChannelName();		// // //
 
-		COLORREF HeadTextCol = bMuted ? STATIC_COLOR_SCHEME.CHANNEL_MUTED : STATIC_COLOR_SCHEME.CHANNEL_NORMAL;
+		COLORREF HeadTextCol = bMuted ? STATIC_COLOR_SCHEME.CHANNEL_MUTED : m_iColHeaderFont;
 
 		// Shadow
 		if (m_bCompactMode)		// // //
@@ -1663,20 +1669,26 @@ void CPatternEditor::DrawHeader(CDC *pDC)
 
 		pDC->SetTextColor(BLEND(HeadTextCol, 0x00FFFFFF, SHADE_LEVEL.TEXT_SHADOW));
 		pDC->TextOut(Offset + (m_bCompactMode ? GetColumnSpace(C_NOTE) / 2 + 1 : 10) + 1, HEADER_CHAN_START + 6 + (bMuted ? 1 : 0), pChanName);
-		
+
 		// Foreground
 		if (m_iMouseHoverChan == Channel)
 			HeadTextCol = BLEND(HeadTextCol, 0x0000FFFF, SHADE_LEVEL.HOVER);
 		pDC->SetTextColor(HeadTextCol);
 		pDC->TextOut(Offset + (m_bCompactMode ? GetColumnSpace(C_NOTE) / 2 + 1 : 10), HEADER_CHAN_START + 5, pChanName);		// // //
-		
+
 		if (!m_bCompactMode) {		// // //
 			// Effect columns
-			pDC->SetTextColor(TEXT_COLOR);
+			pDC->SetTextColor(HeadTextCol);
 			pDC->SetTextAlign(TA_CENTER);
 			for (unsigned int i = 1; i <= m_pDocument->GetEffColumns(Track, Channel); i++) {		// // //
 				CString str;
 				str.Format(_T("fx%d"), i + 1);
+				// Shadow
+				COLORREF tmpHeaderFxTxtCol = \
+				pDC->SetTextColor(BLEND(HeadTextCol, 0x00FFFFFF, SHADE_LEVEL.TEXT_SHADOW));
+				pDC->TextOut(Offset + GetChannelWidth(i) - m_iCharWidth * 3 / 2 + 1, HEADER_CHAN_START + HEADER_CHAN_HEIGHT - 17 + (bMuted ? 1 : 0), str);
+				// Foreground
+				pDC->SetTextColor(tmpHeaderFxTxtCol);
 				pDC->TextOut(Offset + GetChannelWidth(i) - m_iCharWidth * 3 / 2, HEADER_CHAN_START + HEADER_CHAN_HEIGHT - 17, str);
 			}
 
@@ -3537,32 +3549,51 @@ CPatternClipData *CPatternEditor::CopyEntire() const
 
 CPatternClipData *CPatternEditor::Copy() const
 {
-	// Copy selection
-	CPatternIterator it = GetIterators().first;		// // //
-	const int Channels	= m_selection.GetChanEnd() - m_selection.GetChanStart() + 1;
-	const int Rows		= GetSelectionSize();		// // //
-	stChanNote NoteData;
+	// Copy selection if selecting
+	if (m_bSelecting && GetSelectionSize() > 0) {
+		CPatternIterator it = GetIterators().first;		// // //
+		const int Channels = m_selection.GetChanEnd() - m_selection.GetChanStart() + 1;
+		const int Rows = GetSelectionSize();		// // //
+		stChanNote NoteData;
 
-	CPatternClipData *pClipData = new CPatternClipData(Channels, Rows);
-	pClipData->ClipInfo.Channels	= Channels;		// // //
-	pClipData->ClipInfo.Rows		= Rows;
-	pClipData->ClipInfo.StartColumn	= GetSelectColumn(m_selection.GetColStart());		// // //
-	pClipData->ClipInfo.EndColumn	= GetSelectColumn(m_selection.GetColEnd());		// // //
-	
-	for (int r = 0; r < Rows; r++) {		// // //
-		for (int i = 0; i < Channels; ++i) {
-			stChanNote *Target = pClipData->GetPattern(i, r);
-			it.Get(i + m_selection.GetChanStart(), &NoteData);
-			/*CopyNoteSection(Target, &NoteData, PASTE_DEFAULT,
-				i == 0 ? ColStart : COLUMN_NOTE, i == Channels - 1 ? ColEnd : COLUMN_EFF4);*/
-			memcpy(Target, &NoteData, sizeof(stChanNote));
-			// the clip data should store the entire field;
-			// other methods should check ClipInfo.StartColumn and ClipInfo.EndColumn before operating
+		CPatternClipData *pClipData = new CPatternClipData(Channels, Rows);
+		pClipData->ClipInfo.Channels = Channels;		// // //
+		pClipData->ClipInfo.Rows = Rows;
+		pClipData->ClipInfo.StartColumn = GetSelectColumn(m_selection.GetColStart());		// // //
+		pClipData->ClipInfo.EndColumn = GetSelectColumn(m_selection.GetColEnd());		// // //
+
+		for (int r = 0; r < Rows; r++) {		// // //
+			for (int i = 0; i < Channels; ++i) {
+				stChanNote *Target = pClipData->GetPattern(i, r);
+				it.Get(i + m_selection.GetChanStart(), &NoteData);
+				/*CopyNoteSection(Target, &NoteData, PASTE_DEFAULT,
+						i == 0 ? ColStart : COLUMN_NOTE, i == Channels - 1 ? ColEnd : COLUMN_EFF4);*/
+				memcpy(Target, &NoteData, sizeof(stChanNote));
+				// the clip data should store the entire field;
+				// other methods should check ClipInfo.StartColumn and ClipInfo.EndColumn before operating
+			}
+			++it;
 		}
-		++it;
+		return pClipData;
 	}
 
-	return pClipData;
+	// If nothing is selected, copy the row under the cursor
+	const int Track = GetSelectedTrack();
+	const int Channel = m_cpCursorPos.m_iChannel;
+	const int Row = m_cpCursorPos.m_iRow;
+	const int Frame = m_cpCursorPos.m_iFrame;
+	const cursor_column_t Col = m_cpCursorPos.m_iColumn;
+
+	CPatternClipData *pSingleNote = new CPatternClipData(1, 1);
+	pSingleNote->ClipInfo.Channels = 1;
+	pSingleNote->ClipInfo.Rows = 1;
+
+	// Always copy note, instrument, volume, and all 4 effects
+	pSingleNote->ClipInfo.StartColumn = COLUMN_NOTE;
+	pSingleNote->ClipInfo.EndColumn = COLUMN_EFF4;
+
+	m_pDocument->GetNoteData(Track, Frame, Channel, Row, pSingleNote->GetPattern(0, 0));
+	return pSingleNote;
 }
 
 CPatternClipData *CPatternEditor::CopyRaw() const		// // //

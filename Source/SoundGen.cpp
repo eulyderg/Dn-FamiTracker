@@ -1083,17 +1083,17 @@ bool CSoundGen::ResetAudioDevice()
 		if (UseSurveyMix) {
 			// Override expansion chip level mixing when using survey hardware levels
 			for (int i = 0; i < CHIP_LEVEL_COUNT; i++)
-				config.SetChipLevel(static_cast<chip_level_t>(i), float(SurveyMixLevels.at(i) / 100.0f), true);
+				config.SetChipLevel(static_cast<chip_level_t>(i), static_cast<double>(SurveyMixLevels.at(i)) / 100.0, true);
 		}
 		else {
-			config.SetChipLevel(CHIP_LEVEL_APU1, float(pSettings->ChipLevels.iLevelAPU1 / 10.0f));
-			config.SetChipLevel(CHIP_LEVEL_APU2, float(pSettings->ChipLevels.iLevelAPU2 / 10.0f));
-			config.SetChipLevel(CHIP_LEVEL_VRC6, float(pSettings->ChipLevels.iLevelVRC6 / 10.0f));
-			config.SetChipLevel(CHIP_LEVEL_VRC7, float(pSettings->ChipLevels.iLevelVRC7 / 10.0f));
-			config.SetChipLevel(CHIP_LEVEL_FDS, float(pSettings->ChipLevels.iLevelFDS / 10.0f));
-			config.SetChipLevel(CHIP_LEVEL_MMC5, float(pSettings->ChipLevels.iLevelMMC5 / 10.0f));
-			config.SetChipLevel(CHIP_LEVEL_N163, float(pSettings->ChipLevels.iLevelN163 / 10.0f));
-			config.SetChipLevel(CHIP_LEVEL_S5B, float(pSettings->ChipLevels.iLevelS5B / 10.0f));
+			config.SetChipLevel(CHIP_LEVEL_APU1, static_cast<double>(pSettings->ChipLevels.iLevelAPU1) / 10.0);
+			config.SetChipLevel(CHIP_LEVEL_APU2, static_cast<double>(pSettings->ChipLevels.iLevelAPU2) / 10.0);
+			config.SetChipLevel(CHIP_LEVEL_VRC6, static_cast<double>(pSettings->ChipLevels.iLevelVRC6) / 10.0);
+			config.SetChipLevel(CHIP_LEVEL_VRC7, static_cast<double>(pSettings->ChipLevels.iLevelVRC7) / 10.0);
+			config.SetChipLevel(CHIP_LEVEL_FDS , static_cast<double>(pSettings->ChipLevels.iLevelFDS) / 10.0);
+			config.SetChipLevel(CHIP_LEVEL_MMC5, static_cast<double>(pSettings->ChipLevels.iLevelMMC5) / 10.0);
+			config.SetChipLevel(CHIP_LEVEL_N163, static_cast<double>(pSettings->ChipLevels.iLevelN163) / 10.0);
+			config.SetChipLevel(CHIP_LEVEL_S5B , static_cast<double>(pSettings->ChipLevels.iLevelS5B) / 10.0);
 		}
 	}
 

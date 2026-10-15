@@ -1,18 +1,18 @@
-#ifndef _NES_VRC6_H_
-#define _NES_VRC6_H_
+#pragma once
+
 #include "../device.h"
 
 namespace xgm
 {
 
-  class NES_VRC6:public ISoundChip
+  class NES_VRC6 : public ISoundChip
   {
   public:
     enum
     {
       OPT_END
     };
-  protected:
+  public:
     UINT32 counter[3]; // frequency divider
     UINT32 phase[3];   // phase counter
     UINT32 freq2[3];   // adjusted frequency
@@ -49,8 +49,7 @@ namespace xgm
     virtual void SetMask (int m){ mask = m; }
     virtual void SetStereoMix (int trk, xgm::INT16 mixl, xgm::INT16 mixr);
     virtual ITrackInfo *GetTrackInfo(int trk);
+    virtual double GetFreq(int Channel) const;
   };
 
-}                               // namespace
-
-#endif
+}

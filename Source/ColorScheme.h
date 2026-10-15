@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -25,6 +25,9 @@
 const static TCHAR *FONT_FACE = _T("Verdana");
 const static int FONT_SIZE	  = 12;
 const static int FONT_RATIO = 100;
+
+const static TCHAR* HEADER_FONT = _T("Tahoma");
+const static int HEADER_FONT_SIZE = 11;
 
 // Static colors
 const struct {
@@ -66,9 +69,14 @@ struct COLOR_SCHEME {
 	const COLORREF	ROW_NORMAL;		// // //
 	const COLORREF	ROW_EDIT;		// // //
 	const COLORREF	ROW_PLAYING;		// // //
+	const COLORREF	HEADER_BACKGND;
+	const COLORREF	HEADER_CORNER;
+	const COLORREF	HEADER_FONT_COL;
 	const TCHAR		*FONT_FACE;
 	const int		FONT_SIZE;
-	const int FONT_PERCENT = 100;
+	const TCHAR 	*HEADER_FONT;
+	const int		HEADER_FONT_SIZE;
+	const int		FONT_PERCENT = 100;
 };
 
 // Default
@@ -88,8 +96,13 @@ const COLOR_SCHEME DEFAULT_COLOR_SCHEME = {
 	0x00A02030,			// // // Current row
 	0x00302080,			// // // Current row (edit mode)
 	0x00400050,			// // // Current row (playing)
+	0x00FFFFFF,			// !! !! Channel header background color
+	0x00FFFFFF,			// !! !! Channel header corner color
+	0x00000000,			// !! !! Channel header text color
 	_T("Verdana"),		// Font
-	12					// Font size
+	12,					// Font size
+	_T("Tahoma"),		// !! !! Channel header font
+	11					// !! !! Channel header font size
 };
 
 // Monochrome
@@ -109,8 +122,13 @@ const COLOR_SCHEME MONOCHROME_COLOR_SCHEME = {
 	0x00A02030,			// // // Current row
 	0x00302080,			// // // Current row (edit mode)
 	0x00400050,			// // // Current row (playing)
+	0x00FFFFFF,			// Header background color
+	0x00FFFFFF,			// Header corner color
+	0x00000000,			// Header text color
 	_T("Fixedsys"),		// Font
-	12					// Font size
+	12,					// Font size
+	_T("Tahoma"),		// !! !! Channel header font
+	11					// !! !! Channel header font size
 };
 
 // Renoise
@@ -130,8 +148,13 @@ const COLOR_SCHEME RENOISE_COLOR_SCHEME = {
 	0x00A02030,			// // // Current row
 	0x00302080,			// // // Current row (edit mode)
 	0x00400050,			// // // Current row (playing)
+	0x00FFFFFF,			// !! !! Channel header background color
+	0x00FFFFFF,			// !! !! Channel header corner color
+	0x00000000,			// !! !! Channel header text color
 	_T("Fixedsys"),		// Font
-	12					// Font size
+	12,					// Font size
+	_T("Tahoma"),		// !! !! Channel header font
+	11					// !! !! Channel header font size
 };
 
 // White
@@ -151,8 +174,13 @@ const COLOR_SCHEME WHITE_COLOR_SCHEME = {
 	0x00A02030,			// // // Current row
 	0x00302080,			// // // Current row (edit mode)
 	0x00400050,			// // // Current row (playing)
+	0x00FFFFFF,			// !! !! Channel header background color
+	0x00FFFFFF,			// !! !! Channel header corner color
+	0x00000000,			// veader text color
 	_T("Courier"),		// Font
-	12					// Font size
+	12,					// Font size
+	_T("Tahoma"),		// !! !! Channel header font
+	11					// !! !! Channel header font size
 };
 
 // // // Saturday
@@ -172,8 +200,13 @@ const COLOR_SCHEME SATURDAY_COLOR_SCHEME = {
 	0x00D01030,			// // // Current row
 	0x000030C0,			// // // Current row (edit mode)
 	0x00500070,			// // // Current row (playing)
+	0x00FFFFFF,			// !! !! Channel header background color
+	0x00FFFFFF,			// !! !! Channel header corner color
+	0x00000000,			// !! !! Channel header text color
 	_T("Courier"),		// Font
-	11					// Font size
+	11,					// Font size
+	_T("Tahoma"),		// !! !! Channel header font
+	11					// !! !! Channel header font size
 };
 
 

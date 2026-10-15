@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -35,7 +35,10 @@ enum color_items_t {
 	COL_CURRENT_ROW_NORMAL,
 	COL_CURRENT_ROW_EDIT,
 	COL_CURRENT_ROW_PLAYING,
-	COLOR_ITEM_COUNT
+	COL_HEADER_BACKGND,
+	COL_HEADER_CORNER,
+	COL_HEADER_FONT,
+	COLOR_ITEM_COUNT,
 };
 
 #include "ColorScheme.h"
@@ -84,7 +87,10 @@ protected:
 	int			m_rowHeight;
 	int			fontPercent;
 	CComboBox	fontPercentList;
-	
+
+	CString		m_strHeaderFont;
+	int			m_headerFontHeight;
+
 	int			m_iSelectedItem;
 	bool		m_bPatternColors;
 	bool		m_bDisplayFlats;
@@ -105,6 +111,10 @@ public:
 	afx_msg void OnBnClickedPatterncolors();
 	afx_msg void OnBnClickedDisplayFlats();
 	afx_msg void OnCbnEditchangeFontSize();
+	
+	afx_msg void OnCbnSelchangeFontHeader();
+	afx_msg void OnCbnSelchangeFontSizeHeader();
+	afx_msg void OnCbnEditchangeFontSizeHeader();
 
 	afx_msg void OnBnClickedButtonAppearanceSave();		// // // 050B
 	afx_msg void OnBnClickedButtonAppearanceLoad();		// // // 050B

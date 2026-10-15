@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -25,7 +25,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>		// !! !! M_PI
 
-// FDS interface, actual FDS emulation is in FDSSound.cpp
+// FDS interface, actual FDS emulation is in APU/mesen/FdsAudio.h
 
 CFDS::CFDS()
 {
@@ -33,10 +33,6 @@ CFDS::CFDS()
 
 	// Reset() is called by CAPU::SetExternalSound(), but let's call it ourself.
 	Reset();
-}
-
-CFDS::~CFDS()
-{
 }
 
 void CFDS::Reset()
@@ -229,7 +225,7 @@ void CFDS::UpdateMixLevel(double v, bool UseSurveyMix)
 	// (m_SynthFDS: FdsAudio) used to generate output samples between [0..63] inclusive,
 	// but was changed to  [0 .. 63*1152] inclusive to prevent quantization at low volumes.
 
-	m_SynthFDS.volume(UseSurveyMix ? v : (v * 1.122f), UseSurveyMix ? (63 * 1152) : (256 * 1152));
+	m_SynthFDS.volume(v, UseSurveyMix ? (63 * 1152) : (256 * 1152));
 }
 
 /// Input:

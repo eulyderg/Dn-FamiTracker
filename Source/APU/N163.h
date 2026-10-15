@@ -21,34 +21,38 @@
 
 #pragma once
 
-#include "SoundChip2.h"
+#include "SoundChip.h"
 #include "ChannelLevelState.h"
 #include "Blip_Buffer/Blip_Buffer.h"
 #include "APU/mesen/Namco163Audio.h"
 #include "FamiTracker.h"
 #include "Settings.h"
 
-class CN163 : public CSoundChip2 {
+class CN163 : public CSoundChip {
 public:
 	CN163();
-	virtual	~CN163();
+
+	// standard instance methods
 	void	Reset() override;
-	void UpdateFilter(blip_eq_t eq) override;
-	void SetClockRate(uint32_t Rate) override;
+	void	UpdateFilter(blip_eq_t eq) override;
+	void	SetClockRate(uint32_t Rate) override;
 	void	Write(uint16_t Address, uint8_t Value) override;
 	uint8_t	Read(uint16_t Address, bool &Mapped) override;
 	void	Process(uint32_t Time, Blip_Buffer& Output) override;
 	void	EndFrame(Blip_Buffer& Output, gsl::span<int16_t> TempBuffer) override;
 	double	GetFreq(int Channel) const override;
-	int GetChannelLevel(int Channel) override;
-	int GetChannelLevelRange(int Channel) const override;
+	int		GetChannelLevel(int Channel) override;
+	int		GetChannelLevelRange(int Channel) const override;
 
-	void UpdateN163Filter(int CutoffHz, bool DisableMultiplex);
-	void UpdateMixLevel(double v, bool UseSurveyMix = false);
+	void	UpdateN163Filter(int CutoffHz, bool DisableMultiplex);
+	void	UpdateMixLevel(double v, bool UseSurveyMix = false);
 
-	void Log(uint16_t Address, uint8_t Value) override;		// // //
+	void	Log(uint16_t Address, uint8_t Value) override;		// // //
+	void	SetMixingMethod(bool bLinear);						// // //
 
-	void SetMixingMethod(bool bLinear);		// // //
+	// Report some basic information about the chip
+	uint8_t GetChannelCount() const override { return 8; };						// TODO: Dynamically calculate this?
+	chan_id_t GetFirstChannelID() const override { return CHANID_N163_CH1; };	//
 
 private:
 	void RecomputeN163Filter();
@@ -59,8 +63,10 @@ private:
 	double m_Attenuation;
 	bool m_UseSurveyMix = false;
 
+	// The N163 emulation core (currently mesen)
 	Namco163Audio m_N163;
 
+	// The audio buffer
 	Blip_Buffer m_BlipN163;
 	Blip_Synth<blip_good_quality> m_SynthN163;
 

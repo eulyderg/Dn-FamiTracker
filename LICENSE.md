@@ -44,8 +44,14 @@ version.
 	  later version.
 - NSFPlay
 	- Copyright (C) 2006 Brezza, 2012-2026 Brad Smith
-	- Used under an [informal license](https://github.com/bbbradsmith/nsfplay/blob/master/readme.txt).
-- VRC7/OPLL sound emulator from [emu2413](https://github.com/digital-sound-antiques/emu2413) v1.5.9
+	- Used under an
+	  [informal license](https://github.com/bbbradsmith/nsfplay/blob/master/readme.txt).
+- VRC7/OPLL sound emulator from
+  [emu2413](https://github.com/digital-sound-antiques/emu2413) v1.5.9
+	- Copyright (C) 2001-2022 Mitsutaka Okazaki
+	- Licensed under the [MIT license](https://mit-license.org/).
+- Sunsoft 5B PSG sound emulator from
+  [emu2149](https://github.com/digital-sound-antiques/emu2149) v1.42
 	- Copyright (C) 2001-2022 Mitsutaka Okazaki
 	- Licensed under the [MIT license](https://mit-license.org/).
 - FDS and N163 sound emulator from [Mesen](https://github.com/SourMesen/Mesen2)

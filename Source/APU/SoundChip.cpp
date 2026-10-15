@@ -22,16 +22,9 @@
 #include "SoundChip.h"
 #include "../RegisterState.h"
 
-CSoundChip::CSoundChip(CMixer *pMixer) :
-	m_pMixer(pMixer),
-	m_pRegisterLogger(new CRegisterLogger { })
+CSoundChip::CSoundChip() :
+	m_pRegisterLogger(std::make_unique<CRegisterLogger>())
 {
-}
-
-CSoundChip::~CSoundChip()
-{
-	if (m_pRegisterLogger)
-		delete m_pRegisterLogger;
 }
 
 double CSoundChip::GetFreq(int Channel) const		// // //
@@ -46,7 +39,7 @@ void CSoundChip::Log(uint16_t Address, uint8_t Value)		// // //
 		m_pRegisterLogger->Write(Value);
 }
 
-CRegisterLogger *CSoundChip::GetRegisterLogger() const		// // //
+CRegisterLogger* CSoundChip::GetRegisterLogger() const		// // //
 {
-	return m_pRegisterLogger;
+	return m_pRegisterLogger.get();
 }

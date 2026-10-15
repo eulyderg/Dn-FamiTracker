@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -33,20 +33,19 @@
 #include "VRC7.h"
 #include "S5B.h"
 #include "SoundChip.h"
-#include "SoundChip2.h"
 #include "../RegisterState.h"		// // //
 #include "../SpeedDlg.h"
 
-const int		CAPU::SEQUENCER_FREQUENCY	= 240;		// // //
-const uint32_t	CAPU::BASE_FREQ_NTSC		= 1789773;		// 72.667
-const uint32_t	CAPU::BASE_FREQ_PAL			= 1662607;
-const uint32_t	CAPU::BASE_FREQ_VRC7		= 3579545;
-const uint8_t	CAPU::FRAME_RATE_NTSC		= 60;
-const uint8_t	CAPU::FRAME_RATE_PAL		= 50;
-const uint16_t	CAPU::NSF_RATE_NTSC			= 16639;
-const uint16_t	CAPU::NSF_RATE_PAL			= 19997;
+constexpr int		CAPU::SEQUENCER_FREQUENCY	= 240;		// // //
+constexpr uint32_t	CAPU::BASE_FREQ_NTSC		= 1789773;		// 72.667
+constexpr uint32_t	CAPU::BASE_FREQ_PAL			= 1662607;
+constexpr uint32_t	CAPU::BASE_FREQ_VRC7		= 3579545;
+constexpr uint8_t	CAPU::FRAME_RATE_NTSC		= 60;
+constexpr uint8_t	CAPU::FRAME_RATE_PAL		= 50;
+constexpr uint16_t	CAPU::NSF_RATE_NTSC			= 16639;
+constexpr uint16_t	CAPU::NSF_RATE_PAL			= 19997;
 
-const int OPLL_TONE_NUM = 9;
+constexpr int OPLL_TONE_NUM = 9;
 
 // based off NSFPlay emu2413's hardware patch scheme
 const uint8_t CAPU::OPLL_DEFAULT_PATCHES[OPLL_TONE_NUM][19 * 8] =
@@ -146,7 +145,7 @@ const std::string CAPU::OPLL_PATCHNAME_YMF281B[19] = {
 	"Tom / Top Cymbal"
 };
 
-const uint8_t CAPU::LENGTH_TABLE[] = {
+constexpr uint8_t CAPU::LENGTH_TABLE[] = {
 	0x0A, 0xFE, 0x14, 0x02, 0x28, 0x04, 0x50, 0x06,
 	0xA0, 0x08, 0x3C, 0x0A, 0x0E, 0x0C, 0x1A, 0x0E,
 	0x0C, 0x10, 0x18, 0x12, 0x30, 0x14, 0x60, 0x16,
@@ -159,17 +158,16 @@ CAPU::CAPU(IAudioCallback *pCallback) :		// // //
 	m_pSoundBuffer(NULL),
 	m_pMixer(new CMixer(this)),
 	m_p2A03(std::make_unique<C2A03>()),
+	m_pMMC5(std::make_unique<CMMC5>()),
+	m_pVRC6(std::make_unique<CVRC6>()),
 	m_pFDS(std::make_unique<CFDS>()),
 	m_pN163(std::make_unique<CN163>()),
 	m_pVRC7(std::make_unique<CVRC7>()),
+	m_pS5B(std::make_unique<CS5B>()),
 	m_iExternalSoundChips(0),
 	m_iCyclesToRun(0),
 	m_iSampleRate(44100)		// // //
 {
-	m_pMMC5 = new CMMC5(m_pMixer);
-	m_pVRC6 = new CVRC6(m_pMixer);
-	m_pS5B  = new CS5B(m_pMixer);
-
 	m_fLevelVRC7 = 1.0f;
 
 #ifdef LOGGING
@@ -180,14 +178,8 @@ CAPU::CAPU(IAudioCallback *pCallback) :		// // //
 
 CAPU::~CAPU()
 {
-	SAFE_RELEASE(m_pMMC5);
-	SAFE_RELEASE(m_pVRC6);
-	SAFE_RELEASE(m_pS5B);
-
 	SAFE_RELEASE(m_pMixer);
-
 	SAFE_RELEASE(m_pSoundBuffer);
-
 #ifdef LOGGING
 	m_pLog->Close();
 	delete m_pLog;
@@ -205,10 +197,7 @@ void CAPU::Process()
 		uint32_t Time = m_iCyclesToRun;
 		Time = std::min(Time, m_iSequencerNext - m_iSequencerClock);		// // //
 		Time = std::min(Time, m_iFrameClock);
-
-		for (auto Chip : m_SoundChips)		// // //
-			Chip->Process(Time);
-		for (auto Chip : m_SoundChips2)
+		for (auto Chip : m_SoundChips)
 			Chip->Process(Time, m_pMixer->GetBuffer());
 
 		m_iFrameCycles	  += Time;
@@ -229,8 +218,8 @@ void CAPU::StepSequence()		// // //
 	if (++m_iSequencerCount == SEQUENCER_FREQUENCY)
 		m_iSequencerClock = m_iSequencerCount = 0;
 	m_iSequencerNext = (uint64_t)BASE_FREQ_NTSC * (m_iSequencerCount + 1) / SEQUENCER_FREQUENCY;
-	m_p2A03->ClockSequence();
-	m_pMMC5->ClockSequence();		// // //
+	//m_p2A03->ClockSequence();		// // //
+	//m_pMMC5->ClockSequence();		// // //
 }
 
 // End of audio frame, flush the buffer if enough samples has been produced, and start a new frame
@@ -238,9 +227,7 @@ void CAPU::EndFrame()
 {
 	// The APU will always output audio in 32 bit signed format
 	
-	for (auto Chip : m_SoundChips)		// // //
-		Chip->EndFrame();
-	for (auto Chip : m_SoundChips2)
+	for (auto Chip : m_SoundChips)
 		Chip->EndFrame(m_pMixer->GetBuffer(), gsl::span(m_pSoundBuffer, m_iSoundBufferSize << 1));
 
 	m_pMixer->FinishBuffer(m_iFrameCycles);
@@ -250,9 +237,7 @@ void CAPU::EndFrame()
 	m_iFrameClock /*+*/= m_iFrameCycleCount;
 	m_iFrameCycles = 0;
 
-	for (auto& r : m_SoundChips)		// // //
-		r->GetRegisterLogger()->Step();
-	for (auto& r : m_SoundChips2)
+	for (auto& r : m_SoundChips)
 		r->GetRegisterLogger()->Step();
 
 #ifdef LOGGING
@@ -274,12 +259,8 @@ void CAPU::Reset()
 	m_iFrameClock		= m_iFrameCycleCount;
 	
 	m_pMixer->ClearBuffer();
-	
-	for (auto Chip : m_SoundChips) {		// // //
-		Chip->GetRegisterLogger()->Reset();
-		Chip->Reset();
-	}
-	for (auto Chip : m_SoundChips2) {
+
+	for (auto Chip : m_SoundChips) {
 		Chip->GetRegisterLogger()->Reset();
 		Chip->Reset();
 	}
@@ -292,28 +273,27 @@ void CAPU::Reset()
 void CAPU::SetExternalSound(uint8_t Chip)
 {
 	// Initialize list of active sound chips.
-	// Do this first because m_SoundChips2 is used by CMixer::ExternalSound() -> CMixer::UpdateMixing().
+	// Do this first because m_SoundChips is used by CMixer::ExternalSound() -> CMixer::UpdateMixing().
 	m_SoundChips.clear();
-	m_SoundChips2.clear();
 
-	m_SoundChips2.push_back(m_p2A03.get());		// // //
+	m_SoundChips.push_back(m_p2A03.get());		// // //
 	if (Chip & SNDCHIP_VRC6)
-		m_SoundChips.push_back(m_pVRC6);
+		m_SoundChips.push_back(m_pVRC6.get());
 	if (Chip & SNDCHIP_VRC7)
-		m_SoundChips2.push_back(m_pVRC7.get());
+		m_SoundChips.push_back(m_pVRC7.get());
 	if (Chip & SNDCHIP_FDS)
-		m_SoundChips2.push_back(m_pFDS.get());
+		m_SoundChips.push_back(m_pFDS.get());
 	if (Chip & SNDCHIP_MMC5)
-		m_SoundChips.push_back(m_pMMC5);
+		m_SoundChips.push_back(m_pMMC5.get());
 	if (Chip & SNDCHIP_N163)
-		m_SoundChips2.push_back(m_pN163.get());
+		m_SoundChips.push_back(m_pN163.get());
 	if (Chip & SNDCHIP_S5B)
-		m_SoundChips.push_back(m_pS5B);
+		m_SoundChips.push_back(m_pS5B.get());
 
 	// Set (unused) bitfield of external sound chips enabled.
 	m_iExternalSoundChips = Chip;
 
-	// Reinitialize mixer with list of external sound chips (as well as m_SoundChips2).
+	// Reinitialize mixer with list of external sound chips (as well as m_SoundChips).
 	m_pMixer->ExternalSound(Chip);
 
 	// CAPU::ChangeMachineRate -> CMixer::SetClockRate is called before CAPU::SetExternalSound,
@@ -391,9 +371,7 @@ void CAPU::Write(uint16_t Address, uint8_t Value)
 
 	Process();
 	
-	for (auto Chip : m_SoundChips)		// // //
-		Chip->Write(Address, Value);
-	for (auto Chip : m_SoundChips2)
+	for (auto Chip : m_SoundChips)
 		Chip->Write(Address, Value);
 
 	LogWrite(Address, Value);
@@ -408,11 +386,8 @@ uint8_t CAPU::Read(uint16_t Address)
 	bool Mapped(false);
 
 	Process();
-	
-	for (auto Chip : m_SoundChips)		// // //
-		if (!Mapped)
-			Value = Chip->Read(Address, Mapped);
-	for (auto Chip : m_SoundChips2)
+
+	for (auto Chip : m_SoundChips)
 		if (!Mapped)
 			Value = Chip->Read(Address, Mapped);
 
@@ -509,9 +484,7 @@ int CAPU::GetMeterDecayRate() const		// // // 050B
 
 void CAPU::LogWrite(uint16_t Address, uint8_t Value)
 {
-	for (auto &r : m_SoundChips)		// // //
-		r->Log(Address, Value);
-	for (auto& r : m_SoundChips2)
+	for (auto& r : m_SoundChips)
 		r->Log(Address, Value);
 }
 
@@ -601,36 +574,72 @@ void CAPUConfig::SetupMixer(
 	};
 }
 
+/*
+Compensate for emulator output gain differences. This is done by
+setting them to `0.0`, measuring the delta db RMS, and compensating to
+match the `mixe` reference gain.
+
+These constants are also saved in the registry as "<chip> survey level"
+Dn-FamiTracker uses NSFPlay's mixe constants as reference, in millibels
+- APU1:	===
+- APU2:	-20
+- VRC6:	0
+- VRC7:	1340
+- FDS:	690
+- MMC5:	0
+- N163:	1540
+- S5B:	-250
+*/
+constexpr double SURVEY_LEVEL_DB_CORRECTION[CHIP_LEVEL_COUNT]{
+	  0.0,  // APU1
+	 -0.12, // APU2
+	 -4.33, // VRC6
+	  8.33, // VRC7
+	-16.11, // FDS
+	  0.0,  // MMC5
+	-16.44, // N163
+	  2.09  // S5B
+};
+
+/*
+Legacy volume adjustments. This is done by setting them to `0.0`,
+measuring the delta db RMS, and compensating to match the reference
+gain observed in 0CC v0.3.14.5 and FT v0.5.0 beta 10.
+
+Before the refactoring of CSoundChip and CMixer, levels were adjusted
+by multiplying a factor into the chip's blip synth somewhere in source:
+	VRC6:	3.98333f
+	MMC5:	1.18421f
+	VRC7:	4.6f;	patch 14 is 4, 88 times stronger than a 50 % square @ v = 15
+	N163:	1.3f if single channel, else: (1.5f + (Channels - 1) / 1.5f)
+*/
+constexpr double LEGACY_LEVEL_DB_CORRECTION[CHIP_LEVEL_COUNT]{
+	 0.0,   // APU1
+	-0.65,  // APU2
+	12.15,  // VRC6
+	 9.72,  // VRC7; its own amplification is absolute
+	 4.43,  // FDS
+	 1.06,  // MMC5
+	 0.25,  // N163; further dynamically calculated
+	 0.89   // S5B
+};
+
 // must be called after SetupMixer()
 // Device chip levels needs to be initialized first
-void CAPUConfig::SetChipLevel(chip_level_t Chip, float LeveldB, bool SurveyMix)
+void CAPUConfig::SetChipLevel(chip_level_t Chip, double LeveldB, bool SurveyMix)
 {
+	double Mix = LeveldB;
+	Mix += static_cast<double>(m_MixerConfig->DeviceMixOffsets[Chip]) / 10.0;
+
+	if (SurveyMix)
+		// chipleveldb = SurveyConfig + ModuleMix + SurveyCorrection
+		Mix += SURVEY_LEVEL_DB_CORRECTION[Chip];
+	else
+		// chipleveldb = MixerConfig + ModuleMix + LegacyCorrection
+		Mix += LEGACY_LEVEL_DB_CORRECTION[Chip];
+
 	// Convert dB to linear
-	float LevelLinear = 1.0f;
-	if (SurveyMix) {
-		// Compensate for blip_buffer output scaling differences
-		// values are derived by setting m_ChipLevels[] to 1.0
-		// and measuring the dB RMS delta between APU1 and other chips
-		// using methods described here: https://www.nesdev.org/wiki/NSFe#mixe
-		// TODO: investigate issues with rounding error
-		int16_t dblevelcorrection[CHIP_LEVEL_COUNT]{
-			0,		// APU1
-			-13,	// APU2
-			-494,	// VRC6
-			776,	// VRC7
-			-1700,	// FDS
-			869,	// MMC5
-			-1681,	// N163
-			108		// S5B
-		};
-		LevelLinear = powf(10, (LeveldB +
-			((static_cast<float>(dblevelcorrection[Chip]) / 100.0f)) +
-				(static_cast<float>(m_MixerConfig->DeviceMixOffsets[Chip]) / 10.0f)) / 20.0f);
-	}
-	else {
-		LevelLinear = powf(10, (LeveldB +
-			(static_cast<float>(m_MixerConfig->DeviceMixOffsets[Chip]) / 10.0f)) / 20.0f);
-	}
+	double LevelLinear = pow(10, Mix / 20.0);
 
 	m_ChipLevels[Chip] = LevelLinear;
 }

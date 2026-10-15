@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -157,6 +157,7 @@ BOOL CAboutDlg::OnInitDialog()
 #endif
 
 	SetDlgItemText(IDC_ABOUT1, aboutString);
+	// TODO: draw information from LICENSE.md?
 	SetDlgItemText(IDC_ABOUT_CONTRIB,
 		_T("- FamiTracker\r\n")
 		_T("    Copyright (C) 2005-2020 Jonathan Liss\r\n")
@@ -174,12 +175,15 @@ BOOL CAboutDlg::OnInitDialog()
 		_T("- Module text import/export by rainwarrior"));		// // //
 	SetDlgItemText(IDC_ABOUT_LIB, // // !!
 		_T("- 2A03 sound emulator from NSFPlay\r\n")
-		_T("    Copyright (C) 2006 Brezza, 2012-2025 Brad Smith\r\n")
+		_T("    Copyright (C) 2006 Brezza, 2012-2026 Brad Smith\r\n")
 		_T("- VRC7/OPLL sound emulator from emu2413 v1.5.9\r\n")
-		_T("    Copyright (C) 2001-2019 Mitsutaka Okazaki\r\n")
+		_T("    Copyright (C) 2001-2022 Mitsutaka Okazaki\r\n")
+		_T("    Licensed under the MIT license\r\n")
+		_T("- Sunsoft 5B PSG sound emulator from emu2149 v1.41\r\n")
+		_T("    Copyright (C) 2001-2022 Mitsutaka Okazaki\r\n")
 		_T("    Licensed under the MIT license\r\n")
 		_T("- FDS and N163 sound emulator from Mesen\r\n")
-		_T("    Copyright (C) 2014-2024 Sour\r\n")
+		_T("    Copyright (C) 2014-2026 Sour\r\n")
 		_T("    Licensed under GPLv3\r\n")
 		_T("- Blip_buffer 0.4.1\r\n")
 		_T("    Copyright (C) 2003-2006 Shay Green\r\n")

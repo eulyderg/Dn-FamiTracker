@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -23,262 +23,188 @@
 #include "S5B.h"
 #include "../RegisterState.h"
 
-// // // 050B
-// Sunsoft 5B channel class
-
-const int32_t EXP_VOLUME[32] = {
-	  0,   1,   1,   2,
-	  2,   3,   3,   4,
-	  5,   6,   7,   9,
-	 11,  13,  15,  18,
-	 22,  26,  31,  37,
-	 45,  53,  63,  76,
-	 90, 106, 127, 151,
-	180, 212, 255, 255
-};
-
-CS5BChannel::CS5BChannel(CMixer *pMixer, uint8_t ID) : CChannel(pMixer, SNDCHIP_S5B, ID),
-	m_iVolume(0),
-	m_iPeriod(0),
-	m_iPeriodClock(0),
-	m_bSquareHigh(false),
-	m_bSquareDisable(false),
-	m_bNoiseDisable(false)
-{
-}
-
-void CS5BChannel::Process(uint32_t Time)
-{
-	m_iPeriodClock += Time;
-	if (m_iPeriodClock >= m_iPeriod) {
-		m_iPeriodClock = 0;
-		m_bSquareHigh = !m_bSquareHigh;
-	}
-	m_iTime += Time;
-}
-
-void CS5BChannel::Reset()
-{
-	m_iVolume = 0;
-	m_iPeriod = 0;
-	m_iPeriodClock = 0;
-	m_bSquareHigh = false;
-	m_bSquareDisable = true;
-	m_bNoiseDisable = true;
-}
-
-uint32_t CS5BChannel::GetTime()
-{
-	if (m_iPeriod < 2U || !m_iVolume)
-		return 0xFFFFFU;
-	return m_iPeriod - m_iPeriodClock;
-}
-
-void CS5BChannel::Output(uint32_t Noise, uint32_t Envelope)
-{
-	int Level = ((m_iVolume & 0x20) ? Envelope : m_iVolume) & 0x1F;
-	int32_t Output = EXP_VOLUME[Level];
-	if (!m_bSquareDisable && !m_bSquareHigh && m_iPeriod >= 2U)
-		Output = 0;
-	if (!m_bNoiseDisable && !Noise)
-		Output = 0;
-	Mix(static_cast<int32_t>(Output) * -1);
-}
-
-double CS5BChannel::GetFrequency() const		// // //
-{
-	if (m_bSquareDisable || !m_iPeriod)
-		return 0.;
-	return CAPU::BASE_FREQ_NTSC / 2. / m_iPeriod;
-}
-
-
-
 // Sunsoft 5B chip class
 
-CS5B::CS5B(CMixer *pMixer) : CSoundChip(pMixer),
-	m_cPort(0),
-	m_iCounter(0)
+CS5B::CS5B() :
+	m_cPort(0)
 {
-	m_pRegisterLogger->AddRegisterRange(0x00, 0x0F);		// // //
+	// Set up the emulation core with parameters
+	// clock and rate will be updated in SetClockRate()
+	m_S5B = PSG_new(m_BlipS5B.clock_rate(), m_BlipS5B.clock_rate());
+	// choose YM2149 mode
+	PSG_setClockDivider(m_S5B, 1);
+	PSG_setVolumeMode(m_S5B, 1);
 
-	m_pChannel[0] = new CS5BChannel(pMixer, CHANID_S5B_CH1);
-	m_pChannel[1] = new CS5BChannel(pMixer, CHANID_S5B_CH2);
-	m_pChannel[2] = new CS5BChannel(pMixer, CHANID_S5B_CH3);
-	Reset();
-}
-
-CS5B::~CS5B()
-{
-	for (auto x : m_pChannel)
-		if (x)
-			delete x;
+	// 5B internal registers
+	m_pRegisterLogger->AddRegisterRange(0x00, 0x0F);
 }
 
 void CS5B::Reset()
 {
-	m_iNoiseState = 0xFFFF;
-	m_iCounter = 0;
-	m_iNoisePeriod = 0x1F << 5;
-	m_iNoiseClock = 0;
-	m_iEnvelopePeriod = 0;
-	m_iEnvelopeClock = 0;
-	m_iEnvelopeLevel = 0;
-	m_iEnvelopeShape = 0;
-	m_bEnvelopeHold = true;
-	
-	for (auto x : m_pChannel)
-		x->Reset();
+	PSG_reset(m_S5B);
+
+	m_SynthS5B.clear();
+	m_BlipS5B.clear();
 }
 
-void CS5B::Process(uint32_t Time)
+void CS5B::UpdateFilter(blip_eq_t eq)
 {
-	while (Time > 0U) {
-		uint32_t TimeToRun = Time;
-		if (m_iEnvelopeClock < m_iEnvelopePeriod)
-			TimeToRun = std::min<uint32_t>(m_iEnvelopePeriod - m_iEnvelopeClock, TimeToRun);
-		if (m_iNoiseClock < m_iNoisePeriod)
-			TimeToRun = std::min<uint32_t>(m_iNoisePeriod - m_iNoiseClock, TimeToRun);
-		for (const auto x : m_pChannel)
-			TimeToRun = std::min<uint32_t>(x->GetTime(), TimeToRun);
-
-		m_iCounter += TimeToRun;
-		Time -= TimeToRun;
-
-		RunEnvelope(TimeToRun);
-		RunNoise(TimeToRun);
-		for (auto x : m_pChannel)
-			x->Process(TimeToRun);
-
-		for (auto x : m_pChannel)
-			x->Output(m_iNoiseState & 0x01, m_iEnvelopeLevel);
-	}
+	m_SynthS5B.treble_eq(eq);
 }
 
-void CS5B::EndFrame()
+void CS5B::SetClockRate(uint32_t Rate)
 {
-	for (auto x : m_pChannel)
-		x->EndFrame();
-	m_iCounter = 0;
+	m_BlipS5B.clock_rate(Rate);
+	PSG_setClock(m_S5B, Rate);
+	PSG_setRate(m_S5B, Rate);
 }
 
 void CS5B::Write(uint16_t Address, uint8_t Value)
 {
+	// S5B has an I/O system for setting its internal registers.
+	// The currently set port is m_cPort.
 	switch (Address) {
-	case 0xC000:
-		m_cPort = Value & 0x0F;
-		break;
-	case 0xE000:
-		WriteReg(m_cPort, Value);
-		break;
+	case 0xC000: m_cPort = Value & 0x0F; break;
+	case 0xE000: PSG_writeReg(m_S5B, m_cPort, Value); break;
 	}
 }
 
-uint8_t CS5B::Read(uint16_t Address, bool &Mapped)
+uint8_t CS5B::Read(uint16_t Address, bool& Mapped)
 {
+	// The internal registers are inaccessible to reads.
 	Mapped = false;
-	return 0U;
-}
-
-double CS5B::GetFreq(int Channel) const		// // //
-{
-	switch (Channel) {
-	case 0: case 1: case 2:
-		return m_pChannel[Channel]->GetFrequency();
-	case 3:
-		if (!m_iEnvelopePeriod)
-			return 0.;
-		if (!(m_iEnvelopeShape & 0x08) || (m_iEnvelopeShape & 0x01))
-			return 0.;
-		return CAPU::BASE_FREQ_NTSC / ((m_iEnvelopeShape & 0x02) ? 64. : 32.) / m_iEnvelopePeriod;
-	//case 4: TODO noise refresh rate
-	}
-	return 0.;
-}
-
-void CS5B::WriteReg(uint8_t Port, uint8_t Value)
-{
-	switch (Port) {
-	case 0x00: case 0x02: case 0x04:
-	{
-		auto pChan = m_pChannel[Port >> 1];
-		pChan->m_iPeriod = (pChan->m_iPeriod & 0xF000) | (Value << 4);
-	}
-		break;
-	case 0x01: case 0x03: case 0x05:
-	{
-		auto pChan = m_pChannel[Port >> 1];
-		pChan->m_iPeriod = (pChan->m_iPeriod & 0x0FF0) | ((Value & 0x0F) << 12);
-	}
-		break;
-	case 0x06:
-		m_iNoisePeriod = Value ? ((Value & 0x1F) << 5) : 0x10;
-		break;
-	case 0x07:
-		for (int i = 0; i < 3; ++i) {
-			auto pChan = m_pChannel[i];
-			pChan->m_bSquareDisable = (Value & (1 << i)) != 0;
-			pChan->m_bNoiseDisable = (Value & (1 << (i + 3))) != 0;
-		}
-		break;
-	case 0x08: case 0x09: case 0x0A:
-		m_pChannel[Port - 0x08]->m_iVolume = Value * 2;
-		break;
-	case 0x0B:
-		m_iEnvelopePeriod = (m_iEnvelopePeriod & 0xFF000) | (Value << 4);
-		break;
-	case 0x0C:
-		m_iEnvelopePeriod = (m_iEnvelopePeriod & 0x00FF0) | (Value << 12);
-		break;
-	case 0x0D:
-		m_iEnvelopeClock = 0;
-		m_iEnvelopeShape = Value;
-		m_bEnvelopeHold = false;
-		m_iEnvelopeLevel = (Value & 0x04) ? 0 : 0x1F;
-		break;
-	}
+	return 0;
 }
 
 void CS5B::Log(uint16_t Address, uint8_t Value)		// // //
 {
+	// Despite the write-only registers, inform the register logger of their values anyway.
 	switch (Address) {
 	case 0xC000: m_pRegisterLogger->SetPort(Value); break;
 	case 0xE000: m_pRegisterLogger->Write(Value); break;
 	}
 }
 
-void CS5B::RunEnvelope(uint32_t Time)
+void CS5B::EndFrame(Blip_Buffer& Output, gsl::span<int16_t>)
 {
-	m_iEnvelopeClock += Time;
-	if (m_iEnvelopeClock >= m_iEnvelopePeriod && m_iEnvelopePeriod) {
-		m_iEnvelopeClock = 0;
-		if (!m_bEnvelopeHold) {
-			m_iEnvelopeLevel += (m_iEnvelopeShape & 0x04) ? 1 : -1;
-			m_iEnvelopeLevel &= 0x3F;
-		}
-		if (m_iEnvelopeLevel & 0x20) {
-			if (m_iEnvelopeShape & 0x08) {
-				if ((m_iEnvelopeShape & 0x03) == 0x01 || (m_iEnvelopeShape & 0x03) == 0x02)
-					m_iEnvelopeShape ^= 0x04;
-				if (m_iEnvelopeShape & 0x01)
-					m_bEnvelopeHold = true;
-				m_iEnvelopeLevel = (m_iEnvelopeShape & 0x04) ? 0 : 0x1F;
-			}
-			else {
-				m_bEnvelopeHold = true;
-				m_iEnvelopeLevel = 0;
-			}
-		}
-	}
+	m_iTime = 0;
 }
 
-void CS5B::RunNoise(uint32_t Time)
+// This function takes the 5B channel output from 0-255 and recovers the volume level for the meter
+uint8_t CS5B::output_to_level(int output) const
 {
-	m_iNoiseClock += Time;
-	if (m_iNoiseClock >= m_iNoisePeriod) {
-		m_iNoiseClock = 0;
-		if (m_iNoiseState & 0x01)
-			m_iNoiseState ^= 0x24000;
-		m_iNoiseState >>= 1;
+	switch (output) {
+//  output --> meter level
+	case 0x00: return 0x00;
+	case 0x01: return 0x01;
+	case 0x02: return 0x02;
+	case 0x03: 
+	case 0x04: return 0x03;
+	case 0x05:
+	case 0x06: return 0x04;
+	case 0x07:
+	case 0x09: return 0x05;
+	case 0x0B:
+	case 0x0D: return 0x06;
+	case 0x0F:
+	case 0x12: return 0x07;
+	case 0x16:
+	case 0x1A: return 0x08;
+	case 0x1F:
+	case 0x25: return 0x09;
+	case 0x2D:
+	case 0x35: return 0x0A;
+	case 0x3F:
+	case 0x4C: return 0x0B;
+	case 0x5A:
+	case 0x6A: return 0x0C;
+	case 0x7F:
+	case 0x97: return 0x0D;
+	case 0xB4:
+	case 0xD6: return 0x0E;
+	case 0xFF: return 0x0F;
 	}
+	return 0x00;
+}
+
+// based on FT 0.5.0 algorithm
+uint32_t CS5B::ClocksUntilLevelChange(uint32_t Time)
+{
+	uint32_t toneclocks = Time;
+
+	for (int i = 0; i < 3; i++) {
+		if (m_S5B->freq[i] > 2 && m_S5B->volume[i])
+			toneclocks = m_S5B->freq[i] - m_S5B->count[i];
+		Time = std::min(toneclocks, Time);
+	}
+	if (m_S5B->env_count < m_S5B->env_freq)
+		Time = std::min(
+			m_S5B->env_freq - m_S5B->env_count,
+			Time
+		);
+
+	if (m_S5B->noise_count < m_S5B->noise_freq)
+		Time = std::min<uint32_t>(
+			m_S5B->noise_freq - m_S5B->noise_count,
+			Time
+		);
+
+	return Time;
+}
+
+// Clock the emulation core and output to the buffer.
+void CS5B::Process(uint32_t Time, Blip_Buffer& Output)
+{
+	uint32_t now = 0;
+
+	auto get_output = [this](uint32_t dclocks, uint32_t now, Blip_Buffer& blip_buf) {
+		Tick(m_S5B, dclocks);
+
+		int32_t out = PSG_calc(m_S5B);
+		m_SynthS5B.update(m_iTime + now, out, &blip_buf);
+
+		m_ChannelLevels[0].update(output_to_level(m_S5B->ch_out[0]));
+		m_ChannelLevels[1].update(output_to_level(m_S5B->ch_out[1]));
+		m_ChannelLevels[2].update(output_to_level(m_S5B->ch_out[2]));
+	};
+
+	while (Time > now) {
+		auto dclocks = std::min(ClocksUntilLevelChange(Time), Time - now);
+		get_output(dclocks, now, Output);
+		now += dclocks;
+	}
+
+	m_iTime += Time;
+}
+
+
+double CS5B::GetFreq(int Channel) const		// // //
+{
+	// Borrowed from old core's calculations.
+	switch (Channel) {
+	case 0: case 1: case 2:
+		if (m_S5B->tmask[Channel] || m_S5B->freq[Channel] == 0) return 0.;
+		return CAPU::BASE_FREQ_NTSC / 2. / m_S5B->freq[Channel] / 16.;
+	case 3:
+		if (m_S5B->env_freq == 0) return 0.;
+		if (!m_S5B->env_continue || m_S5B->env_hold) return 0.;
+		return CAPU::BASE_FREQ_NTSC / (m_S5B->env_alternate ? 64. : 32.) / m_S5B->env_freq / 16.;
+		//case 4: TODO noise refresh rate
+	}
+	return 20.;
+}
+
+int CS5B::GetChannelLevel(int Channel)
+{
+	return m_ChannelLevels[Channel].getLevel();
+}
+
+int CS5B::GetChannelLevelRange(int Channel) const
+{
+	return 0x0F;
+}
+
+void CS5B::UpdateMixLevel(double v, bool UseSurveyMix)
+{
+	m_SynthS5B.volume(v, UseSurveyMix ? (255 + 255 + 255) : 1200);
 }

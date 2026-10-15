@@ -6,31 +6,39 @@ Written by D.P.C.M.
 
 Version 0.5.3.9
 
-Last updated: 2026-05-26
+Last updated: 2026-06-03
 
 ---
 
-## Unreleased - 2026-05-26
+## Unreleased - 2026-06-03
 
 ### Breaking changes
 
-- ...
+- S5B Envelope frequency 0 halt has been fixed (@eulyderg #417)
 
 ### Important changes
 
-- ...
+- Update MMC5, VRC6, and S5B emulation cores (@eulyderg #417)
 
 ### Improvements
 
-- ...
+- Allow copying entire channel row at cursor with no selection (@henrikvilhelmberglund #385)
+- Add color and font appearance setting for channel header (@Nemo55aa #413 #409)
+- Rename CSoundChip2 to deprecate the old CSoundChip (@eulyderg #417)
+- Port S5B to new CSoundChip and emu2149 emulation core (@Gumball2415 @eulyderg #323 #417)
+- Port MMC5 to new CSoundChip and NSFPlay emulation core (@Gumball2415 @eulyderg #324 #417)
+	- MMC5 also now has proper nonlinear mixing.
+- Port VRC6 to new CSoundChip and NSFPlay emulation core (@Gumball2415 @eulyderg #325 #417)
+	- VRC6 sawtooth volume meter reads the register value rather than the actual output, the only practical difference being that the meter now displays volume level 1 correctly.
 
 ### Bug fixes
 
-- ...
+- Replace the old CSoundChip, CChannel, and 2A03Chan classes (@Gumball2415 @eulyderg #29 #417)
 
 ### Internal
 
-- ...
+- Miscellaneous code documentation and minor cleanup (@eulyderg #417)
+- CSoundChip now reports the channel count and initial channel of the chip (@eulyderg #417)
 
 
 
@@ -402,8 +410,8 @@ Notice: the version numbers in the .exe are wrong, please ignore it.
 
 ### Important changes
 
-- New file extension format for modules: *.dnm (@Gumball2415 #71)
-- New file extension format for instruments: *.dni (@Gumball2415 #71)
+- New file extension format for modules: \*.dnm (@Gumball2415 #71)
+- New file extension format for instruments: \*.dni (@Gumball2415 #71)
 - Support for Windows XP has been dropped (@Gumball2415, @nyanpasu64, @N-SPC700 #82, #84)
 
 ### Additions:

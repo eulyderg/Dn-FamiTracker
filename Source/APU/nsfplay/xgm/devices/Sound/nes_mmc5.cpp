@@ -5,9 +5,8 @@ namespace xgm
 
   NES_MMC5::NES_MMC5 ()
   {
-    cpu = NULL;
-    SetClock (DEFAULT_CLOCK);
-    SetRate (DEFAULT_RATE);
+    SetClock(DEFAULT_CLOCK);
+    SetRate(DEFAULT_RATE);
     option[OPT_NONLINEAR_MIXER] = true;
     option[OPT_PHASE_REFRESH] = true;
     frame_sequence_count = 0;
@@ -16,18 +15,6 @@ namespace xgm
     square_table[0] = 0;
     for(int i=1;i<32;i++) 
         square_table[i]=(INT32)((8192.0*95.88)/(8128.0/i+100));
-
-    // 2A03 style nonlinear pcm mix with double the bits
-    //pcm_table[0] = 0;
-    //INT32 wd = 22638;
-    //for(int d=1;d<256; ++d)
-    //    pcm_table[d] = (INT32)((8192.0*159.79)/(100.0+1.0/((double)d/wd)));
-
-    // linear pcm mix (actual hardware seems closer to this)
-    pcm_table[0] = 0;
-    double pcm_scale = 32.0;
-    for (int d=1; d<256; ++d)
-        pcm_table[d] = (INT32)(double(d) * pcm_scale);
 
     // stereo mix
     for(int c=0;c<2;++c)
@@ -65,8 +52,6 @@ namespace xgm
         out[i] = 0;
 
     mask = 0;
-    pcm = 0; // PCM channel
-    pcm_mode = false; // write mode
 
     SetRate(rate);
   }
@@ -167,16 +152,14 @@ namespace xgm
   {
     out[0] = calc_sqr(0, clocks);
     out[1] = calc_sqr(1, clocks);
-    out[2] = pcm;
   }
 
   UINT32 NES_MMC5::Render (INT32 b[2])
   {
     out[0] = (mask & 1) ? 0 : out[0];
     out[1] = (mask & 2) ? 0 : out[1];
-    out[2] = (mask & 4) ? 0 : out[2];
 
-    INT32 m[3];
+    INT32 m[2];
 
     if(option[OPT_NONLINEAR_MIXER])
     {
@@ -195,30 +178,22 @@ namespace xgm
             m[0] = voltage;
             m[1] = voltage;
         }
-
-        // pcm nonlinear
-        m[2] = pcm_table[out[2]];
     }
     else
     {
         // squares
         m[0] = out[0] << 6;
         m[1] = out[1] << 6;
-
-        // pcm channel
-        m[2] = out[2] << 5;
     }
 
     // note polarity is flipped on output
 
     b[0]  = m[0] * -sm[0][0];
     b[0] += m[1] * -sm[0][1];
-    b[0] += m[2] * -sm[0][2];
     b[0] >>= 7;
 
     b[1]  = m[0] * -sm[1][0];
     b[1] += m[1] * -sm[1][1];
-    b[1] += m[2] * -sm[1][2];
     b[1] >>= 7;
 
     return 2;
@@ -246,16 +221,6 @@ namespace xgm
         0x10, 0x1C,
         0x20, 0x1E
     };
-
-    if ((0x5c00 <= adr) && (adr < 0x5ff0))
-    {
-      ram[adr & 0x3ff] = val;
-      return true;
-    }
-    else if ((0x5000 <= adr) && (adr < 0x5008))
-    {
-      reg[adr & 0x7] = val;
-    }
 
     switch (adr)
     {
@@ -291,20 +256,6 @@ namespace xgm
       }
       break;
 
-    // PCM channel control
-    case 0x5010:
-      pcm_mode = ((val & 1) != 0); // 0 = write, 1 = read
-      break;
-
-    // PCM channel control
-    case 0x5011:
-      if (!pcm_mode)
-      {
-          val &= 0xFF;
-          if (val != 0) pcm = val;
-      }
-      break;
-
     case 0x5015:
       enable[0] = (val & 1) ? true : false;
       enable[1] = (val & 2) ? true : false;
@@ -312,14 +263,6 @@ namespace xgm
           length_counter[0] = 0;
       if (!enable[1])
           length_counter[1] = 0;
-      break;
-
-    case 0x5205:
-      mreg[0] = val;
-      break;
-
-    case 0x5206:
-      mreg[1] = val;
       break;
 
     default:
@@ -331,17 +274,6 @@ namespace xgm
 
   bool NES_MMC5::Read (UINT32 adr, UINT32 & val, UINT32 id)
   {
-    // in PCM read mode, reads from $8000-$C000 automatically load the PCM output
-    if (pcm_mode && (0x8000 <= adr) && (adr < 0xC000) && cpu)
-    {
-        pcm_mode = false; // prevent recursive entry
-        UINT32 pcm_read;
-        cpu->Read(adr, pcm_read);
-        pcm_read &= 0xFF;
-        if (pcm_read != 0)
-            pcm = pcm_read;
-        pcm_mode = true;
-    }
 
     if ((0x5000 <= adr) && (adr < 0x5008))
     {
@@ -352,22 +284,6 @@ namespace xgm
     {
         val = (enable[1]?2:0)|(enable[0]?1:0);
         return true;
-    }
-
-    if ((0x5c00 <= adr) && (adr < 0x5ff0))
-    {
-      val = ram[adr & 0x3ff];
-      return true;
-    }
-    else if (adr == 0x5205)
-    {
-      val = (mreg[0] * mreg[1]) & 0xff;
-      return true;
-    }
-    else if (adr == 0x5206)
-    {
-      val = (mreg[0] * mreg[1]) >> 8;
-      return true;
     }
 
     return false;
@@ -383,40 +299,29 @@ namespace xgm
 
   ITrackInfo *NES_MMC5::GetTrackInfo(int trk)
   {
-    assert(trk<3);
-
-    if (trk < 2) // square
-    {
-        trkinfo[trk]._freq = freq[trk];
-        if(freq[trk])
-          trkinfo[trk].freq = clock/16/(freq[trk] + 1);
-        else
-          trkinfo[trk].freq = 0;
-
-        trkinfo[trk].output = out[trk];
-        trkinfo[trk].max_volume = 15;
-        trkinfo[trk].volume = volume[trk]+(envelope_disable[trk]?0:0x10);
-        trkinfo[trk].key = (envelope_disable[trk]?(volume[trk]>0): (envelope_counter[trk]>0));
-        trkinfo[trk].tone = duty[trk];
-    }
-    else // pcm
-    {
-        trkinfo[trk]._freq = 0;
+    trkinfo[trk]._freq = freq[trk];
+    if(freq[trk])
+        trkinfo[trk].freq = clock/16/(freq[trk] + 1);
+    else
         trkinfo[trk].freq = 0;
-        trkinfo[trk].output = out[2];
-        trkinfo[trk].max_volume = 255;
-        trkinfo[trk].volume = pcm;
-        trkinfo[trk].key = 0;
-        trkinfo[trk].tone = pcm_mode ? 1 : 0;
-    }
+
+    trkinfo[trk].output = out[trk];
+    trkinfo[trk].max_volume = 15;
+    trkinfo[trk].volume = volume[trk]+(envelope_disable[trk]?0:0x10);
+    trkinfo[trk].key = (envelope_disable[trk]?(volume[trk]>0): (envelope_counter[trk]>0));
+    trkinfo[trk].tone = duty[trk];
 
     return &trkinfo[trk];
   }
 
-  // pcm read mode requires CPU read access
-  void NES_MMC5::SetCPU(NES_CPU* cpu_)
+  double NES_MMC5::GetFreq(int Channel) const    // // !!
   {
-      cpu = cpu_;
+      if (!(length_counter[Channel] > 0 &&
+          enable[Channel] &&
+          (envelope_disable[Channel] ? (volume[Channel] > 0) : (envelope_counter[Channel] > 0)) &&
+          freq[Channel] >= 1))
+          return 0.0;
+      return clock / 16 / (freq[Channel] + 1);
   }
 
 }// namespace

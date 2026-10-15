@@ -163,15 +163,15 @@ private:
 
     // Internal
     typedef blip_ulong blip_resampled_time_t;
-    int const blip_widest_impulse_ = 16;
-    int const blip_buffer_extra_ = blip_widest_impulse_ + 2;
-    int const blip_res = 1 << BLIP_PHASE_BITS;
+    int constexpr blip_widest_impulse_ = 16;
+    int constexpr blip_buffer_extra_ = blip_widest_impulse_ + 2;
+    int constexpr blip_res = 1 << BLIP_PHASE_BITS;
     class blip_eq_t;
 
     class Blip_Synth_Fast_ {
     public:
         int last_amp = 0;
-        int delta_factor;
+        double delta_factor;
 
         void volume_unit( double );
         Blip_Synth_Fast_();
@@ -181,7 +181,7 @@ private:
     class Blip_Synth_ {
     public:
         int last_amp = 0;
-        int delta_factor;
+        double delta_factor;
 
         void volume_unit( double );
         Blip_Synth_( short* impulses, int width );
@@ -196,19 +196,18 @@ private:
     };
 
 // Quality level. Start with blip_good_quality.
-const int blip_med_quality  = 8;
-const int blip_good_quality = 12;
-const int blip_high_quality = 16;
-
-// Range specifies the greatest expected change in amplitude. Calculate it
-// by finding the difference between the maximum and minimum expected
-// amplitudes (max - min).
+constexpr int blip_med_quality  = 8;
+constexpr int blip_good_quality = 12;
+constexpr int blip_high_quality = 16;
 template<int quality>
 class Blip_Synth {
 public:
     // Set overall volume of waveform
     // The actual output value (assuming no DC removal) is around
     // (amplitude / range) * volume * 65536.
+    // Range specifies the greatest expected change in amplitude. Calculate it
+    // by finding the difference between the maximum and minimum expected
+    // amplitudes (max - min).
     void volume( double v, unsigned int range ) { impl.volume_unit( v / range ); }
 
     // Configure low-pass filter (see blip_buffer.txt)
@@ -285,7 +284,7 @@ private:
     friend class Blip_Synth_;
 };
 
-int const blip_sample_bits = 30;
+int constexpr blip_sample_bits = 30;
 
 // Dummy Blip_Buffer to direct sound output to, for easy muting without
 // having to stop sound code.
@@ -337,9 +336,9 @@ int const blip_reader_default_bass = 9;
 
 
 // Compatibility with older version
-const blip_long blip_unscaled = 65535;
-const int blip_low_quality  = blip_med_quality;
-const int blip_best_quality = blip_high_quality;
+constexpr blip_long blip_unscaled = 65535;
+constexpr int blip_low_quality  = blip_med_quality;
+constexpr int blip_best_quality = blip_high_quality;
 
 // Deprecated; use BLIP_READER macros as follows:
 // Blip_Reader r; r.begin( buf ); -> BLIP_READER_BEGIN( r, buf );
@@ -373,7 +372,7 @@ inline void Blip_Synth<quality>::offset_resampled( blip_resampled_time_t time,
     // Fails if time is beyond end of Blip_Buffer, due to a bug in caller code or the
     // need for a longer buffer as set by set_sample_rate().
     assert( (blip_long) (time >> BLIP_BUFFER_ACCURACY) < blip_buf->buffer_size_ );
-    delta *= impl.delta_factor;
+    delta = (int)((double)delta * impl.delta_factor);
     blip_long* BLIP_RESTRICT buf = blip_buf->buffer_ + (time >> BLIP_BUFFER_ACCURACY);
     int phase = (int) (time >> (BLIP_BUFFER_ACCURACY - BLIP_PHASE_BITS) & (blip_res - 1));
 
@@ -391,9 +390,9 @@ inline void Blip_Synth<quality>::offset_resampled( blip_resampled_time_t time,
     buf [1] = right;
 #else
 
-    int const fwd = (blip_widest_impulse_ - quality) / 2;
-    int const rev = fwd + quality - 2;
-    int const mid = quality / 2 - 1;
+    int constexpr fwd = (blip_widest_impulse_ - quality) / 2;
+    int constexpr rev = fwd + quality - 2;
+    int constexpr mid = quality / 2 - 1;
 
     imp_t const* BLIP_RESTRICT imp = impulses + blip_res - phase;
 
@@ -521,7 +520,7 @@ inline int Blip_Reader::begin( Blip_Buffer& blip_buf )
     return blip_buf.bass_shift_;
 }
 
-int const blip_max_length = 0;
-int const blip_default_length = 250;
+int constexpr blip_max_length = 0;
+int constexpr blip_default_length = 250;
 
 #endif

@@ -21,19 +21,46 @@
 
 #pragma once
 
-#include <cstdint>		// // //
+#include "Blip_Buffer/Blip_Buffer.h"
 
-class CMixer;
+#include "gsl/span"
+#include <cstdint>		// // //
+#include <memory>
+#include "Types.h"
+
 class CRegisterLogger;		// // //
+class Blip_Buffer;
 
 class CSoundChip {
 public:
-	CSoundChip(CMixer *pMixer = nullptr);		// // //
-	virtual ~CSoundChip();
+	CSoundChip();		// // //
+	virtual ~CSoundChip() = default;
 
 	virtual void	Reset() = 0;
-	virtual void	Process(uint32_t Time) = 0;
-	virtual void	EndFrame() = 0;
+	virtual void UpdateFilter(blip_eq_t eq) = 0;
+
+	/// The empty default implementation is sufficient
+	/// unless your CSoundChip subclass owns its own Blip_Buffer (not just Blip_Synth).
+	///
+	/// tbh the proliferation of mutable state with setters is evil,
+	/// I'd much rather set clock rate as a constructor parameter
+	/// and tear down all sound chips when it changes.
+	virtual void SetClockRate(uint32_t Rate) {}
+
+	/// Advance the sound chip emulator.
+	///
+	/// - Time is the number of clock cycles to advance.
+	/// - Output is where audio will be written to.
+	virtual void	Process(uint32_t Time, Blip_Buffer& Output) = 0;
+
+	/// End an audio frame/tick.
+	/// Each subclass of CSoundChip can choose to write audio to Output
+	/// on every call to Process(), or on the final call to EndFrame().
+	///
+	/// - Output is where audio will be written to.
+	/// - TempBuffer can be overwritten freely, and the contents will be discarded
+	///   after the function returns.
+	virtual void	EndFrame(Blip_Buffer& Output, gsl::span<int16_t> TempBuffer) = 0;
 
 	virtual void	Write(uint16_t Address, uint8_t Value) = 0;
 	virtual uint8_t	Read(uint16_t Address, bool &Mapped) = 0;
@@ -41,10 +68,36 @@ public:
 	// TODO: unify with definitions in DetuneTable.cpp?
 	virtual double	GetFreq(int Channel) const;		// // //
 
+	/// Obtain the amplitude range seen by the specified channel
+	/// since the previous call to GetChannelLevel() with the same channel.
+	/// If the channel has not encountered any deltas since then, returns 0.
+	///
+	/// This method is called by CMixer.
+	/// The return values will near-instantly drop to 0 when a note ends.
+	/// CMixer may run a peak follower on the return values
+	/// to make the volume meters decay gradually.
+	virtual int GetChannelLevel(int Channel)
+	{
+		return 0;
+	}
+
+	/// The largest possible value returned by GetChannelLevel(Channel).
+	/// Return 1 instead of 0 for invalid channels, to avoid division-by-0 crashes.
+	virtual int GetChannelLevelRange(int Channel) const
+	{
+		return 1;
+	}
+
 	virtual void	Log(uint16_t Address, uint8_t Value);		// // //
 	CRegisterLogger *GetRegisterLogger() const;		// // //
 
+	/// Returns the total number of channels that this sound chip has.
+	virtual uint8_t GetChannelCount() const = 0; // TODO: Dynamically calculate this?
+
+	/// Get first channel ID
+	virtual chan_id_t GetFirstChannelID() const = 0;
+
+
 protected:
-	CMixer *m_pMixer;
-	CRegisterLogger *m_pRegisterLogger;		// // //
+	std::unique_ptr<CRegisterLogger> m_pRegisterLogger;		// // //
 };

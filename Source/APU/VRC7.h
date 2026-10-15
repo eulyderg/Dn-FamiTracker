@@ -21,12 +21,12 @@
 
 #pragma once
 
-#include "SoundChip2.h"
+#include "SoundChip.h"
 #include "ChannelLevelState.h"
 
 #include "digital-sound-antiques/emu2413.h"
 
-class CVRC7 : public CSoundChip2 {
+class CVRC7 : public CSoundChip {
 public:
 	CVRC7();
 	virtual ~CVRC7();
@@ -51,6 +51,10 @@ public:
 	void UpdateMixLevel(double v, bool UseSurveyMix = false);
 
 	void UpdatePatchSet(int PatchSelection, bool UseExternalOPLLChip, uint8_t *PatchSet);
+
+	// Report some basic information about the chip
+	uint8_t GetChannelCount() const override { return 6; };						// TODO: Dynamically calculate this?
+	chan_id_t GetFirstChannelID() const override { return CHANID_VRC7_CH1; };	//
 
 protected:
 	static const float  AMPLIFY;

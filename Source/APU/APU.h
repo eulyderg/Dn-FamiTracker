@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -44,7 +44,7 @@ class CN163;
 class CS5B;
 
 class CSoundChip;		// // //
-class CSoundChip2;
+class CSoundChip;
 class CRegisterState;		// // //
 
 #ifdef LOGGING
@@ -131,19 +131,18 @@ private:
 
 	// Expansion chips
 	std::unique_ptr<C2A03> m_p2A03;
-	CVRC6		*m_pVRC6;
-	CMMC5		*m_pMMC5;
+	std::unique_ptr<CMMC5> m_pMMC5;
+	std::unique_ptr<CVRC6> m_pVRC6;
 	std::unique_ptr<CFDS> m_pFDS;
 	std::unique_ptr<CN163> m_pN163;
 	std::unique_ptr<CVRC7> m_pVRC7;
-	CS5B		*m_pS5B;
+	std::unique_ptr<CS5B> m_pS5B;
 
 	/// Bitfield of external sound chips enabled.
 	/// Never read, except for code hidden behind #ifdef LOGGING.
 	uint8_t		m_iExternalSoundChips;
 
 	std::vector<CSoundChip*> m_SoundChips;
-	std::vector<CSoundChip2*> m_SoundChips2;
 
 	uint32_t	m_iSampleRate;						// // //
 	uint32_t	m_iFrameCycleCount;
@@ -164,7 +163,6 @@ private:
 	uint8_t		m_iSequencerCount;					// // // Step count for sequencer
 
 	float		m_fLevelVRC7;
-	// // // 050B removed
 
 #ifdef LOGGING
 	CFile		  *m_pLog;
@@ -211,7 +209,7 @@ public:
 		std::vector<int16_t> DeviceMixOffsets
 	);
 
-	void SetChipLevel(chip_level_t Chip, float LeveldB, bool SurveyMix = false);
+	void SetChipLevel(chip_level_t Chip, double LeveldB, bool SurveyMix = false);
 
 	/// Commit changes if no exception is active.
 	///
@@ -229,7 +227,7 @@ private:
 
 	// Mutations.
 	std::optional<uint8_t> m_ExternalSound;
-	std::optional<float> m_ChipLevels[CHIP_LEVEL_COUNT];		// Chip levels, in linear gain factor scale
+	std::optional<double> m_ChipLevels[CHIP_LEVEL_COUNT];		// Chip levels, in linear gain factor scale
 	std::optional<MixerConfig> m_MixerConfig;
 	std::optional<EmulatorConfig> m_EmulatorConfig;
 };

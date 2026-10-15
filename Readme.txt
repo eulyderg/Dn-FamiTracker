@@ -3,7 +3,7 @@
  /  | |) | ' \|___|| _/ _ | |\/| || |  | | |   / / _ | (__| ' <| _||   /  /
 /===|___/|_||_|    |_/_/ _|_|  |_|___| |_| |_|_\/_/ _|\___|_|\_\___|_|_\=/
 
-Version 0.5.3 - May 25, 2025
+Version 0.5.3.9 - May 26, 2026
 
 --------------------------------------------------------------------------------
 
@@ -27,6 +27,7 @@ Notable additions
 - More accessible DPCM pitch preview
 - More accessible VRC7 patch and envelope editing
 - Improved FDS, N163 VRC7 and 2A03 emulation
+- Appearance setting for pattern editor's color and font
 - Restored Help manual, now at Dn-help
     - <https://github.com/Dn-Programming-Core-Management/Dn-help>
 
