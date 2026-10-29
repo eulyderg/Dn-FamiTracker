@@ -20,8 +20,6 @@
 
 #pragma once
 
-const int ROOT_ITEM_COUNT = 7;
-
 // CChannelsDlg dialog
 
 class CChannelsDlg : public CDialog
@@ -39,9 +37,9 @@ protected:
 	CTreeCtrl *m_pAvailableTree;
 	CListCtrl *m_pAddedChannels;
 
-	HTREEITEM m_hRootItems[ROOT_ITEM_COUNT];
+	HTREEITEM m_hRootItems[CHIP_COUNT];
 
-	void AddChannel(int ChanID);
+	void AddChannel(chan_id_t ChanID);
 	void InsertChannel(HTREEITEM hItem);
 
 protected:

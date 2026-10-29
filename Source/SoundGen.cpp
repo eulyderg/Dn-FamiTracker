@@ -381,6 +381,23 @@ void CSoundGen::CreateChannels()
 	AssignChannel(new CTrackerChannel(_T("5B Square 1"), _T("5B1"), SNDCHIP_S5B, CHANID_S5B_CH1));
 	AssignChannel(new CTrackerChannel(_T("5B Square 2"), _T("5B2"), SNDCHIP_S5B, CHANID_S5B_CH2));
 	AssignChannel(new CTrackerChannel(_T("5B Square 3"), _T("5B3"), SNDCHIP_S5B, CHANID_S5B_CH3));
+
+	// // // EPSM
+	AssignChannel(new CTrackerChannel(_T("SSG 1"), _T("ES1"), SNDCHIP_EPSM, CHANID_EPSM_SSG1));
+	AssignChannel(new CTrackerChannel(_T("SSG 2"), _T("ES2"), SNDCHIP_EPSM, CHANID_EPSM_SSG2));
+	AssignChannel(new CTrackerChannel(_T("SSG 3"), _T("ES3"), SNDCHIP_EPSM, CHANID_EPSM_SSG3));
+	AssignChannel(new CTrackerChannel(_T("EPSM FM 1"), _T("EF1"), SNDCHIP_EPSM, CHANID_EPSM_FM1));
+	AssignChannel(new CTrackerChannel(_T("EPSM FM 2"), _T("EF2"), SNDCHIP_EPSM, CHANID_EPSM_FM2));
+	AssignChannel(new CTrackerChannel(_T("EPSM FM 3"), _T("EF3"), SNDCHIP_EPSM, CHANID_EPSM_FM3));
+	AssignChannel(new CTrackerChannel(_T("EPSM FM 4"), _T("EF4"), SNDCHIP_EPSM, CHANID_EPSM_FM4));
+	AssignChannel(new CTrackerChannel(_T("EPSM FM 5"), _T("EF5"), SNDCHIP_EPSM, CHANID_EPSM_FM5));
+	AssignChannel(new CTrackerChannel(_T("EPSM FM 6"), _T("EF6"), SNDCHIP_EPSM, CHANID_EPSM_FM6));
+	AssignChannel(new CTrackerChannel(_T("Kick"), _T("KIC"), SNDCHIP_EPSM, CHANID_EPSM_KICK));
+	AssignChannel(new CTrackerChannel(_T("Snare"), _T("SNA"), SNDCHIP_EPSM, CHANID_EPSM_SNARE));
+	AssignChannel(new CTrackerChannel(_T("Cymbal"), _T("CYM"), SNDCHIP_EPSM, CHANID_EPSM_CYMBAL));
+	AssignChannel(new CTrackerChannel(_T("Hi-hat"), _T("HAT"), SNDCHIP_EPSM, CHANID_EPSM_HIHAT));
+	AssignChannel(new CTrackerChannel(_T("Tom"), _T("TOM"), SNDCHIP_EPSM, CHANID_EPSM_TOM));
+	AssignChannel(new CTrackerChannel(_T("Rimshot"), _T("RIM"), SNDCHIP_EPSM, CHANID_EPSM_RIMSHOT));
 }
 
 void CSoundGen::AssignChannel(CTrackerChannel *pTrackerChannel)		// // //
@@ -544,6 +561,7 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 	std::unique_ptr<CDetuneFDS> pDetuneFDS(new CDetuneFDS(A440_NOTE));
 	std::unique_ptr<CDetuneN163> pDetuneN163(new CDetuneN163(A440_NOTE));
 	std::unique_ptr<CDetuneS5B> pDetuneS5B(new CDetuneS5B(A440_NOTE));
+	// TODO: EPSM detune table
 
 	for (int i = 0; i < NOTE_COUNT; ++i) {
 		double Pitch;
@@ -685,6 +703,7 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 			Table = m_iNoteLookupTableN163; break;
 		case CHANID_S5B_CH1: case CHANID_S5B_CH2: case CHANID_S5B_CH3:
 			Table = m_iNoteLookupTableS5B; break;
+		// TODO: EPSM note table
 		default: continue;
 		}
 		m_pChannels[i]->SetNoteTable(Table);
@@ -712,6 +731,7 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 	SurveyMixLevels.at(CHIP_LEVEL_MMC5) = static_cast<int16_t>(pSettings->ChipLevels.iSurveyMixMMC5);
 	SurveyMixLevels.at(CHIP_LEVEL_N163) = static_cast<int16_t>(pSettings->ChipLevels.iSurveyMixN163);
 	SurveyMixLevels.at(CHIP_LEVEL_S5B) = static_cast<int16_t>(pSettings->ChipLevels.iSurveyMixS5B);
+	// TODO: EPSM channel levels
 
 	bool refreshsettings = false;
 
@@ -1094,6 +1114,7 @@ bool CSoundGen::ResetAudioDevice()
 			config.SetChipLevel(CHIP_LEVEL_MMC5, static_cast<double>(pSettings->ChipLevels.iLevelMMC5) / 10.0);
 			config.SetChipLevel(CHIP_LEVEL_N163, static_cast<double>(pSettings->ChipLevels.iLevelN163) / 10.0);
 			config.SetChipLevel(CHIP_LEVEL_S5B , static_cast<double>(pSettings->ChipLevels.iLevelS5B) / 10.0);
+			// TODO: EPSM chip level
 		}
 	}
 
@@ -1430,6 +1451,7 @@ int CSoundGen::ReadPeriodTable(int Index, int Table) const		// // //
 	case CDetuneTable::DETUNE_FDS:  return m_iNoteLookupTableFDS[Index]; break;
 	case CDetuneTable::DETUNE_N163: return m_iNoteLookupTableN163[Index]; break;
 	case CDetuneTable::DETUNE_S5B:  return m_iNoteLookupTableS5B[Index]; break;
+	// TODO: EPSM detune table
 	default:
 		AfxDebugBreak(); return m_iNoteLookupTableNTSC[Index];
 	}
@@ -2125,6 +2147,13 @@ int CSoundGen::GetChannelVolume(int Channel) const
 	if (!m_pChannels[Channel])
 		return 0;
 	return m_pChannels[Channel]->GetChannelVolume();
+}
+
+inst_type_t CSoundGen::GetChannelNewInst(int Channel) const
+{
+	if (!m_pChannels[Channel])
+		return INST_NONE;
+	return m_pChannels[Channel]->GetNewInst();
 }
 
 void CSoundGen::PlayNote(int Channel, stChanNote *NoteData, int EffColumns)

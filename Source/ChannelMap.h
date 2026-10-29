@@ -32,34 +32,31 @@ public:
 
 	int			GetChipCount() const;
 	LPCTSTR		GetChipName(int Index) const;
-	int			GetChipIdent(int Index) const;
-	int			GetChipIndex(int Ident) const;
-	CInstrument	*GetChipInstrument(int Chip) const;
+	chip_id_t	GetChipIdent(int Index) const;
+	int			GetChipIndex(chip_id_t Ident) const;
+	CInstrument	*GetChipInstrument(chip_id_t Chip) const;
 
 	// Active channel map
 	void			ResetChannels();
-	void			RegisterChannel(CTrackerChannel *pChannel, int ChannelType, int ChipType);
+	void			RegisterChannel(CTrackerChannel *pChannel, chan_id_t ChannelType, chip_id_t ChipType);
 	CTrackerChannel	*GetChannel(int Index) const;
-	int				GetChannelType(int Channel) const;
-	int				GetChipType(int Channel) const;
-
-public:
-	static const int CHIP_COUNT = 8;	// Number of allowed expansion chips
+	chan_id_t		GetChannelType(int Index) const;
+	chip_id_t		GetChipType(int Index) const;
 
 protected:
-	void AddChip(int Ident, inst_type_t Inst, LPCTSTR pName);
+	void AddChip(chip_id_t Ident, inst_type_t Inst, LPCTSTR pName);
 
 protected:
 	// Chips
 	int				m_iAddedChips;
-	int				m_iChipIdents[CHIP_COUNT];
+	chip_id_t		m_iChipIdents[CHIP_COUNT];
 	LPCTSTR			m_pChipNames[CHIP_COUNT];
 	inst_type_t		m_iChipInstType[CHIP_COUNT];		// // //
 
 	// Current set
 	CTrackerChannel	*m_pChannels[CHANNELS];
 	int				m_iRegisteredChannels;
-	int				m_iChannelTypes[CHANNELS];
-	int				m_iChannelChip[CHANNELS];
+	chan_id_t		m_iChannelTypes[CHANNELS];
+	chip_id_t		m_iChannelChip[CHANNELS];
 
 };

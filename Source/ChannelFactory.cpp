@@ -30,6 +30,7 @@
 #include "ChannelsMMC5.h"
 #include "ChannelsN163.h"
 #include "ChannelsS5B.h"
+#include "ChannelsEPSM.h"
 
 // // // Default implementation for channel factory
 
@@ -77,4 +78,23 @@ CChannelFactory::CChannelFactory() : CFactory()
 	m_pMakeFunc[CHANID_S5B_CH1] = Func;
 	m_pMakeFunc[CHANID_S5B_CH2] = Func;
 	m_pMakeFunc[CHANID_S5B_CH3] = Func;
+
+	Func = MakeCtor<CEPSMSSGChannel>();
+	m_pMakeFunc[CHANID_EPSM_SSG1] = Func;
+	m_pMakeFunc[CHANID_EPSM_SSG2] = Func;
+	m_pMakeFunc[CHANID_EPSM_SSG3] = Func;
+	Func = MakeCtor<CEPSMFMChannel>();
+	m_pMakeFunc[CHANID_EPSM_FM1] = Func;
+	m_pMakeFunc[CHANID_EPSM_FM2] = Func;
+	m_pMakeFunc[CHANID_EPSM_FM3] = Func;
+	m_pMakeFunc[CHANID_EPSM_FM4] = Func;
+	m_pMakeFunc[CHANID_EPSM_FM5] = Func;
+	m_pMakeFunc[CHANID_EPSM_FM6] = Func;
+	Func = MakeCtor<CEPSMSampleChannel>();
+	m_pMakeFunc[CHANID_EPSM_KICK] = Func;
+	m_pMakeFunc[CHANID_EPSM_SNARE] = Func;
+	m_pMakeFunc[CHANID_EPSM_CYMBAL] = Func;
+	m_pMakeFunc[CHANID_EPSM_HIHAT] = Func;
+	m_pMakeFunc[CHANID_EPSM_TOM] = Func;
+	m_pMakeFunc[CHANID_EPSM_RIMSHOT] = Func;
 }

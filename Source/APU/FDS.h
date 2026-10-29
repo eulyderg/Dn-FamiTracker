@@ -44,7 +44,7 @@ public:
 	int		GetChannelLevelRange(int Channel) const override;
 
 	// Report some basic information about the chip
-	uint8_t GetChannelCount() const override { return 1; };					// TODO: Dynamically calculate this?
+	uint8_t GetChannelCount() const override { return CHANNELS_FDS; };		// TODO: Dynamically calculate this?
 	chan_id_t GetFirstChannelID() const override { return CHANID_FDS; };	//
 
 	int CFDS::GetModCounter() const;

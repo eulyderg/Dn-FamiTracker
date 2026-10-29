@@ -53,7 +53,7 @@ public:
 	void UpdatePatchSet(int PatchSelection, bool UseExternalOPLLChip, uint8_t *PatchSet);
 
 	// Report some basic information about the chip
-	uint8_t GetChannelCount() const override { return 6; };						// TODO: Dynamically calculate this?
+	uint8_t GetChannelCount() const override { return CHANNELS_VRC7; };			// TODO: Dynamically calculate this?
 	chan_id_t GetFirstChannelID() const override { return CHANID_VRC7_CH1; };	//
 
 protected:

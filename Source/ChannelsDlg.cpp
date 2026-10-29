@@ -31,16 +31,17 @@
 // Used to handle channels in a future version. Not finished.
 
 const TCHAR *ROOT_ITEMS[] = {
-	_T("2A03/2A07"), 
-	_T("Konami VRC6"), 
-	_T("Konami VRC7"), 
-	_T("Nintendo FDS"), 
-	_T("Nintendo MMC5"), 
-	_T("Namco 106"), 
-	_T("Sunsoft 5B")
+	_T("2A03/2A07"),
+	_T("Konami VRC6"),
+	_T("Konami VRC7"),
+	_T("Nintendo FDS"),
+	_T("Nintendo MMC5"),
+	_T("Namco 106"),
+	_T("Sunsoft 5B"),
+	_T("EPSM")
 };
 
-const int CHILD_ITEMS_ID[ROOT_ITEM_COUNT][9] = {
+const int CHILD_ITEMS_ID[CHIP_COUNT][16] = {
 	// 2A03
 	{CHANID_SQUARE1, CHANID_SQUARE2, CHANID_TRIANGLE, CHANID_NOISE, CHANID_DPCM},
 	// VRC 6
@@ -53,11 +54,17 @@ const int CHILD_ITEMS_ID[ROOT_ITEM_COUNT][9] = {
 	{CHANID_MMC5_SQUARE1, CHANID_MMC5_SQUARE2},
 	// N163
 	{CHANID_N163_CH1, CHANID_N163_CH2, CHANID_N163_CH3, CHANID_N163_CH4, CHANID_N163_CH5, CHANID_N163_CH6, CHANID_N163_CH7, CHANID_N163_CH8}, 
-	 // S5B
-	{CHANID_S5B_CH1, CHANID_S5B_CH2, CHANID_S5B_CH3}
+	// S5B
+	{CHANID_S5B_CH1, CHANID_S5B_CH2, CHANID_S5B_CH3},
+	// EPSM
+	{
+		CHANID_EPSM_SSG1, CHANID_EPSM_SSG2, CHANID_EPSM_SSG3,
+		CHANID_EPSM_FM1, CHANID_EPSM_FM2, CHANID_EPSM_FM3, CHANID_EPSM_FM4, CHANID_EPSM_FM5, CHANID_EPSM_FM6,
+		CHANID_EPSM_KICK, CHANID_EPSM_SNARE, CHANID_EPSM_CYMBAL, CHANID_EPSM_HIHAT, CHANID_EPSM_TOM, CHANID_EPSM_RIMSHOT,
+	}
 };
 
-const TCHAR *CHILD_ITEMS[ROOT_ITEM_COUNT][9] = {
+const TCHAR *CHILD_ITEMS[CHIP_COUNT][16] = {
 	// 2A03
 	{_T("Square 1"), _T("Square 2"), _T("Triangle"), _T("Noise"), _T("DPCM")},
 	// VRC 6
@@ -70,8 +77,14 @@ const TCHAR *CHILD_ITEMS[ROOT_ITEM_COUNT][9] = {
 	{_T("Square 1"), _T("Square 2")},
 	// N163
 	{_T("Channel 1"), _T("Channel 2"), _T("Channel 3"), _T("Channel 4"), _T("Channel 5"), _T("Channel 6"), _T("Channel 7"), _T("Channel 8")},
-	 // S5B
-	{_T("Square 1"), _T("Square 2"), _T("Square 3")}
+	// S5B
+	{_T("Square 1"), _T("Square 2"), _T("Square 3")},
+	// EPSM
+	{
+		_T("SSG 1"), _T("SSG 2"), _T("SSG 3"),
+		_T("EPSM FM 1"), _T("EPSM FM 2"), _T("EPSM FM 3"), _T("EPSM FM 4"), _T("EPSM FM 5"), _T("EPSM FM 6"),
+		_T("Kick"), _T("Snare"), _T("Cymbal"), _T("Hi-Hat"), _T("Tom"), _T("Rimshot")
+	}
 };
 
 // CChannelsDlg dialog
@@ -118,7 +131,7 @@ BOOL CChannelsDlg::OnInitDialog()
 
 	m_pAddedChannels->InsertColumn(0, _T("Name"), 0, 150);
 
-	for (int i = 0; i < ROOT_ITEM_COUNT; ++i) {
+	for (int i = 0; i < CHIP_COUNT; ++i) {
 		HTREEITEM hItem = m_pAvailableTree->InsertItem(ROOT_ITEMS[i]);
 		m_hRootItems[i] = hItem;
 		for (int j = 0; CHILD_ITEMS[i][j] != NULL; ++j) {
@@ -177,7 +190,7 @@ void CChannelsDlg::OnDblClickAdded(NMHDR *pNMHDR, LRESULT *result)
 		m_pAvailableTree->GetRootItem();
 
 		// Put back in available list
-		for (int i = 0; i < ROOT_ITEM_COUNT; ++i) {
+		for (int i = 0; i < CHIP_COUNT; ++i) {
 			HTREEITEM hParent = m_hRootItems[i];
 			HTREEITEM hItem = m_pAvailableTree->GetNextItem(hParent, TVGN_CHILD);
 			for (int j = 0; CHILD_ITEMS[i][j] != NULL; ++j) {
@@ -197,9 +210,9 @@ void CChannelsDlg::OnDblClickAdded(NMHDR *pNMHDR, LRESULT *result)
 	}
 }
 
-void CChannelsDlg::AddChannel(int ChanID)
+void CChannelsDlg::AddChannel(chan_id_t ChanID)
 {
-	for (int i = 0; i < ROOT_ITEM_COUNT; ++i) {
+	for (int i = 0; i < CHIP_COUNT; ++i) {
 		HTREEITEM hItem = m_pAvailableTree->GetNextItem(m_hRootItems[i], TVGN_CHILD);
 		for (int j = 0; hItem != NULL; ++j) {
 

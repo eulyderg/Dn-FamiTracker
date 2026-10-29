@@ -196,6 +196,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_INSTRUMENT_ADD_MMC5, OnAddInstrumentMMC5)
 	ON_COMMAND(ID_INSTRUMENT_ADD_N163, OnAddInstrumentN163)
 	ON_COMMAND(ID_INSTRUMENT_ADD_S5B, OnAddInstrumentS5B)
+	ON_COMMAND(ID_INSTRUMENT_ADD_EPSM, OnAddInstrumentEPSM)
 	ON_COMMAND(ID_MODULE_MODULEPROPERTIES, OnModuleModuleproperties)
 	ON_COMMAND(ID_MODULE_CHANNELS, OnModuleChannels)
 	ON_COMMAND(ID_MODULE_COMMENTS, OnModuleComments)
@@ -934,12 +935,13 @@ void CMainFrame::ClearInstrumentList()
 	SetInstrumentName(_T(""));
 }
 
-void CMainFrame::NewInstrument(int ChipType)
+// Adds a new instrument of the chip type given
+void CMainFrame::NewInstrument(inst_type_t InstType)
 {
 	// Add new instrument to module
 	CFamiTrackerDoc *pDoc = static_cast<CFamiTrackerDoc*>(GetActiveDocument());
 
-	int Index = pDoc->AddInstrument(CFamiTrackerDoc::NEW_INST_NAME, ChipType);
+	int Index = pDoc->AddInstrument(CFamiTrackerDoc::NEW_INST_NAME, InstType);
 
 	if (Index == -1) {
 		// Out of slots
@@ -1173,47 +1175,56 @@ void CMainFrame::OnInstNameChange()
 
 void CMainFrame::OnAddInstrument2A03()
 {
-	NewInstrument(SNDCHIP_NONE);
+	NewInstrument(INST_2A03);
 }
 
 void CMainFrame::OnAddInstrumentVRC6()
 {
-	NewInstrument(SNDCHIP_VRC6);
+	NewInstrument(INST_VRC6);
 }
 
 void CMainFrame::OnAddInstrumentVRC7()
 {
-	NewInstrument(SNDCHIP_VRC7);
+	NewInstrument(INST_VRC7);
 }
 
 void CMainFrame::OnAddInstrumentFDS()
 {
-	NewInstrument(SNDCHIP_FDS);
+	NewInstrument(INST_FDS);
 }
 
 void CMainFrame::OnAddInstrumentMMC5()
 {
-	NewInstrument(SNDCHIP_MMC5);
+	NewInstrument(INST_2A03);
 }
 
 void CMainFrame::OnAddInstrumentN163()
 {
-	NewInstrument(SNDCHIP_N163);
+	NewInstrument(INST_N163);
 }
 
 void CMainFrame::OnAddInstrumentS5B()
 {
-	NewInstrument(SNDCHIP_S5B);
+	NewInstrument(INST_S5B);
+}
+
+void CMainFrame::OnAddInstrumentEPSM()
+{
+	NewInstrument(INST_EPSM);
 }
 
 void CMainFrame::OnAddInstrument()
 {
 	// Add new instrument to module
-
-	// Chip type depends on selected channel
-	CFamiTrackerView *pView = static_cast<CFamiTrackerView*>(GetActiveView());
-	int ChipType = pView->GetSelectedChipType();
-	NewInstrument(ChipType);
+	// Instrument type depends on selected channel
+	CFamiTrackerView* pView = static_cast<CFamiTrackerView*>(GetActiveView());
+	CFamiTrackerDoc* pDoc = static_cast<CFamiTrackerDoc*>(GetActiveDocument());
+	CSoundGen *pSoundGen = theApp.GetSoundGenerator();
+	inst_type_t InstType = pSoundGen->GetChannelNewInst(pDoc->GetChannelType(pView->GetSelectedChannel()));
+	
+	if (InstType != INST_NONE) {
+		NewInstrument(InstType);
+	}
 }
 
 void CMainFrame::OnRemoveInstrument()
@@ -1670,6 +1681,9 @@ void CMainFrame::OnUpdateSBChip(CCmdUI *pCmdUI)
 			case SNDCHIP_S5B:
 				String = _T(" Sunsoft 5B");
 				break;
+			case SNDCHIP_EPSM:
+				String = _T(" EPSM");
+				break;
 		}
 	else {
 		for (int i = 0; i < 6; i++)	if (Chip & (1 << i)) switch (i) {
@@ -1690,6 +1704,9 @@ void CMainFrame::OnUpdateSBChip(CCmdUI *pCmdUI)
 				break;
 			case 5:
 				String += _T(" + S5B");
+				break;
+			case SNDCHIP_EPSM:
+				String += _T(" + EPSM");
 				break;
 		}
 		String.Delete(0, 3);
@@ -2709,6 +2726,8 @@ void CMainFrame::OnNewInstrumentMenu(NMHDR* pNotifyStruct, LRESULT* result)
 		menu.AppendMenu(MF_STRING, ID_INSTRUMENT_ADD_N163, _T("New Namco instrument"));
 	if (Chip & SNDCHIP_S5B)
 		menu.AppendMenu(MF_STRING, ID_INSTRUMENT_ADD_S5B, _T("New Sunsoft instrument"));
+	if (Chip & SNDCHIP_EPSM)
+		menu.AppendMenu(MF_STRING, ID_INSTRUMENT_ADD_EPSM, _T("New EPSM instrument"));
 
 	switch (SelectedChip) {
 		case SNDCHIP_NONE:
@@ -2731,6 +2750,9 @@ void CMainFrame::OnNewInstrumentMenu(NMHDR* pNotifyStruct, LRESULT* result)
 			break;
 		case SNDCHIP_S5B:
 			menu.SetDefaultItem(ID_INSTRUMENT_ADD_S5B);
+			break;
+		case SNDCHIP_EPSM:
+			menu.SetDefaultItem(ID_INSTRUMENT_ADD_EPSM);
 			break;
 	}
 

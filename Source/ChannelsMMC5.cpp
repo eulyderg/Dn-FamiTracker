@@ -125,6 +125,11 @@ int CChannelHandlerMMC5::getDutyMax() const {
 	return MAX_DUTY;
 }
 
+inst_type_t CChannelHandlerMMC5::GetNewInst() const
+{
+	return INST_2A03;
+}
+
 void CChannelHandlerMMC5::RefreshChannel()		// // //
 {
 	int Period = CalculatePeriod();

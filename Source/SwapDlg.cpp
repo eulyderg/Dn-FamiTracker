@@ -88,6 +88,8 @@ BOOL CSwapDlg::OnInitDialog()
 		m_cChipFirst->AddString(_T("N163"));
 	if (pDoc->ExpansionEnabled(SNDCHIP_S5B))
 		m_cChipFirst->AddString(_T("5B"));
+	if (pDoc->ExpansionEnabled(SNDCHIP_EPSM))
+		m_cChipFirst->AddString(_T("EPSM"));
 
 	CString str;
 	for (int i = 0; i < m_cChipFirst->GetCount(); i++)
@@ -129,6 +131,8 @@ int CSwapDlg::GetChipFromString(const CString str)
 		return SNDCHIP_N163;
 	else if (str == _T("5B"))
 		return SNDCHIP_S5B;
+	else if (str == _T("EPSM"))
+		return SNDCHIP_EPSM;
 	else
 		return SNDCHIP_NONE;
 }
@@ -144,6 +148,7 @@ int CSwapDlg::GetFinalChannel(unsigned int Channel, unsigned int Chip) const
 	case SNDCHIP_MMC5: Channel += CHANID_MMC5_SQUARE1; break;
 	case SNDCHIP_N163: Channel += CHANID_N163_CH1; break;
 	case SNDCHIP_S5B:  Channel += CHANID_S5B_CH1; break;
+	case SNDCHIP_EPSM: Channel += CHANID_EPSM_SSG1; break;
 	}
 
 	return pDoc->GetChannelIndex(Channel);

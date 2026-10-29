@@ -125,6 +125,7 @@ namespace {
 			case inst_type_t::INST_FDS:  return "FDS"sv;
 			case inst_type_t::INST_N163: return "N163"sv;
 			case inst_type_t::INST_S5B:  return "5B"sv;
+			case inst_type_t::INST_EPSM: return "EPSM"sv;
 			default: return ""sv;
 		}
 	}
@@ -138,6 +139,7 @@ namespace {
 			case SNDCHIP_MMC5: return "MMC5"sv;
 			case SNDCHIP_N163: return "N163"sv;
 			case SNDCHIP_S5B:  return "S5B"sv;
+			case SNDCHIP_EPSM: return "EPSM"sv;
 			default: return ""sv;
 		}
 	}
@@ -383,7 +385,7 @@ void to_json(json& j, const CGroove& groove) {
 
 // TODO: compartmentalize all blocks within their own subclass?
 void to_json(json& j, const CFamiTrackerDoc& modfile) {
-
+	// TODO: EPSM in json export.
 	const auto GenerateChannelSubindex = [&](CTrackerChannel* ch, auto &chip_type, auto &subindex) {
 		chip_type = ch->GetChip();
 		subindex = ch->GetID();
@@ -395,6 +397,7 @@ void to_json(json& j, const CFamiTrackerDoc& modfile) {
 			case SNDCHIP_FDS: subindex -= CHANID_FDS; break;
 			case SNDCHIP_VRC7: subindex -= CHANID_VRC7_CH1; break;
 			case SNDCHIP_S5B: subindex -= CHANID_S5B_CH1; break;
+			case SNDCHIP_EPSM: subindex -= CHANID_EPSM_SSG1; break;
 			default: break;
 		}
 	};

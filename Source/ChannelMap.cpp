@@ -31,29 +31,27 @@
  *
  */
 
-CChannelMap::CChannelMap() :
-	m_iAddedChips(0)
+CChannelMap::CChannelMap() : m_iAddedChips(0)
 {
 	SetupSoundChips();
 }
 
-CChannelMap::~CChannelMap()
-{
-}
+CChannelMap::~CChannelMap() {}
 
 void CChannelMap::SetupSoundChips()
 {
 	// Add available chips
-	AddChip(SNDCHIP_NONE, INST_2A03, _T("NES channels only"));
-	AddChip(SNDCHIP_VRC6, INST_VRC6, _T("Konami VRC6"));
-	AddChip(SNDCHIP_VRC7, INST_VRC7, _T("Konami VRC7"));
-	AddChip(SNDCHIP_FDS,  INST_FDS,  _T("Nintendo FDS sound"));
-	AddChip(SNDCHIP_MMC5, INST_2A03, _T("Nintendo MMC5"));
-	AddChip(SNDCHIP_N163, INST_N163, _T("Namco 163"));
-	AddChip(SNDCHIP_S5B,  INST_S5B,  _T("Sunsoft 5B"));
+	AddChip(SNDCHIP_NONE, INST_2A03, "NES channels only");
+	AddChip(SNDCHIP_VRC6, INST_VRC6, "Konami VRC6");
+	AddChip(SNDCHIP_VRC7, INST_VRC7, "Konami VRC7");
+	AddChip(SNDCHIP_FDS,  INST_FDS,  "Nintendo FDS sound");
+	AddChip(SNDCHIP_MMC5, INST_2A03, "Nintendo MMC5");
+	AddChip(SNDCHIP_N163, INST_N163, "Namco 163");
+	AddChip(SNDCHIP_S5B,  INST_S5B,  "Sunsoft 5B");
+	AddChip(SNDCHIP_EPSM, INST_EPSM, "EPSM");
 }
 
-void CChannelMap::AddChip(int Ident, inst_type_t Inst, LPCTSTR pName)
+void CChannelMap::AddChip(chip_id_t Ident, inst_type_t Inst, LPCTSTR pName)
 {
 	ASSERT(m_iAddedChips < CHIP_COUNT);
 
@@ -75,13 +73,13 @@ LPCTSTR CChannelMap::GetChipName(int Index) const
 	return m_pChipNames[Index];
 }
 
-int CChannelMap::GetChipIdent(int Index) const
+chip_id_t CChannelMap::GetChipIdent(int Index) const
 {
 	// Get chip ID from index
 	return m_iChipIdents[Index];
 }
 
-int	CChannelMap::GetChipIndex(int Ident) const
+int	CChannelMap::GetChipIndex(chip_id_t Ident) const
 {
 	// Get index from chip ID
 	for (int i = 0; i < m_iAddedChips; ++i) {
@@ -91,29 +89,28 @@ int	CChannelMap::GetChipIndex(int Ident) const
 	return 0;
 }
 
-CInstrument* CChannelMap::GetChipInstrument(int Chip) const
+CInstrument* CChannelMap::GetChipInstrument(chip_id_t Chip) const
 {
 	// Get instrument from chip ID
 	int Index = GetChipIndex(Chip);
-
 	return CInstrumentFactory::CreateNew(m_iChipInstType[Index]);		// // //
 }
 
 // Todo move enabled module channels here
 
-int CChannelMap::GetChannelType(int Channel) const
+chan_id_t CChannelMap::GetChannelType(int Index) const
 {
 	// Return channel type form channel index
 	ASSERT(m_iRegisteredChannels != 0);
-	return m_iChannelTypes[Channel];
+	return m_iChannelTypes[Index];
 }
 
-int CChannelMap::GetChipType(int Channel) const
+chip_id_t CChannelMap::GetChipType(int Index) const
 {
 	// Return chip type from channel index
 	ASSERT(m_iRegisteredChannels != 0);
-	ASSERT(Channel < m_iRegisteredChannels);
-	return m_pChannels[Channel]->GetChip();
+	ASSERT(Index < m_iRegisteredChannels);
+	return m_pChannels[Index]->GetChip();
 }
 
 void CChannelMap::ResetChannels()
@@ -122,7 +119,7 @@ void CChannelMap::ResetChannels()
 	m_iRegisteredChannels = 0;
 }
 
-void CChannelMap::RegisterChannel(CTrackerChannel *pChannel, int ChannelType, int ChipType)
+void CChannelMap::RegisterChannel(CTrackerChannel *pChannel, chan_id_t ChannelType, chip_id_t ChipType)
 {
 	// Adds a channel to the channel map
 	m_pChannels[m_iRegisteredChannels] = pChannel;

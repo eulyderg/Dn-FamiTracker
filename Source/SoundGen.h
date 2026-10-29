@@ -33,6 +33,7 @@
 #include "Common.h"
 #include "FamiTrackerTypes.h"
 #include "ChannelState.h"		// // //
+#include "Instrument.h"
 
 #include <atomic>
 #include <cstdint>
@@ -212,6 +213,7 @@ public:
 
 	stDPCMState	 GetDPCMState() const;
 	int			 GetChannelVolume(int Channel) const;		// // //
+	inst_type_t    GetChannelNewInst(int Channel) const;
 
 	// Rendering
 	bool		 RenderToFile(LPTSTR pFile, render_end_t SongEndType, int SongEndParam, int Track);

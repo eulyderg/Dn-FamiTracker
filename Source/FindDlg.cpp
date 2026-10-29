@@ -304,12 +304,14 @@ void CFindResultsBox::SelectItem(int Index)
 		static const CString HEADER_STR[] = {
 			_T("Pulse "), _T("Triangle"), _T("Noise"), _T("DPCM"),
 			_T("VRC6 Pulse "), _T("Sawtooth"),
-			_T("MMC5 Pulse "), _T("Namco "), _T("FDS"), _T("FM Channel "), _T("5B Square ")
+			_T("MMC5 Pulse "), _T("Namco "), _T("FDS"), _T("FM Channel "), _T("5B Square "),
+			_T("EPSM SSG "), _T("EPSM FM "), _T("EPSM Sample "),
 		};
 		static const int HEADER_ID[] = {
 			CHANID_SQUARE1, CHANID_TRIANGLE, CHANID_NOISE, CHANID_DPCM,
 			CHANID_VRC6_PULSE1, CHANID_VRC6_SAWTOOTH,
 			CHANID_MMC5_SQUARE1, CHANID_N163_CH1, CHANID_FDS, CHANID_VRC7_CH1, CHANID_S5B_CH1,
+			CHANID_EPSM_SSG1, CHANID_EPSM_FM1, CHANID_EPSM_KICK,
 		};
 		for (int i = 0; i < sizeof(HEADER_ID) / sizeof(int); ++i) {
 			const auto &n = HEADER_STR[i];
@@ -513,6 +515,7 @@ int CFindResultsBox::ChannelCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM l
 			_T("Pulse "), _T("Triangle"), _T("Noise"), _T("DPCM"),
 			_T("VRC6 Pulse "), _T("Sawtooth"),
 			_T("MMC5 Pulse "), _T("Namco "), _T("FDS"), _T("FM Channel "), _T("5B Square ")
+			_T("EPSM SSG "), _T("EPSM FM "), _T("EPSM Sample "),
 		};
 		int Pos = 0;
 		for (const auto &n : HEADER_STR) {
@@ -544,6 +547,7 @@ int CFindResultsBox::NoteCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 	CString x = pList->GetItemText(static_cast<int>(lParam1), m_iLastsortColumn);
 	CString y = pList->GetItemText(static_cast<int>(lParam2), m_iLastsortColumn);
 
+	// TODO: EPSM sample notes
 	const auto ToIndex = [] (const CString &x) {
 		if (x.Left(1) == _T("^"))
 			return 0x400 + x.GetAt(x.GetLength() - 1);

@@ -107,6 +107,7 @@ public:
 	afx_msg void OnBnClickedExpansionMMC5();
 	afx_msg void OnBnClickedExpansionS5B();
 	afx_msg void OnBnClickedExpansionN163();
+	afx_msg void OnBnClickedExpansionEPSM();
 	afx_msg void OnEnChangeApu1OffsetEdit();
 	afx_msg void OnEnChangeApu2OffsetEdit();
 	afx_msg void OnEnChangeVrc6OffsetEdit();

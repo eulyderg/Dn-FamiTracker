@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -118,6 +118,10 @@ int CChannelHandlerS5B::getDutyMax() const {
 	return MAX_DUTY;
 }
 
+inst_type_t CChannelHandlerS5B::GetNewInst() const
+{
+	return INST_S5B;
+}
 
 bool CChannelHandlerS5B::HandleEffect(effect_t EffNum, EffParamT EffParam)
 {

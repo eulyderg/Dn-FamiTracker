@@ -20,6 +20,7 @@
 
 #include "stdafx.h"
 #include "DocumentWrapper.h"
+#include "Instrument.h"
 
 // This will implement the CFamiTrackerDocInterface for export plugins
 

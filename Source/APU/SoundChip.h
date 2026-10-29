@@ -27,6 +27,7 @@
 #include <cstdint>		// // //
 #include <memory>
 #include "Types.h"
+#include "FamiTrackerTypes.h"
 
 class CRegisterLogger;		// // //
 class Blip_Buffer;

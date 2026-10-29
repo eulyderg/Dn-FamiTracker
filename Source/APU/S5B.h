@@ -43,7 +43,7 @@ public:
 	void	UpdateMixLevel(double v, bool UseSurveyMix);
 
 	// Report some basic information about the chip
-	uint8_t GetChannelCount() const override { return 3; };						// TODO: Dynamically calculate this?
+	uint8_t GetChannelCount() const override { return CHANNELS_S5B; };						// TODO: Dynamically calculate this?
 	chan_id_t GetFirstChannelID() const override { return CHANID_S5B_CH1; };	//
 
 private:

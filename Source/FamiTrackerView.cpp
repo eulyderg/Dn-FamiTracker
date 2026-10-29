@@ -2438,8 +2438,27 @@ void CFamiTrackerView::UpdateNoteQueues()		// // //
 				n.push_back(CHANID_N163_CH1 + i);
 			m_pNoteQueue->AddMap(n);
 		}
-		if (pDoc->ExpansionEnabled(SNDCHIP_S5B))
-			m_pNoteQueue->AddMap({CHANID_S5B_CH1, CHANID_S5B_CH2, CHANID_S5B_CH3});
+		if (pDoc->ExpansionEnabled(SNDCHIP_S5B)) {
+			if (pDoc->ExpansionEnabled(SNDCHIP_EPSM)) {
+				m_pNoteQueue->AddMap({CHANID_S5B_CH1, CHANID_S5B_CH2, CHANID_S5B_CH3, CHANID_EPSM_SSG1, CHANID_EPSM_SSG2, CHANID_EPSM_SSG3});
+			} else {
+				m_pNoteQueue->AddMap({CHANID_S5B_CH1, CHANID_S5B_CH2, CHANID_S5B_CH3});
+			}
+		}
+		if (pDoc->ExpansionEnabled(SNDCHIP_EPSM)) {
+			if (pDoc->ExpansionEnabled(SNDCHIP_S5B)) {
+				m_pNoteQueue->AddMap({CHANID_EPSM_FM1,   CHANID_EPSM_FM2,   CHANID_EPSM_FM3,
+									  CHANID_EPSM_FM4,   CHANID_EPSM_FM5,   CHANID_EPSM_FM6,
+									  CHANID_EPSM_KICK,  CHANID_EPSM_SNARE, CHANID_EPSM_CYMBAL,
+									  CHANID_EPSM_HIHAT, CHANID_EPSM_TOM,   CHANID_EPSM_RIMSHOT});
+			} else {
+				m_pNoteQueue->AddMap({CHANID_EPSM_SSG1,  CHANID_EPSM_SSG2,  CHANID_EPSM_SSG3,
+									  CHANID_EPSM_FM1,   CHANID_EPSM_FM2,   CHANID_EPSM_FM3,
+									  CHANID_EPSM_FM4,   CHANID_EPSM_FM5,   CHANID_EPSM_FM6,
+									  CHANID_EPSM_KICK,  CHANID_EPSM_SNARE, CHANID_EPSM_CYMBAL,
+									  CHANID_EPSM_HIHAT, CHANID_EPSM_TOM,   CHANID_EPSM_RIMSHOT});
+			}
+		}
 	}
 
 //	for (int i = 0; i < Channels; ++i)
@@ -3733,7 +3752,7 @@ void CFamiTrackerView::OnTrackerRecordToInst()		// // //
 	int Chip = pDoc->GetChipType(m_iMenuChannel);
 	m_iMenuChannel = -1;
 
-	if (Channel == CHANID_DPCM || Chip == SNDCHIP_VRC7) {
+	if (Channel == CHANID_DPCM || Chip == SNDCHIP_VRC7 || Chip == SNDCHIP_EPSM) {
 		AfxMessageBox(IDS_DUMP_NOT_SUPPORTED, MB_ICONERROR); return;
 	}
 	if (pDoc->GetInstrumentCount() >= MAX_INSTRUMENTS) {

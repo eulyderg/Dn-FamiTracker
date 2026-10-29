@@ -40,6 +40,7 @@
 #include "InstrumentEditorFDS.h"
 #include "InstrumentEditorFDSEnvelope.h"
 #include "InstrumentEditorN163Wave.h"
+#include "InstrumentEditorEPSM.h"
 #include "MainFrm.h"
 #include "SoundGen.h"
 #include "TrackerChannel.h"
@@ -51,12 +52,13 @@ const int CInstrumentEditDlg::KEYBOARD_HEIGHT = 58;
 
 const TCHAR *CInstrumentEditDlg::CHIP_NAMES[] = {
 	_T(""), 
-	_T("2A03"), 
-	_T("VRC6"), 
-	_T("VRC7"), 
-	_T("FDS"), 
-	_T("Namco"), 
-	_T("Sunsoft")
+	_T("2A03"),
+	_T("VRC6"),
+	_T("VRC7"),
+	_T("FDS"),
+	_T("Namco"),
+	_T("Sunsoft"),
+	_T("EPSM")
 };
 
 // CInstrumentEditDlg dialog
@@ -212,6 +214,9 @@ void CInstrumentEditDlg::SetCurrentInstrument(int Index, bool Focus)
 			case INST_S5B:
 				InsertPane(new CInstrumentEditorSeq(NULL, _T("Sunsoft 5B"), CInstrumentS5B::SEQUENCE_NAME, 15, 255, INST_S5B), true);
 				break;
+			case INST_EPSM:
+				InsertPane(new CInstrumentEditorEPSM(), true);
+				break;
 		}
 
 		m_iSelectedInstType = InstType;
@@ -355,7 +360,7 @@ void CInstrumentEditDlg::SwitchOnNote(int x, int y)
 	CFamiTrackerDoc *pDoc = static_cast<CFamiTrackerDoc*>(static_cast<CFrameWnd*>(GetParent())->GetActiveDocument());
 	CMainFrame *pFrameWnd = static_cast<CMainFrame*>(GetParent());
 	int Channel = pView->GetSelectedChannel();		// // //
-	int Chip = pDoc->GetExpansionChip();
+	chip_id_t Chip = pDoc->GetExpansionChip();
 
 	stChanNote NoteData { };
 
@@ -374,6 +379,7 @@ void CInstrumentEditDlg::SwitchOnNote(int x, int y)
 		case INST_FDS:  First = CHANID_FDS; break;
 		case INST_VRC7: First = CHANID_VRC7_CH1; break;
 		case INST_S5B:  First = CHANID_S5B_CH1; break;
+		case INST_EPSM: First = CHANID_EPSM_FM1; break;
 		}
 		int Index = pDoc->GetChannelIndex(First);
 		if (Index != -1 && pDoc->GetChipType(Index) != pDoc->GetChipType(Channel))

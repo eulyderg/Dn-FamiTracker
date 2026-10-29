@@ -1352,6 +1352,11 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 	// Hex numbers
 	static const char HEX[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
+	// // // Sample numbers
+	static const char SAMPLE_NUMBERS_1[] = { 'K', 'S', 'C', 'H', 'T', 'R' };
+	static const char SAMPLE_NUMBERS_2[] = { 'I', 'N', 'Y', 'A', 'O', 'I' };
+	static const char SAMPLE_NUMBERS_3[] = { 'C', 'A', 'M', 'T', 'M', 'M' };
+
 	const bool m_bDisplayFlat = theApp.GetSettings()->Appearance.bDisplayFlats;		// // //
 
 	const char *NOTES_A = m_bDisplayFlat ? NOTES_A_FLAT : NOTES_A_SHARP;
@@ -1846,6 +1851,7 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 	int line = -1;		// // //
 	CString text;
 
+	// TODO: EPSM registers
 	const int BAR_OFFSET = LINE_HEIGHT * (3 + 8 +
 		m_pDocument->ExpansionEnabled(SNDCHIP_VRC6) * 5 +
 		m_pDocument->ExpansionEnabled(SNDCHIP_MMC5) * 4 +
@@ -4283,6 +4289,7 @@ void CPatternEditor::GetSelectionAsPPMCK(CString &str) const		// // //
 		case SNDCHIP_MMC5: Type += 'a' - CHANID_MMC5_SQUARE1; break;
 		case SNDCHIP_N163: Type += 'P' - CHANID_N163_CH1; break;
 		case SNDCHIP_S5B:  Type += 'X' - CHANID_S5B_CH1; break;
+		// TODO: EPSM?
 		}
 		str.AppendFormat(_T("%c\t"), Type);
 

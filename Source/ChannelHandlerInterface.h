@@ -88,3 +88,7 @@ class CChannelHandlerInterfaceS5B
 public:
 	virtual void	SetNoiseFreq(int) = 0;
 };
+
+class CChannelHandlerInterfaceEPSM
+{
+};

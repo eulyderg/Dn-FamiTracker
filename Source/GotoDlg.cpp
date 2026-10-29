@@ -79,9 +79,15 @@ BOOL CGotoDlg::OnInitDialog()
 		m_cChipEdit->AddString(_T("N163"));
 	if (pDoc->ExpansionEnabled(SNDCHIP_S5B))
 		m_cChipEdit->AddString(_T("5B"));
+	if (pDoc->ExpansionEnabled(SNDCHIP_EPSM))
+		m_cChipEdit->AddString(_T("EPSM"));
 		
 	int Channel = pDoc->GetChannelType(pEditor->GetChannel());
-	if (Channel >= CHANID_S5B_CH1) {
+	if (Channel >= CHANID_EPSM_SSG1) {
+		Channel -= CHANID_EPSM_SSG1;
+		m_cChipEdit->SelectString(-1, _T("EPSM"));
+	}
+	else if (Channel >= CHANID_S5B_CH1) {
 		Channel -= CHANID_S5B_CH1;
 		m_cChipEdit->SelectString(-1, _T("5B"));
 	}
@@ -155,6 +161,8 @@ int CGotoDlg::GetChipFromString(const CString str)
 		return SNDCHIP_N163;
 	else if (str == _T("5B"))
 		return SNDCHIP_S5B;
+	else if (str == _T("EPSM"))
+		return SNDCHIP_EPSM;
 	else
 		return SNDCHIP_NONE;
 }
@@ -171,6 +179,7 @@ int CGotoDlg::GetFinalChannel() const
 	case SNDCHIP_MMC5: Channel += CHANID_MMC5_SQUARE1; break;
 	case SNDCHIP_N163: Channel += CHANID_N163_CH1; break;
 	case SNDCHIP_S5B:  Channel += CHANID_S5B_CH1; break;
+	case SNDCHIP_EPSM: Channel += CHANID_EPSM_SSG1; break;
 	}
 
 	return pDoc->GetChannelIndex(Channel);

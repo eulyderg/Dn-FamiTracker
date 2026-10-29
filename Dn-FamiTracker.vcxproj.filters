@@ -244,6 +244,12 @@
     <Filter Include="Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\digital-sound-antiques">
       <UniqueIdentifier>{25163f8b-fd27-4438-a81a-98c1c6e3137f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm">
+      <UniqueIdentifier>{14b33911-2edd-4701-a9c9-ced99c7b6c7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm">
+      <UniqueIdentifier>{c7c93882-0245-4a68-8e0d-25ee4156ad12}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Exception.cpp">
@@ -752,6 +758,51 @@
     </ClCompile>
     <ClCompile Include="Source\APU\digital-sound-antiques\emu2149.c">
       <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\digital-sound-antiques</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\InstrumentEPSM.cpp">
+      <Filter>Source Files\Document Data Types\Instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\InstrumentEditorEPSM.cpp">
+      <Filter>Source Files\Dialog Boxes\Instrument\Instrument panels</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ChannelsEPSM.cpp">
+      <Filter>Source Files\Sound Driver\Channels</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\InstHandlerEPSM.cpp">
+      <Filter>Source Files\Sound Driver\Instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\Types.cpp">
+      <Filter>Source Files\Sound Driver\Emulation</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\EPSM.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\ymfm\ymfm_misc.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\ymfm\ymfm_opl.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\ymfm\ymfm_opm.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\ymfm\ymfm_opn.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\ymfm\ymfm_opq.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\ymfm\ymfm_opz.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\ymfm\ymfm_pcm.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\ymfm\ymfm_ssg.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\APU\ymfm\ymfm_adpcm.cpp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1498,6 +1549,60 @@
     </ClInclude>
     <ClInclude Include="Source\APU\digital-sound-antiques\emu2149.h">
       <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\digital-sound-antiques</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InstrumentEPSM.h">
+      <Filter>Header Files\Document Data Type Headers\Instrument Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InstrumentEditorEPSM.h">
+      <Filter>Header Files\Dialog Boxes Headers\Instrument Headers\Instrument dialog</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ChannelsEPSM.h">
+      <Filter>Header Files\Sound Driver Headers\Channels Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InstHandlerEPSM.h">
+      <Filter>Header Files\Sound Driver Headers\Instruments Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_fm.ipp">
+      <Filter>Source Files\Sound Driver\Emulation\Sound Chips\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_ssg.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_adpcm.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_fm.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_misc.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_opl.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_opm.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_opn.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_opq.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_opx.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_opz.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\ymfm\ymfm_pcm.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers\External\ymfm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\APU\EPSM.h">
+      <Filter>Header Files\Sound Driver Headers\Emulation Headers\Sound Chip Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

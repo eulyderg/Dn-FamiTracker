@@ -55,6 +55,7 @@
 #include "InstrumentVRC6.h"		// // // for error messages only
 #include "InstrumentN163.h"		// // // for error messages only
 #include "InstrumentS5B.h"		// // // for error messages only
+#include "InstrumentFactory.h"
 #include "FamiTrackerDoc.h"
 #include "ModuleException.h"		// // //
 #include "TrackerChannel.h"
@@ -532,7 +533,7 @@ void CFamiTrackerDoc::CreateEmpty()
 #endif
 
 	// Add new instrument on new module
-	AddInstrument(NEW_INST_NAME, SNDCHIP_NONE);
+	AddInstrument(NEW_INST_NAME, INST_2A03);
 
 	SetModifiedFlag(FALSE);
 	SetExceededFlag(FALSE);		// // //
@@ -1250,6 +1251,8 @@ bool CFamiTrackerDoc::WriteBlock_SequencesS5B(CDocumentFile *pDocFile, const int
 
 	return pDocFile->FlushBlock();
 }
+
+// TODO: 
 
 bool CFamiTrackerDoc::WriteBlock_Frames(CDocumentFile *pDocFile, const int Version) const
 {
@@ -3205,15 +3208,11 @@ void CFamiTrackerDoc::AddInstrument(CInstrument *pInstrument, unsigned int Slot)
 	}
 }
 
-int CFamiTrackerDoc::AddInstrument(const char *pName, int ChipType)
+int CFamiTrackerDoc::AddInstrument(const char *pName, inst_type_t InstType)
 {
-	CInstrument *pInst = theApp.GetChannelMap()->GetChipInstrument(ChipType);
-	if (!pInst) {
-#ifdef _DEBUG
-		MessageBox(NULL, _T("(TODO) add instrument definitions for this chip"), _T("Stop"), MB_OK);
-#endif
-		return INVALID_INSTRUMENT;
-	}
+	// TODO: this relies on the assumption that every chip has exactly one instrument type.
+	// EPSM does not.
+	CInstrument *pInst = CInstrumentFactory::CreateNew(InstType);
 	pInst->RegisterManager(m_pInstrumentManager);
 	pInst->Setup();
 	pInst->SetName(pName);
@@ -4409,7 +4408,11 @@ int CFamiTrackerDoc::GetChannelPosition(int Channel, unsigned char Chip)		// // 
 	// TODO: use information from the current channel map instead
 	unsigned int pos = Channel;
 	if (pos == CHANID_MMC5_VOICE) return -1;
-
+	
+	if (!(Chip & SNDCHIP_EPSM)) {
+		if (pos > CHANID_EPSM_RIMSHOT) pos -= CHANNELS_EPSM;
+		else if (pos >= CHANID_S5B_CH1) return -1;
+	}
 	if (!(Chip & SNDCHIP_S5B)) {
 		if (pos > CHANID_S5B_CH3) pos -= 3;
 		else if (pos >= CHANID_S5B_CH1) return -1;

@@ -164,6 +164,22 @@ bool CTrackerChannel::IsInstrumentCompatible(int Instrument, inst_type_t Type) c
 			}
 		case SNDCHIP_VRC7:
 			return Type == INST_VRC7;
+		case SNDCHIP_EPSM: {
+			switch (m_iChannelID) {
+			case CHANID_EPSM_SSG1:
+			case CHANID_EPSM_SSG2:
+			case CHANID_EPSM_SSG3:
+				return Type == INST_S5B;
+			case CHANID_EPSM_KICK:
+			case CHANID_EPSM_SNARE:
+			case CHANID_EPSM_CYMBAL:
+			case CHANID_EPSM_HIHAT:
+			case CHANID_EPSM_TOM:
+			case CHANID_EPSM_RIMSHOT:
+				return true;
+			default: return Type == INST_EPSM || Type == INST_VRC7;
+			}
+		}
 	}
 
 	return false;
@@ -246,10 +262,12 @@ bool CTrackerChannel::IsEffectCompatible(effect_t EffNumber, int EffParam) const
 			// VRC7 and S5B is not supported yet.
 			if (m_iChip == SNDCHIP_VRC7) return false;
 			if (m_iChip == SNDCHIP_S5B) return false;
+			if (m_iChip == SNDCHIP_EPSM) return false;
 			return EffParam == 0x00;
 		case EF_HARMONIC:
 			// VRC7 is not supported yet.
 			if (m_iChip == SNDCHIP_VRC7) return false;
+			if (m_iChip == SNDCHIP_EPSM) return false;
 			// 2A03 noise behaves strangely with Kxx.
 			if (m_iChannelID == CHANID_NOISE) return false;
 			// K00 (frequency *= 0) is invalid/undefined behavior,

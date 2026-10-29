@@ -1084,6 +1084,10 @@ int CChannelHandler::getDutyMax() const {
 	return -1;
 }
 
+inst_type_t CChannelHandler::GetNewInst() const
+{
+	return INST_NONE;
+}
 
 unsigned char CChannelHandler::GetArpParam() const
 {

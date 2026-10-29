@@ -108,7 +108,7 @@ public:
 	bool	DPCMPlaying() const;
 
 	// Report some basic information about the chip
-	uint8_t GetChannelCount() const override { return 5; };						// TODO: Dynamically calculate this?
+	uint8_t GetChannelCount() const override { return CHANNELS_DEFAULT; };		// TODO: Dynamically calculate this?
 	chan_id_t GetFirstChannelID() const override { return CHANID_SQUARE1; };	//
 
 private:

@@ -521,14 +521,28 @@
   <ItemGroup>
     <ClCompile Include="Source\APU\digital-sound-antiques\emu2149.c" />
     <ClCompile Include="Source\APU\digital-sound-antiques\emu2413.c" />
+    <ClCompile Include="Source\APU\EPSM.cpp" />
     <ClCompile Include="Source\APU\nsfplay\xgm\devices\Sound\nes_mmc5.cpp" />
     <ClCompile Include="Source\APU\nsfplay\xgm\devices\Sound\nes_vrc6.cpp" />
+    <ClCompile Include="Source\APU\ymfm\ymfm_adpcm.cpp" />
+    <ClCompile Include="Source\APU\ymfm\ymfm_misc.cpp" />
+    <ClCompile Include="Source\APU\ymfm\ymfm_opl.cpp" />
+    <ClCompile Include="Source\APU\ymfm\ymfm_opm.cpp" />
+    <ClCompile Include="Source\APU\ymfm\ymfm_opn.cpp" />
+    <ClCompile Include="Source\APU\ymfm\ymfm_opq.cpp" />
+    <ClCompile Include="Source\APU\ymfm\ymfm_opz.cpp" />
+    <ClCompile Include="Source\APU\ymfm\ymfm_pcm.cpp" />
+    <ClCompile Include="Source\APU\ymfm\ymfm_ssg.cpp" />
+    <ClCompile Include="Source\ChannelsEPSM.cpp" />
     <ClCompile Include="Source\ConfigEmulation.cpp" />
     <ClCompile Include="Source\ConfigGUI.cpp" />
     <ClCompile Include="Source\APU\FDS.cpp" />
     <ClCompile Include="Source\APU\nsfplay\xgm\devices\Sound\nes_apu.cpp" />
     <ClCompile Include="Source\APU\nsfplay\xgm\devices\Sound\nes_dmc.cpp" />
     <ClCompile Include="Source\APU\SoundChip.cpp" />
+    <ClCompile Include="Source\InstHandlerEPSM.cpp" />
+    <ClCompile Include="Source\InstrumentEditorEPSM.cpp" />
+    <ClCompile Include="Source\InstrumentEPSM.cpp" />
     <ClCompile Include="Source\NoNotifyEdit.cpp" />
     <ClCompile Include="Source\HistoryFileDlg.cpp" />
     <ClCompile Include="Source\APU\2A03.cpp" />
@@ -697,8 +711,24 @@
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
     <ClInclude Include="Source\APU\digital-sound-antiques\emu2149.h" />
+    <ClInclude Include="Source\APU\EPSM.h" />
     <ClInclude Include="Source\APU\nsfplay\xgm\devices\Sound\nes_mmc5.h" />
     <ClInclude Include="Source\APU\nsfplay\xgm\devices\Sound\nes_vrc6.h" />
+    <ClInclude Include="Source\APU\Types.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_adpcm.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_fm.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_fm.ipp" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_misc.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_opl.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_opm.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_opn.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_opq.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_opx.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_opz.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_pcm.h" />
+    <ClInclude Include="Source\APU\ymfm\ymfm_ssg.h" />
+    <ClInclude Include="Source\ChannelsEPSM.h" />
     <ClInclude Include="Source\ConfigEmulation.h" />
     <ClInclude Include="Source\ConfigGUI.h" />
     <ClInclude Include="Source\APU\ChannelLevelState.h" />
@@ -716,6 +746,9 @@
     <ClInclude Include="Source\APU\nsfplay\xgm\devices\Sound\nsfplay_math.h" />
     <ClInclude Include="Source\APU\nsfplay\xgm\xtypes.h" />
     <ClInclude Include="Source\APU\SoundChip.h" />
+    <ClInclude Include="Source\InstHandlerEPSM.h" />
+    <ClInclude Include="Source\InstrumentEditorEPSM.h" />
+    <ClInclude Include="Source\InstrumentEPSM.h" />
     <ClInclude Include="Source\NoNotifyEdit.h" />
     <ClInclude Include="Source\HistoryFileDlg.h" />
     <ClInclude Include="Source\APU\2A03.h" />
@@ -859,7 +892,6 @@
     <ClInclude Include="Source\TrackerChannel.h" />
     <ClInclude Include="Source\APU\APU.h" />
     <ClInclude Include="Source\APU\Mixer.h" />
-    <ClInclude Include="Source\APU\Types.h" />
     <ClInclude Include="Source\APU\MMC5.h" />
     <ClInclude Include="Source\APU\N163.h" />
     <ClInclude Include="Source\APU\VRC6.h" />

@@ -30,6 +30,7 @@ public:
 	void	ResetChannel() override;
 	void	RefreshChannel() override;
 	int getDutyMax() const override;
+	inst_type_t GetNewInst() const override;
 protected:
 	static const char MAX_DUTY;
 

@@ -318,7 +318,7 @@ public:
 	std::shared_ptr<CInstrument>	GetInstrument(unsigned int Index) const;
 	unsigned int	GetInstrumentCount() const;
 	bool			IsInstrumentUsed(unsigned int Index) const;
-	int				AddInstrument(const char *pName, int ChipType);					// Add a new instrument
+	int				AddInstrument(const char *pName, inst_type_t ChipType);					// Add a new instrument
 	int				AddInstrument(CInstrument *pInstrument);
 	void			AddInstrument(CInstrument *pInstrument, unsigned int Slot);
 	void			RemoveInstrument(unsigned int Index);							// Remove an instrument

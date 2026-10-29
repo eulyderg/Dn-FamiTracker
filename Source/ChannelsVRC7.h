@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -24,7 +24,7 @@
 // Derived channels, VRC7
 //
 
-enum vrc7_command_t {
+enum note_command_t {
 	CMD_NONE, 
 	CMD_NOTE_ON,
 	CMD_NOTE_TRIGGER,
@@ -74,7 +74,7 @@ protected:
 
 	bool	m_bHold;
 
-	vrc7_command_t m_iCommand;
+	note_command_t m_iCommand;
 
 	int		m_iTriggeredNote;
 	int		m_iOctave;
@@ -88,6 +88,7 @@ public:
 	void RefreshChannel();
 
 	int getDutyMax() const override;
+	inst_type_t GetNewInst() const override;
 protected:
 	static const char MAX_DUTY;		// TODO remove class constant, move to .cpp file
 

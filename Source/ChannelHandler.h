@@ -332,6 +332,12 @@ public:		// // //
 	 * @return Valid duty cycles are 0 <= duty <= getDutyMax().
 	 */
 	virtual int getDutyMax() const;
+	/*!
+	 * Returns the associated new instrument of the channel.
+	 * Used when a new instrument is created based on the selected channel.
+	 * @return Returns an inst_type_t of the appropriate instrument for the channel, or INST_NONE.
+	 */
+	virtual inst_type_t GetNewInst() const;
 
 	unsigned char GetArpParam() const override;		// // //
 	bool	IsActive() const override;

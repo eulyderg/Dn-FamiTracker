@@ -337,3 +337,8 @@ void CChannelHandlerFDS::FillModulationTable(const char *pBuffer)		// // //
 		writeModTable();
 	}
 }
+
+inst_type_t CChannelHandlerFDS::GetNewInst() const
+{
+	return INST_FDS;
+}

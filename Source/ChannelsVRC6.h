@@ -1,6 +1,6 @@
 /*
 ** Dn-FamiTracker - NES/Famicom sound tracker
-** Copyright (C) 2020-2025 D.P.C.M.
+** Copyright (C) 2020-2026 D.P.C.M.
 ** FamiTracker Copyright (C) 2005-2020 Jonathan Liss
 ** 0CC-FamiTracker Copyright (C) 2014-2018 HertzDevil
 **
@@ -27,6 +27,7 @@
 class CChannelHandlerVRC6 : public CChannelHandler {
 public:
 	CChannelHandlerVRC6(int MaxPeriod, int MaxVolume);		// // //
+	inst_type_t GetNewInst() const override;
 
 protected:
 	// // //

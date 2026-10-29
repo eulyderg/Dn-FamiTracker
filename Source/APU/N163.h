@@ -51,8 +51,8 @@ public:
 	void	SetMixingMethod(bool bLinear);						// // //
 
 	// Report some basic information about the chip
-	uint8_t GetChannelCount() const override { return 8; };						// TODO: Dynamically calculate this?
-	chan_id_t GetFirstChannelID() const override { return CHANID_N163_CH1; };	//
+	uint8_t GetChannelCount() const override { return m_N163.GetNumberOfChannels(); };	// TODO: Dynamically calculate this?
+	chan_id_t GetFirstChannelID() const override { return CHANID_N163_CH1; };			//
 
 private:
 	void RecomputeN163Filter();

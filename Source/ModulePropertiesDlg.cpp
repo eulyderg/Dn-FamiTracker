@@ -77,6 +77,7 @@ BEGIN_MESSAGE_MAP(CModulePropertiesDlg, CDialog)
 	ON_BN_CLICKED(IDC_EXPANSION_MMC5, OnBnClickedExpansionMMC5)
 	ON_BN_CLICKED(IDC_EXPANSION_S5B, OnBnClickedExpansionS5B)
 	ON_BN_CLICKED(IDC_EXPANSION_N163, OnBnClickedExpansionN163)
+	ON_BN_CLICKED(IDC_EXPANSION_EPSM, OnBnClickedExpansionEPSM)
 	ON_WM_VSCROLL()
 	ON_EN_CHANGE(IDC_APU1_OFFSET_EDIT, &CModulePropertiesDlg::OnEnChangeApu1OffsetEdit)
 	ON_EN_CHANGE(IDC_APU2_OFFSET_EDIT, &CModulePropertiesDlg::OnEnChangeApu2OffsetEdit)
@@ -86,6 +87,7 @@ BEGIN_MESSAGE_MAP(CModulePropertiesDlg, CDialog)
 	ON_EN_CHANGE(IDC_MMC5_OFFSET_EDIT, &CModulePropertiesDlg::OnEnChangeMmc5OffsetEdit)
 	ON_EN_CHANGE(IDC_N163_OFFSET_EDIT, &CModulePropertiesDlg::OnEnChangeN163OffsetEdit)
 	ON_EN_CHANGE(IDC_S5B_OFFSET_EDIT, &CModulePropertiesDlg::OnEnChangeS5bOffsetEdit)
+	// TODO: EPSM
 	ON_BN_CLICKED(IDC_EXTERNAL_OPLL, &CModulePropertiesDlg::OnBnClickedExternalOpll)
 	ON_EN_KILLFOCUS(IDC_OPLL_PATCHBYTE1, &CModulePropertiesDlg::OnEnKillfocusOpllPatchbyte1)
 	ON_EN_CHANGE(IDC_OPLL_PATCHNAME1, &CModulePropertiesDlg::OnEnChangeOpllPatchname1)
@@ -270,6 +272,7 @@ BOOL CModulePropertiesDlg::OnInitDialog()
 	((CButton*)GetDlgItem(IDC_EXPANSION_MMC5))->SetCheck((m_iExpansions & SNDCHIP_MMC5) != 0);
 	((CButton*)GetDlgItem(IDC_EXPANSION_N163))->SetCheck((m_iExpansions & SNDCHIP_N163) != 0);
 	((CButton*)GetDlgItem(IDC_EXPANSION_S5B))->SetCheck((m_iExpansions & SNDCHIP_S5B) != 0);
+	((CButton*)GetDlgItem(IDC_EXPANSION_EPSM))->SetCheck((m_iExpansions & SNDCHIP_EPSM) != 0);
 
 	// N163 channel count UI
 	m_cChannelsLabel.SubclassDlgItem(IDC_CHANNELS_NR, this);
@@ -360,6 +363,7 @@ void CModulePropertiesDlg::OnBnClickedOk()
 			case 3: str += _T("MMC5 "); break;
 			case 4: str += _T("N163 "); break;
 			case 5: str += _T("5B ");   break;
+			case 6: str += _T("EPSM ");   break;
 			}
 			if (i == 4 && m_pDocument->ExpansionEnabled(SNDCHIP_N163)
 				&& (m_iExpansions & SNDCHIP_N163) && m_iN163Channels < m_pDocument->GetNamcoChannels()) {
@@ -664,6 +668,7 @@ void CModulePropertiesDlg::OnBnClickedSongImport()
 	((CButton*)GetDlgItem(IDC_EXPANSION_MMC5))->SetCheck((m_iExpansions & SNDCHIP_MMC5) != 0);
 	((CButton*)GetDlgItem(IDC_EXPANSION_N163))->SetCheck((m_iExpansions & SNDCHIP_N163) != 0);
 	((CButton*)GetDlgItem(IDC_EXPANSION_S5B))->SetCheck((m_iExpansions & SNDCHIP_S5B) != 0);
+	((CButton*)GetDlgItem(IDC_EXPANSION_EPSM))->SetCheck((m_iExpansions & SNDCHIP_EPSM) != 0);
 
 
 	for (int i = 0; i < 8; i++)
@@ -805,6 +810,17 @@ void CModulePropertiesDlg::OnBnClickedExpansionN163()
 	updateDeviceMixOffsetUI(6);
 }
 
+void CModulePropertiesDlg::OnBnClickedExpansionEPSM()
+{
+	CButton* pCheckBox = (CButton*)GetDlgItem(IDC_EXPANSION_EPSM);
+
+	if (pCheckBox->GetCheck() == BST_CHECKED) {
+		m_iExpansions |= SNDCHIP_EPSM;
+	} else {
+		m_iExpansions &= ~SNDCHIP_EPSM;		// // //
+	}
+}
+
 // N163 Channel Count
 void CModulePropertiesDlg::setN163NChannels(int nchan) {
 	m_iN163Channels = nchan;
@@ -849,7 +865,7 @@ void CModulePropertiesDlg::updateN163ChannelCountUI()
 
 void CModulePropertiesDlg::updateDeviceMixOffsetUI(int device, bool renderText)
 {
-	int const chipenable[8] = {
+	const uint8_t chipenable[9] = {
 		255,
 		255,
 		SNDCHIP_VRC6,
@@ -857,7 +873,8 @@ void CModulePropertiesDlg::updateDeviceMixOffsetUI(int device, bool renderText)
 		SNDCHIP_FDS,
 		SNDCHIP_MMC5,
 		SNDCHIP_N163,
-		SNDCHIP_S5B
+		SNDCHIP_S5B,
+		SNDCHIP_EPSM
 	};
 
 	std::array<CWnd*, 4> DeviceMixOffsetUI = {
