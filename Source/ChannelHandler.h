@@ -337,7 +337,7 @@ public:		// // //
 	 * Used when a new instrument is created based on the selected channel.
 	 * @return Returns an inst_type_t of the appropriate instrument for the channel, or INST_NONE.
 	 */
-	virtual inst_type_t GetNewInst() const;
+	virtual inst_type_t GetNewInstType() const;
 
 	unsigned char GetArpParam() const override;		// // //
 	bool	IsActive() const override;

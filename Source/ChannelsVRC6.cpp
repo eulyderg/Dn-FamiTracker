@@ -107,7 +107,7 @@ void CChannelHandlerVRC6::resetPhase()		// // //
 
 
 
-inst_type_t CChannelHandlerVRC6::GetNewInst() const
+inst_type_t CChannelHandlerVRC6::GetNewInstType() const
 {
 	return INST_VRC6;
 }

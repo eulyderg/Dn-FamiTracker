@@ -58,7 +58,7 @@ public:
 	void RefreshChannel() override;
 	void ResetChannel() override;
 	int  getDutyMax() const override;
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 	epsm_channel_type GetChannelType() const;
 
 protected:
@@ -72,11 +72,16 @@ protected:
 	int  RunNote(int Octave, int Note) override;
 	bool CreateInstHandler(inst_type_t Type) override;
 	int  CalculateVolume() const override;
+	int  ConvertDuty(int Duty) const override;
 	int  CalculatePeriod(bool MultiplyByHarmonic = true) const override;
 
 protected:
 	// copied from S5B
 	static void SetMode(int Chan, int Square, int Noise);
+	void UpdateAutoEnvelope(int Period);
+	void UpdateRegs();
+	void WriteReg(int Reg, int Value);
+	void SetNoiseFreq(int Pitch);
 
 	static uint8_t s_iModes;
 	static uint8_t s_iNoiseFreq;
@@ -99,7 +104,7 @@ public:
 	void RefreshChannel() override;
 	void ResetChannel() override;
 	int  getDutyMax() const override;
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 	epsm_channel_type GetChannelType() const;
 
 protected:
@@ -132,7 +137,7 @@ public:
 	void RefreshChannel() override;
 	void ResetChannel() override;
 	int  getDutyMax() const override;
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 	epsm_channel_type GetChannelType() const;
 
 protected:

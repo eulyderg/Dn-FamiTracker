@@ -128,7 +128,7 @@ void CChannelHandler2A03::ResetChannel()
 	m_iLengthCounter = 1;
 }
 
-inst_type_t CChannelHandler2A03::GetNewInst() const
+inst_type_t CChannelHandler2A03::GetNewInstType() const
 {
 	return INST_2A03;
 }
@@ -782,7 +782,7 @@ int CDPCMChan::GetChannelVolume() const
 	return VOL_COLUMN_MAX;
 }
 
-inst_type_t CDPCMChan::GetNewInst() const
+inst_type_t CDPCMChan::GetNewInstType() const
 {
 	return INST_2A03;
 }

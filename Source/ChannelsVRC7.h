@@ -88,7 +88,7 @@ public:
 	void RefreshChannel();
 
 	int getDutyMax() const override;
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 protected:
 	static const char MAX_DUTY;		// TODO remove class constant, move to .cpp file
 

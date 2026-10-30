@@ -32,6 +32,7 @@
 #include "ChannelsS5B.h"
 #include "InstHandler.h"
 #include "InstHandlerEPSM.h"
+#include "SeqInstHandlerS5B.h"
 #include "Sequence.h"
 #include <map>
 
@@ -67,36 +68,40 @@ uint8_t CEPSMSSGChannel::s_iEnvFreqLo    = 0;
 bool    CEPSMSSGChannel::s_bEnvTrigger   = false;
 uint8_t CEPSMSSGChannel::s_iEnvType      = 0;
 
-void CEPSMSSGChannel::SetMode(int Chan, int Square, int Noise)
-{
-	Chan -= CHANID_S5B_CH1;
-
-	switch (Chan) {
-	case 0:
-		s_iModes &= 0x36;
-		break;
-	case 1:
-		s_iModes &= 0x2D;
-		break;
-	case 2:
-		s_iModes &= 0x1B;
-		break;
-	}
-
-	s_iModes |= (Noise << (3 + Chan)) | (Square << Chan);
-}
-
 // Class functions
 CEPSMSSGChannel::CEPSMSSGChannel()
 {
-	m_bUpdate			 = false;
+	m_bUpdate            = false;
 	m_bEnvelopeEnabled   = false;
 	m_iAutoEnvelopeShift = 0;
+	m_iDefaultDuty       = S5B_MODE_SQUARE;
+	s_iDefaultNoise      = 0;
 }
 
 void CEPSMSSGChannel::RefreshChannel()
 {
-	
+	uint16_t Period = CalculatePeriod();
+	uint8_t LoPeriod = Period & 0xFF;
+	uint8_t HiPeriod = Period >> 8;
+	uint8_t Volume = CalculateVolume();
+
+	uint8_t Noise = (m_bGate && (m_iDutyPeriod & S5B_MODE_NOISE)) ? 0 : 1;
+	uint8_t Square = (m_bGate && (m_iDutyPeriod & S5B_MODE_SQUARE)) ? 0 : 1;
+	uint8_t Envelope = (m_bGate && (m_iDutyPeriod & S5B_MODE_ENVELOPE)) ? 0x10 : 0;
+
+	UpdateAutoEnvelope(Period);
+	SetMode(m_iChannelID, Square, Noise);
+
+	//WriteReg((m_iChannelID - CHANID_EPSM_SSG1) * 2, LoPeriod);
+	//WriteReg((m_iChannelID - CHANID_EPSM_SSG1) * 2 + 1, HiPeriod);
+	//WriteReg((m_iChannelID - CHANID_EPSM_SSG1) + 8, Volume | Envelope);
+
+	if (Envelope && (m_bTrigger || m_bUpdate))
+		s_bEnvTrigger = true;
+	m_bUpdate = false;
+
+	if (m_iChannelID == CHANID_EPSM_SSG3)
+		UpdateRegs();
 }
 
 void CEPSMSSGChannel::ResetChannel()
@@ -104,14 +109,21 @@ void CEPSMSSGChannel::ResetChannel()
 	CChannelHandler::ResetChannel();
 	m_iDefaultDuty = m_iDutyPeriod = S5B_MODE_SQUARE;
 	s_iDefaultNoise = s_iNoiseFreq = 0;
+	s_iNoisePrev = -1;
+	m_bEnvelopeEnabled = false;
+	m_iAutoEnvelopeShift = 0;
+	s_iEnvFreqHi = 0;
+	s_iEnvFreqLo = 0;
+	s_iEnvType = 0;
+	s_bEnvTrigger = false;
 }
 
 int CEPSMSSGChannel::getDutyMax() const
 {
-	return 0x0F;
+	return 0x07;
 }
 
-inst_type_t CEPSMSSGChannel::GetNewInst() const
+inst_type_t CEPSMSSGChannel::GetNewInstType() const
 {
 	return INST_S5B;
 }
@@ -123,7 +135,7 @@ epsm_channel_type CEPSMSSGChannel::GetChannelType() const
 
 void CEPSMSSGChannel::ClearRegisters()
 {
-
+	//WriteReg(8 + m_iChannelID - CHANID_EPSM_SSG1, 0);		// Clear volume
 }
 
 void CEPSMSSGChannel::HandleNoteData(stChanNote* pNoteData, int EffColumns)
@@ -181,17 +193,24 @@ void CEPSMSSGChannel::HandleEmptyNote()
 
 void CEPSMSSGChannel::HandleCut()
 {
-	
+	CutNote();
+	m_iDutyPeriod = S5B_MODE_SQUARE;
+	m_iNote = 0;
 }
 
 void CEPSMSSGChannel::HandleRelease()
 {
-	
+	if (!m_bRelease)
+		ReleaseNote();	
 }
 
 void CEPSMSSGChannel::HandleNote(int Note, int Octave)
 {
-	
+	CChannelHandler::HandleNote(Note, Octave);
+
+	if (this->m_iDefaultDuty & S5B_MODE_NOISE) {
+		s_iNoiseFreq = s_iDefaultNoise;
+	}
 }
 
 int CEPSMSSGChannel::RunNote(int Octave, int Note)
@@ -201,17 +220,94 @@ int CEPSMSSGChannel::RunNote(int Octave, int Note)
 
 bool CEPSMSSGChannel::CreateInstHandler(inst_type_t Type)
 {
-	return CChannelHandler::CreateInstHandler(Type);
+	switch (Type) {
+	case INST_2A03: case INST_VRC6: case INST_N163: case INST_S5B: case INST_FDS:
+		switch (m_iInstTypeCurrent) {
+		case INST_2A03: case INST_VRC6: case INST_N163: case INST_S5B: case INST_FDS: break;
+		default:
+			m_pInstHandler.reset(new CSeqInstHandlerS5B(this, 0x0F, Type == INST_S5B ? 0x40 : 0));
+			return true;
+		}
+	}
+	return false;
 }
 
 int CEPSMSSGChannel::CalculateVolume() const
 {
-	return 0;
+	return LimitVolume((m_iVolume >> VOL_COLUMN_SHIFT) + m_iInstVolume - 15 - GetTremolo());
+}
+
+int CEPSMSSGChannel::ConvertDuty(int Duty) const		// // //
+{
+	switch (m_iInstTypeCurrent) {
+	case INST_2A03: case INST_VRC6: case INST_N163:
+		return S5B_MODE_SQUARE;
+	default:
+		return Duty;
+	}
 }
 
 int CEPSMSSGChannel::CalculatePeriod(bool MultiplyByHarmonic) const
 {
 	return 1;
+}
+
+void CEPSMSSGChannel::SetMode(int Chan, int Square, int Noise)
+{
+	Chan -= CHANID_S5B_CH1;
+
+	switch (Chan) {
+	case 0:
+		s_iModes &= 0x36;
+		break;
+	case 1:
+		s_iModes &= 0x2D;
+		break;
+	case 2:
+		s_iModes &= 0x1B;
+		break;
+	}
+
+	s_iModes |= (Noise << (3 + Chan)) | (Square << Chan);
+}
+
+void CEPSMSSGChannel::UpdateAutoEnvelope(int Period)		// // // 050B
+{
+	if (m_bEnvelopeEnabled && m_iAutoEnvelopeShift) {
+		if (m_iAutoEnvelopeShift > 8) {
+			Period >>= m_iAutoEnvelopeShift - 8 - 1;		// // // round off
+			if (Period & 0x01) ++Period;
+			Period >>= 1;
+		}
+		else if (m_iAutoEnvelopeShift < 8)
+			Period <<= 8 - m_iAutoEnvelopeShift;
+		s_iEnvFreqLo = Period & 0xFF;
+		s_iEnvFreqHi = Period >> 8;
+	}
+}
+
+void CEPSMSSGChannel::UpdateRegs()
+{
+	// Done only once
+	if (s_iNoiseFreq != s_iNoisePrev)
+		WriteReg(0x06, (s_iNoisePrev = s_iNoiseFreq) ^ 0x1F);
+	WriteReg(0x07, s_iModes);
+	WriteReg(0x0B, s_iEnvFreqLo);
+	WriteReg(0x0C, s_iEnvFreqHi);
+	if (s_bEnvTrigger)
+		WriteReg(0x0D, s_iEnvType);
+	s_bEnvTrigger = false;
+}
+
+void CEPSMSSGChannel::WriteReg(int Reg, int Value)
+{
+	WriteRegister(0xC000, Reg);
+	WriteRegister(0xE000, Value);
+}
+
+void CEPSMSSGChannel::SetNoiseFreq(int Pitch)
+{
+	s_iNoiseFreq = Pitch;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,7 +334,7 @@ int CEPSMFMChannel::getDutyMax() const
 	return 0x00;
 }
 
-inst_type_t CEPSMFMChannel::GetNewInst() const
+inst_type_t CEPSMFMChannel::GetNewInstType() const
 {
 	return INST_EPSM;
 }
@@ -348,7 +444,7 @@ int CEPSMSampleChannel::getDutyMax() const
 	return 0x00;
 }
 
-inst_type_t CEPSMSampleChannel::GetNewInst() const
+inst_type_t CEPSMSampleChannel::GetNewInstType() const
 {
 	return INST_NONE;
 }

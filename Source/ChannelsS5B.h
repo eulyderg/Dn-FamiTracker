@@ -31,7 +31,7 @@ public:
 	void	RefreshChannel() override;
 
 	void	SetNoiseFreq(int Pitch) override final;		// // //
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 
 	int getDutyMax() const override;
 protected:

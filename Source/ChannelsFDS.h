@@ -34,7 +34,7 @@ protected:
 	bool	CreateInstHandler(inst_type_t Type) override;		// // //
 	void	ClearRegisters() override;
 	CString	GetCustomEffectString() const override;		// // //
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 
 	void	resetPhase();
 	void	writeModTable();

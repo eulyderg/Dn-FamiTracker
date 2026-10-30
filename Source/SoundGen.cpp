@@ -2153,7 +2153,7 @@ inst_type_t CSoundGen::GetChannelNewInst(int Channel) const
 {
 	if (!m_pChannels[Channel])
 		return INST_NONE;
-	return m_pChannels[Channel]->GetNewInst();
+	return m_pChannels[Channel]->GetNewInstType();
 }
 
 void CSoundGen::PlayNote(int Channel, stChanNote *NoteData, int EffColumns)

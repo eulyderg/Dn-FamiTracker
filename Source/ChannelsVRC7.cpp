@@ -270,7 +270,7 @@ int CVRC7Channel::getDutyMax() const {
 	return MAX_DUTY;
 }
 
-inst_type_t CVRC7Channel::GetNewInst() const
+inst_type_t CVRC7Channel::GetNewInstType() const
 {
 	return INST_VRC7;
 }

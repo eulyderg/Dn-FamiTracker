@@ -1084,7 +1084,7 @@ int CChannelHandler::getDutyMax() const {
 	return -1;
 }
 
-inst_type_t CChannelHandler::GetNewInst() const
+inst_type_t CChannelHandler::GetNewInstType() const
 {
 	return INST_NONE;
 }

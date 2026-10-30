@@ -28,7 +28,7 @@ class CChannelHandler2A03 : public CChannelHandler {
 public:
 	CChannelHandler2A03();
 	virtual void ResetChannel();
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 
 protected:
 	void	HandleNoteData(stChanNote *pNoteData, int EffColumns) override;
@@ -117,7 +117,7 @@ public:
 	CDPCMChan();		// // //
 	void	RefreshChannel() override;
 	int		GetChannelVolume() const override;		// // //
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 
 	void WriteDCOffset(unsigned char Delta);		// // //
 	void SetLoopOffset(unsigned char Loop);		// // //

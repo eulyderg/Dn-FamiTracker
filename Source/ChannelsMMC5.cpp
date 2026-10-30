@@ -125,7 +125,7 @@ int CChannelHandlerMMC5::getDutyMax() const {
 	return MAX_DUTY;
 }
 
-inst_type_t CChannelHandlerMMC5::GetNewInst() const
+inst_type_t CChannelHandlerMMC5::GetNewInstType() const
 {
 	return INST_2A03;
 }

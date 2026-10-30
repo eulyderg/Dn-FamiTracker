@@ -27,7 +27,7 @@
 class CChannelHandlerVRC6 : public CChannelHandler {
 public:
 	CChannelHandlerVRC6(int MaxPeriod, int MaxVolume);		// // //
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 
 protected:
 	// // //

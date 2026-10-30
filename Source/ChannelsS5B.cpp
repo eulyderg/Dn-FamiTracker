@@ -118,7 +118,7 @@ int CChannelHandlerS5B::getDutyMax() const {
 	return MAX_DUTY;
 }
 
-inst_type_t CChannelHandlerS5B::GetNewInst() const
+inst_type_t CChannelHandlerS5B::GetNewInstType() const
 {
 	return INST_S5B;
 }

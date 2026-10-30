@@ -38,7 +38,7 @@ public:
 	void	SetChannelCount(int Count);		// // //
 
 	int getDutyMax() const override;
-	inst_type_t GetNewInst() const override;
+	inst_type_t GetNewInstType() const override;
 
 protected:
 	bool	HandleEffect(effect_t EffNum, unsigned char EffParam) override;		// // //

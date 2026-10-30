@@ -233,7 +233,7 @@ int CChannelHandlerN163::getDutyMax() const {
 	return CInstrumentN163::MAX_WAVE_COUNT - 1;
 }
 
-inst_type_t CChannelHandlerN163::GetNewInst() const
+inst_type_t CChannelHandlerN163::GetNewInstType() const
 {
 	return INST_N163;
 }
