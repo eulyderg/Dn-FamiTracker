@@ -1188,7 +1188,8 @@ bool CFindDlg::Replace(CCompoundAction *pAction)
 
 			if (m_replaceTerm.Definite[WC_EFF]) {
 				effect_t fx = GetEffectFromChar(EFF_CHAR[m_replaceTerm.Note.EffNumber[0]],
-												m_pDocument->GetChipType(m_pFindCursor->m_iChannel));
+												m_pDocument->GetChipType(m_pFindCursor->m_iChannel),
+												m_pDocument->GetChannelType(m_pFindCursor->m_iChannel));
 				for (const int &i : MatchedColumns)
 					Target.EffNumber[i] = fx;
 			}

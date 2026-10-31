@@ -49,16 +49,13 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	void LoadPatch(int Num);
-	void LoadCustomPatch();
 	void SavePatch();
-	void LoadInternalPatch(int Num);
 	void PatchBytesToText(int Patch);
 
 	void SetupSlider(int Slider, int Max);
 	int GetSliderVal(int Slider);
 	void SetSliderVal(int Slider, int Value);
-	void EnableControls(bool bEnable);
-	void SelectPatch(int Patch);
+	void SetSliderTic(int Slider, int Tic);
 	void PatchTextToBytes(LPCTSTR pString);
 	void CopyAsPlainText();		// // //
 	std::uint8_t FetchPatchByte(int patch, unsigned char patch_byte);
@@ -69,7 +66,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnInitDialog();
-	afx_msg void OnCbnSelchangePatch();
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnBnClickedCheckbox();

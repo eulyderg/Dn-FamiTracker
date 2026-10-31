@@ -504,7 +504,7 @@ void CSoundGen::RegisterChannels(int Chip, CFamiTrackerDoc *pDoc)
 	// Register the channels in the document
 	// Expansion & internal channels
 	for (int i = 0; i < sizeof(m_pTrackerChannels) / sizeof(CTrackerChannel*); ++i) {
-		int ID = m_pTrackerChannels[i]->GetID();		// // //
+		chan_id_t ID = m_pTrackerChannels[i]->GetID();		// // //
 		if (m_pChannels[i] && ((m_pTrackerChannels[i]->GetChip() & Chip) || (i < 5))			// // //
 						   && (i >= CHANID_FDS || i < CHANID_N163_CH1 + pDoc->GetNamcoChannels())) {
 			pDoc->RegisterChannel(m_pTrackerChannels[i], ID, m_pTrackerChannels[i]->GetChip());
@@ -561,6 +561,7 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 	std::unique_ptr<CDetuneFDS> pDetuneFDS(new CDetuneFDS(A440_NOTE));
 	std::unique_ptr<CDetuneN163> pDetuneN163(new CDetuneN163(A440_NOTE));
 	std::unique_ptr<CDetuneS5B> pDetuneS5B(new CDetuneS5B(A440_NOTE));
+	std::unique_ptr<CDetuneEPSMSSG> pDetuneEPSMSSG(new CDetuneEPSMSSG(A440_NOTE));
 	// TODO: EPSM detune table
 
 	for (int i = 0; i < NOTE_COUNT; ++i) {
@@ -602,6 +603,10 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 		// // // Sunsoft 5B
 		Pitch = pDetuneS5B->FrequencyToPeriod(pDetuneS5B->NoteToFreq(i), 1, 0);
 		m_iNoteLookupTableS5B[i] = std::lround(Pitch - pDocument->GetDetuneOffset(0, i));
+
+		// EPSM
+		Pitch = pDetuneEPSMSSG->FrequencyToPeriod(pDetuneEPSMSSG->NoteToFreq(i), 1, 0);
+		m_iNoteLookupTableEPSMSSG[i] = std::lround(Pitch - pDocument->GetDetuneOffset(0, i));
 	}
 
 #ifdef WRITE_PERIOD_FILES
@@ -703,6 +708,8 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 			Table = m_iNoteLookupTableN163; break;
 		case CHANID_S5B_CH1: case CHANID_S5B_CH2: case CHANID_S5B_CH3:
 			Table = m_iNoteLookupTableS5B; break;
+		case CHANID_EPSM_SSG1: case CHANID_EPSM_SSG2: case CHANID_EPSM_SSG3:
+			Table = m_iNoteLookupTableEPSMSSG; break;
 		// TODO: EPSM note table
 		default: continue;
 		}
@@ -731,6 +738,7 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 	SurveyMixLevels.at(CHIP_LEVEL_MMC5) = static_cast<int16_t>(pSettings->ChipLevels.iSurveyMixMMC5);
 	SurveyMixLevels.at(CHIP_LEVEL_N163) = static_cast<int16_t>(pSettings->ChipLevels.iSurveyMixN163);
 	SurveyMixLevels.at(CHIP_LEVEL_S5B) = static_cast<int16_t>(pSettings->ChipLevels.iSurveyMixS5B);
+	SurveyMixLevels.at(CHIP_LEVEL_EPSM) = static_cast<int16_t>(pSettings->ChipLevels.iSurveyMixS5B);
 	// TODO: EPSM channel levels
 
 	bool refreshsettings = false;
@@ -1451,6 +1459,7 @@ int CSoundGen::ReadPeriodTable(int Index, int Table) const		// // //
 	case CDetuneTable::DETUNE_FDS:  return m_iNoteLookupTableFDS[Index]; break;
 	case CDetuneTable::DETUNE_N163: return m_iNoteLookupTableN163[Index]; break;
 	case CDetuneTable::DETUNE_S5B:  return m_iNoteLookupTableS5B[Index]; break;
+	case CDetuneTable::DETUNE_EPSMSSG: return m_iNoteLookupTableEPSMSSG[Index]; break;
 	// TODO: EPSM detune table
 	default:
 		AfxDebugBreak(); return m_iNoteLookupTableNTSC[Index];

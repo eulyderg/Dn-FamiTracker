@@ -25,11 +25,9 @@
 #include "EPSM.h"
 #include "../RegisterState.h"		// // //
 
-//const uint32_t CVRC7::OPLL_CLOCK = CAPU::BASE_FREQ_VRC7;	// Clock frequency
-
 CEPSM::CEPSM()
 {
-	m_pRegisterLogger->AddRegisterRange(0x00, 0x3F);		// // //
+	m_pRegisterLogger->AddRegisterRange(0x000, 0x1FF);
 	Reset();
 }
 
@@ -41,12 +39,15 @@ CEPSM::~CEPSM()
 void CEPSM::Reset()
 {
 	// reset emulation core
-	//m_ymf288.reset();
+	m_ymf288.reset();
 
 	// reset buffer information
 	m_iBufferPtr = 0;
 	m_iTime = 0;
 	m_BlipEPSM.clear();
+
+	m_iSSGVolume[0] = m_iSSGVolume[1] = m_iSSGVolume[2] = 0;
+	m_iSSGPeriod[0] = m_iSSGPeriod[1] = m_iSSGPeriod[2] = 0;
 }
 
 void CEPSM::UpdateFilter(blip_eq_t eq)
@@ -63,8 +64,11 @@ void CEPSM::SetClockRate(uint32_t Rate)
 
 void CEPSM::SetSampleSpeed(uint32_t SampleRate, double ClockRate, uint32_t FrameRate)
 {
-	m_iMaxSamples = (SampleRate / FrameRate) * 2;	// Allow some overflow
-    
+	m_ymf288.reset();
+	m_ymf288.set_fidelity(ymfm::OPN_FIDELITY_MAX);
+
+	m_iMaxSamples = (uint32_t(SampleRate) / FrameRate) * 2;	// Allow some overflow
+
 	SAFE_RELEASE_ARRAY(m_pBuffer);
 	m_pBuffer = new int16_t[m_iMaxSamples];
 	memset(m_pBuffer, 0, sizeof(int16_t) * m_iMaxSamples);
@@ -77,20 +81,50 @@ void CEPSM::SetDirectVolume(double Volume)
 
 void CEPSM::Write(uint16_t Address, uint8_t Value)
 {
-	static constexpr uint16_t offset = 0x9000;
-	//switch (Address) {
-	//	case offset+0x00:
-	//		break;
-	//}
-	//m_ymf288.write_address(Address - offset);
-	//m_ymf288.write_data(Value);
+	switch (Address) {
+		case 0x401C:
+			m_ymf288.write_address(Value);
+			m_iAddress = Value;
+			break;
+		case 0x401D:
+			m_ymf288.write_data(Value);
+			switch (m_iAddress) {
+				// TODO: Pitch
+				case 0x00: m_iSSGPeriod[0] = (m_iSSGPeriod[0] & 0xF00) | Value; break;
+				case 0x01: m_iSSGPeriod[0] = (m_iSSGPeriod[0] & 0x0FF) | (Value & 0xF) << 8; break;
+				case 0x02: m_iSSGPeriod[1] = (m_iSSGPeriod[1] & 0xF00) | Value; break;
+				case 0x03: m_iSSGPeriod[1] = (m_iSSGPeriod[1] & 0x0FF) | (Value & 0xF) << 8; break;
+				case 0x04: m_iSSGPeriod[2] = (m_iSSGPeriod[2] & 0xF00) | Value; break;
+				case 0x05: m_iSSGPeriod[2] = (m_iSSGPeriod[2] & 0x0FF) | (Value & 0xF) << 8; break;
+				case 0x07:
+					m_iSSGToneEnabled[0] = (Value & 0b001) ? 0 : 1;
+					m_iSSGToneEnabled[1] = (Value & 0b010) ? 0 : 1;
+					m_iSSGToneEnabled[2] = (Value & 0b100) ? 0 : 1; break;
+				// TODO: Envelopes
+				case 0x08: m_iSSGVolume[0] = Value & 0xF; break;
+				case 0x09: m_iSSGVolume[1] = Value & 0xF; break;
+				case 0x0A: m_iSSGVolume[2] = Value & 0xF; break;
+				case 0x0B: m_iSSGEnvPeriod = (m_iSSGEnvPeriod & 0xFF00) | Value; break;
+				case 0x0C: m_iSSGEnvPeriod = (m_iSSGEnvPeriod & 0x00FF) | (Value << 8); break;
+				case 0x0D: m_iSSGEnvMode   = Value & 0xF; break;
+				default: break;
+			}
+			break;
+		case 0x401E:
+			m_ymf288.write_address_hi(Value);
+			m_iAddress = Value | 0x100;
+			break;
+		case 0x401F: m_ymf288.write_data_hi(Value); break;
+	}
 }
 
-void CEPSM::Log(uint16_t Address, uint8_t Value)		// // //
+void CEPSM::Log(uint16_t Address, uint8_t Value)
 {
 	switch (Address) {
-	case 0x9010: m_pRegisterLogger->SetPort(Value); break;
-	case 0x9030: m_pRegisterLogger->Write(Value); break;
+		case 0x401C: m_pRegisterLogger->SetPort(Value); break;
+		case 0x401D: m_pRegisterLogger->Write(Value); break;
+		case 0x401E: m_pRegisterLogger->SetPort(Value | 0x100); break;
+		case 0x401F: m_pRegisterLogger->Write(Value); break;
 	}
 }
 
@@ -107,19 +141,35 @@ void CEPSM::Process(uint32_t Time, Blip_Buffer& Output)
 
 void CEPSM::EndFrame(Blip_Buffer& Output, gsl::span<int16_t> TempBuffer)
 {
-	/*uint32_t WantSamples = Output.count_samples(m_iTime);
+	uint32_t WantSamples = Output.count_samples(m_iTime);
 
+	// Hacky solution for higher clock rate. Need proper resampling.
+	const double rateRatio = double(m_ymf288.sample_rate(CAPU::BASE_FREQ_EPSM)) / double(Output.sample_rate());
+	static double clockCount = double(m_iTime);
+	
 	static int32_t LastSample = 0;
 
 	// Generate EPSM samples
 	while (m_iBufferPtr < WantSamples) {
-		int32_t RawSample = OPLL_calc(m_pOPLLInt);
+		// Hacky solution for higher clock rate.
+		// TODO: proper resampling of multiple samples
+		int32_t clocks = uint32_t(clockCount) - uint32_t(clockCount - rateRatio);
+		clockCount -= rateRatio;
+		
+		while (clocks > 0) {
+			m_ymf288.generate(&m_ymf288output);
+			clocks--;
+		}
 
-		for (int i = 0; i < 15; i++)
-			m_ChannelLevels[i].update(0);
+		int32_t FMSampleL = m_ymf288output.data[0];
+		int32_t FMSampleR = m_ymf288output.data[1];
+		int32_t SSGSample = m_ymf288output.data[2];
 
-		// Apply direct volume, hacky workaround
-		int32_t Sample = static_cast<int32_t>(double(RawSample) * m_DirectVolume);
+		int32_t Sample = (FMSampleL + FMSampleR)/2 + SSGSample;
+
+		for (int i = 3; i < 9; i++) {
+			//m_ChannelLevels[i].update(static_cast<uint8_t>((255.0 * ((i) + 1.0) / 4096.0)));
+		}
 
 		if (Sample > 32767)
 			Sample = 32767;
@@ -134,36 +184,55 @@ void CEPSM::EndFrame(Blip_Buffer& Output, gsl::span<int16_t> TempBuffer)
 
 	m_iBufferPtr -= WantSamples;
 
-	m_iTime = 0;*/
+	m_iTime = 0;
 }
 
-double CEPSM::GetFreq(int Channel) const		// // //
+double CEPSM::GetFreq(int Channel) const
 {
-	return 0.;
+	if ((0 <= Channel && Channel < 3) && m_iSSGToneEnabled[Channel] && (m_iSSGPeriod[Channel] > 0)) {
+		// SSG channels
+		return CAPU::BASE_FREQ_EPSM / (64.0 * m_iSSGPeriod[Channel]);
+	} else if (3 <= Channel && Channel < 9) {
+		// FM channels
+		//return 0;
+	} else if (9 <= Channel && Channel < 15) {
+		// ADPCM channels
+		//return 0;     
+	} else if (Channel >= 15 && (m_iSSGEnvMode & 0b1000) && !(m_iSSGEnvMode & 0b0001) && (m_iSSGEnvPeriod > 0)) {
+		// SSG envelope
+		return CAPU::BASE_FREQ_EPSM / (((m_iSSGEnvMode & 0b0010) ? 2048. : 1024.) * m_iSSGEnvPeriod);
+	}
+	return 0;
 }
 
 int CEPSM::GetChannelLevel(int Channel)
 {
-	/*ASSERT(0 <= Channel && Channel < 9);
-	if (0 <= Channel && Channel < 6) {
-		return m_ChannelLevels[Channel].getLevel();
-	}*/
+	if (0 <= Channel && Channel < 3) {
+		return m_iSSGVolume[Channel];
+	} else if (3 <= Channel && Channel < 9) {
+		//return 0;
+	} else if (9 <= Channel && Channel < 15) {
+		//return 0;
+	}
 	return 0;
 }
 
 int CEPSM::GetChannelLevelRange(int Channel) const
 {
+	if (0 <= Channel && Channel < 3) {
+		return 0xF;
+	}
+	else if (3 <= Channel && Channel < 9) {
+		//return 127;
+	}
+	else if (9 <= Channel && Channel < 15) {
+		//return 127;
+	}
 	return 127;
 }
 
 void CEPSM::UpdateMixLevel(double v, bool UseSurveyMix)
 {
-	// The output of emu2413 is resampled. This means
-	// that the emulator output suffers no multiplex hiss and
-	// bit depth quantization.
-	// TODO: replace emu2413 with Nuked-OPLL for better multiplexing accuracy?
-
-	// hacky solution, since VRC7 uses asynchronous direct buffer writes
 	SetDirectVolume(v);
 	
 	// emu2413's waveform output ranges from -4095...4095

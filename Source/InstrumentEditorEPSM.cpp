@@ -68,10 +68,10 @@ BEGIN_MESSAGE_MAP(CInstrumentEditorEPSM, CInstrumentEditPanel)
 	ON_BN_CLICKED(IDC_C_VIB, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
 	ON_BN_CLICKED(IDC_C_EG, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
 	ON_BN_CLICKED(IDC_C_KSR, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_C_DM, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
+	ON_BN_CLICKED(IDC_C_DM, &CInstrumentEditorEPSM::OnBnClickedCheckbox)*/
 	ON_WM_VSCROLL()
 	ON_WM_HSCROLL()
-	ON_WM_CONTEXTMENU()
+	/*_WM_CONTEXTMENU()
 	ON_COMMAND(IDC_COPY, &CInstrumentEditorEPSM::OnCopy)
 	ON_COMMAND(IDC_PASTE, &CInstrumentEditorEPSM::OnPaste)*/
 END_MESSAGE_MAP()
@@ -82,99 +82,95 @@ END_MESSAGE_MAP()
 BOOL CInstrumentEditorEPSM::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-
-	//CComboBox* pPatchBox = static_cast<CComboBox*>(GetDlgItem(IDC_PATCH));
-	//CString Text;
-
 	// Get active document
-	//m_pDocument = GetDocument();
-	/*
-	// fetch patch names and bytes
-	for (int i = 0; i < 19; i++) {
-		for (int j = 0; j < 8; j++)
-			OPLLPatchBytes[(8 * i) + j] = m_pDocument->GetOPLLPatchByte((8 * i) + j);
-		OPLLPatchNames[i] = m_pDocument->GetOPLLPatchName(i);
-	}
+	m_pDocument = GetDocument();
 
-	for (int i = 0; i < 16; ++i) {
-		Text.Format(_T("Patch #%i - %s"), i, OPLLPatchNames[i].c_str());
-		pPatchBox->AddString(Text);
-	}
+	SetupSlider(IDC_M_FB1, 7);
+	SetSliderVal(IDC_M_FB1, 0);
 
-	pPatchBox->SetCurSel(0);
+	SetupSlider(IDC_M_MUL1, 15);
+	SetupSlider(IDC_M_MUL2, 15);
+	SetupSlider(IDC_M_MUL3, 15);
+	SetupSlider(IDC_M_MUL4, 15);
+	SetSliderVal(IDC_M_MUL1, 1);
+	SetSliderVal(IDC_M_MUL2, 1);
+	SetSliderVal(IDC_M_MUL3, 1);
+	SetSliderVal(IDC_M_MUL4, 1);
+	SetSliderTic(IDC_M_MUL1, 1);
+	SetSliderTic(IDC_M_MUL2, 1);
+	SetSliderTic(IDC_M_MUL3, 1);
+	SetSliderTic(IDC_M_MUL4, 1);
 
-	SetupSlider(IDC_M_MUL, 15);
-	SetupSlider(IDC_C_MUL, 15);
-	SetupSlider(IDC_M_KSL, 3);
-	SetupSlider(IDC_C_KSL, 3);
-	SetupSlider(IDC_TL, 63);
-	SetupSlider(IDC_FB, 7);
-	SetupSlider(IDC_M_AR, 15);
-	SetupSlider(IDC_M_DR, 15);
-	SetupSlider(IDC_M_SL, 15);
-	SetupSlider(IDC_M_RR, 15);
-	SetupSlider(IDC_C_AR, 15);
-	SetupSlider(IDC_C_DR, 15);
-	SetupSlider(IDC_C_SL, 15);
-	SetupSlider(IDC_C_RR, 15);*/
+	SetupSlider(IDC_M_VOL1, 127);
+	SetupSlider(IDC_M_VOL2, 127);
+	SetupSlider(IDC_M_VOL3, 127);
+	SetupSlider(IDC_M_VOL4, 127);
+	SetSliderVal(IDC_M_VOL1, 127);
+	SetSliderVal(IDC_M_VOL2, 127);
+	SetSliderVal(IDC_M_VOL3, 127);
+	SetSliderVal(IDC_M_VOL4, 127);
 
-	//EnableControls(true);
+	SetupSlider(IDC_M_DET1, 6);
+	SetupSlider(IDC_M_DET2, 6);
+	SetupSlider(IDC_M_DET3, 6);
+	SetupSlider(IDC_M_DET4, 6);
+	SetSliderVal(IDC_M_DET1, 3);
+	SetSliderVal(IDC_M_DET2, 3);
+	SetSliderVal(IDC_M_DET3, 3);
+	SetSliderVal(IDC_M_DET4, 3);
+	SetSliderTic(IDC_M_DET1, 3);
+	SetSliderTic(IDC_M_DET2, 3);
+	SetSliderTic(IDC_M_DET3, 3);
+	SetSliderTic(IDC_M_DET4, 3);
 
-	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX Property Pages should return FALSE
-}
+	SetupSlider(IDC_M_ATT1, 31);
+	SetupSlider(IDC_M_ATT2, 31);
+	SetupSlider(IDC_M_ATT3, 31);
+	SetupSlider(IDC_M_ATT4, 31);
+	SetSliderVal(IDC_M_ATT1, 31); // 0
+	SetSliderVal(IDC_M_ATT2, 31); // 0
+	SetSliderVal(IDC_M_ATT3, 31); // 0
+	SetSliderVal(IDC_M_ATT4, 31); // 0
+	SetupSlider(IDC_M_DEC1, 31);
+	SetupSlider(IDC_M_DEC2, 31);
+	SetupSlider(IDC_M_DEC3, 31);
+	SetupSlider(IDC_M_DEC4, 31);
+	SetSliderVal(IDC_M_DEC1, 31); // 0
+	SetSliderVal(IDC_M_DEC2, 31); // 0
+	SetSliderVal(IDC_M_DEC3, 31); // 0
+	SetSliderVal(IDC_M_DEC4, 31); // 0
+	SetupSlider(IDC_M_SUS1, 15);
+	SetupSlider(IDC_M_SUS2, 15);
+	SetupSlider(IDC_M_SUS3, 15);
+	SetupSlider(IDC_M_SUS4, 15);
+	SetSliderVal(IDC_M_SUS1, 0); // 15
+	SetSliderVal(IDC_M_SUS2, 0); // 15
+	SetSliderVal(IDC_M_SUS3, 0); // 15
+	SetSliderVal(IDC_M_SUS4, 0); // 15
+	SetupSlider(IDC_M_FAD1, 31);
+	SetupSlider(IDC_M_FAD2, 31);
+	SetupSlider(IDC_M_FAD3, 31);
+	SetupSlider(IDC_M_FAD4, 31);
+	SetSliderVal(IDC_M_FAD1, 0); // 31
+	SetSliderVal(IDC_M_FAD2, 0); // 31
+	SetSliderVal(IDC_M_FAD3, 0); // 31
+	SetSliderVal(IDC_M_FAD4, 0); // 31
+	SetupSlider(IDC_M_REL1, 15);
+	SetupSlider(IDC_M_REL2, 15);
+	SetupSlider(IDC_M_REL3, 15);
+	SetupSlider(IDC_M_REL4, 15);
+	SetSliderVal(IDC_M_REL1, 15); // 0
+	SetSliderVal(IDC_M_REL2, 15); // 0
+	SetSliderVal(IDC_M_REL3, 15); // 0
+	SetSliderVal(IDC_M_REL4, 15); // 0
 
-void CInstrumentEditorEPSM::OnCbnSelchangePatch()
-{
-	//CComboBox *pPatchBox = static_cast<CComboBox*>(GetDlgItem(IDC_PATCH));
-	//SelectPatch(pPatchBox->GetCurSel());
-}
-
-void CInstrumentEditorEPSM::SelectPatch(int Patch)
-{
-	//m_pInstrument->SetPatch(Patch);
-	//EnableControls(Patch == CUSTOM_PATCH);
-	//LoadPatch(Patch);
-}
-
-void CInstrumentEditorEPSM::EnableControls(bool bEnable)
-{
-	/*const int SLIDER_IDS[] = {
-		IDC_M_AM, IDC_M_AR, 
-		IDC_M_DM, IDC_M_DR, 
-		IDC_M_EG, IDC_M_KSL, 
-		IDC_M_KSR2, IDC_M_MUL, 
-		IDC_M_RR, IDC_M_SL, 
-		IDC_M_SL, IDC_M_VIB,
-		IDC_C_AM, IDC_C_AR, 
-		IDC_C_DM, IDC_C_DR, 
-		IDC_C_EG, IDC_C_KSL, 
-		IDC_C_KSR, IDC_C_MUL, 
-		IDC_C_RR, IDC_C_SL, 
-		IDC_C_SL, IDC_C_VIB,
-		IDC_TL, IDC_FB
-	};
-
-	const int SLIDERS = sizeof(SLIDER_IDS) / sizeof(SLIDER_IDS[0]);
-
-	for (int i = 0; i < SLIDERS; ++i)
-		GetDlgItem(SLIDER_IDS[i])->EnableWindow(bEnable ? TRUE : FALSE);*/
+	return TRUE;
 }
 
 void CInstrumentEditorEPSM::SelectInstrument(std::shared_ptr<CInstrument> pInst)
 {
-	/*m_pInstrument = std::dynamic_pointer_cast<CInstrumentEPSM>(pInst);
+	m_pInstrument = std::dynamic_pointer_cast<CInstrumentEPSM>(pInst);
 	ASSERT(m_pInstrument);
-
-	CComboBox *pPatchBox = static_cast<CComboBox*>(GetDlgItem(IDC_PATCH));
-
-	int Patch = m_pInstrument->GetPatch();
-
-	pPatchBox->SetCurSel(Patch);
-	
-	LoadPatch(Patch);
-
-	EnableControls(Patch == CUSTOM_PATCH); */
 }
 
 BOOL CInstrumentEditorEPSM::OnEraseBkgnd(CDC* pDC)
@@ -205,119 +201,25 @@ void CInstrumentEditorEPSM::SetSliderVal(int Slider, int Value)
 	pSlider->SetPos(Value);
 }
 
+void CInstrumentEditorEPSM::SetSliderTic(int Slider, int Tic)
+{
+	CSliderCtrl* pSlider = static_cast<CSliderCtrl*>(GetDlgItem(Slider));
+	pSlider->SetTic(Tic);
+}
+
 void CInstrumentEditorEPSM::LoadPatch(int Num)
 {
-	/*uint8_t inst_params[8];
-	for (int i = 0; i < 8; ++i)
-		inst_params[i] = FetchPatchByte(Num, i);
-
-	// Register 0
-	CheckDlgButton(IDC_M_AM, inst_params[0] & 0x80 ? 1 : 0);
-	CheckDlgButton(IDC_M_VIB, inst_params[0] & 0x40 ? 1 : 0);
-	CheckDlgButton(IDC_M_EG, inst_params[0] & 0x20 ? 1 : 0);
-	CheckDlgButton(IDC_M_KSR2, inst_params[0] & 0x10 ? 1 : 0);
-	SetSliderVal(IDC_M_MUL, inst_params[0] & 0x0F);
-
-	// Register 1
-	CheckDlgButton(IDC_C_AM, inst_params[1] & 0x80 ? 1 : 0);
-	CheckDlgButton(IDC_C_VIB, inst_params[1] & 0x40 ? 1 : 0);
-	CheckDlgButton(IDC_C_EG, inst_params[1] & 0x20 ? 1 : 0);
-	CheckDlgButton(IDC_C_KSR, inst_params[1] & 0x10 ? 1 : 0);
-	SetSliderVal(IDC_C_MUL, inst_params[1] & 0x0F);
-
-	// Register 2
-	SetSliderVal(IDC_M_KSL, inst_params[2] >> 6);
-	SetSliderVal(IDC_TL, inst_params[2] & 0x3F);
-
-	// Register 3
-	SetSliderVal(IDC_C_KSL, inst_params[3] >> 6);
-	SetSliderVal(IDC_FB, 7 - (inst_params[3] & 7));
-	CheckDlgButton(IDC_C_DM, inst_params[3] & 0x10 ? 1 : 0);
-	CheckDlgButton(IDC_M_DM, inst_params[3] & 0x08 ? 1 : 0);
-
-	// Register 4
-	SetSliderVal(IDC_M_AR, inst_params[4] >> 4);
-	SetSliderVal(IDC_M_DR, inst_params[4] & 0x0F);
-
-	// Register 5
-	SetSliderVal(IDC_C_AR, inst_params[5] >> 4);
-	SetSliderVal(IDC_C_DR, inst_params[5] & 0x0F);
-
-	// Register 6
-	SetSliderVal(IDC_M_SL, inst_params[6] >> 4);
-	SetSliderVal(IDC_M_RR, inst_params[6] & 0x0F);
-
-	// Register 7
-	SetSliderVal(IDC_C_SL, inst_params[7] >> 4);
-	SetSliderVal(IDC_C_RR, inst_params[7] & 0x0F);
-
-	PatchBytesToText(Num);*/
+	
 }
 
 void CInstrumentEditorEPSM::SavePatch()
 {
-	/*unsigned char Reg;
-
-	// Register 0
-	Reg  = (IsDlgButtonChecked(IDC_M_AM) ? 0x80 : 0);
-	Reg |= (IsDlgButtonChecked(IDC_M_VIB) ? 0x40 : 0);
-	Reg |= (IsDlgButtonChecked(IDC_M_EG) ? 0x20 : 0);
-	Reg |= (IsDlgButtonChecked(IDC_M_KSR2) ? 0x10 : 0);
-	Reg |= GetSliderVal(IDC_M_MUL);
-	m_pInstrument->SetCustomReg(0, Reg);
-
-	// Register 1
-	Reg  = (IsDlgButtonChecked(IDC_C_AM) ? 0x80 : 0);
-	Reg |= (IsDlgButtonChecked(IDC_C_VIB) ? 0x40 : 0);
-	Reg |= (IsDlgButtonChecked(IDC_C_EG) ? 0x20 : 0);
-	Reg |= (IsDlgButtonChecked(IDC_C_KSR) ? 0x10 : 0);
-	Reg |= GetSliderVal(IDC_C_MUL);
-	m_pInstrument->SetCustomReg(1, Reg);
-
-	// Register 2
-	Reg  = GetSliderVal(IDC_M_KSL) << 6;
-	Reg |= GetSliderVal(IDC_TL);
-	m_pInstrument->SetCustomReg(2, Reg);
-
-	// Register 3
-	Reg  = GetSliderVal(IDC_C_KSL) << 6;
-	Reg |= IsDlgButtonChecked(IDC_C_DM) ? 0x10 : 0;
-	Reg |= IsDlgButtonChecked(IDC_M_DM) ? 0x08 : 0;
-	Reg |= 7 - GetSliderVal(IDC_FB);
-	m_pInstrument->SetCustomReg(3, Reg);
-
-	// Register 4
-	Reg = GetSliderVal(IDC_M_AR) << 4;
-	Reg |= GetSliderVal(IDC_M_DR);
-	m_pInstrument->SetCustomReg(4, Reg);
-
-	// Register 5
-	Reg = GetSliderVal(IDC_C_AR) << 4;
-	Reg |= GetSliderVal(IDC_C_DR);
-	m_pInstrument->SetCustomReg(5, Reg);
-
-	// Register 6
-	Reg = GetSliderVal(IDC_M_SL) << 4;
-	Reg |= GetSliderVal(IDC_M_RR);
-	m_pInstrument->SetCustomReg(6, Reg);
-
-	// Register 7
-	Reg = GetSliderVal(IDC_C_SL) << 4;
-	Reg |= GetSliderVal(IDC_C_RR);
-	m_pInstrument->SetCustomReg(7, Reg);
-
-	PatchBytesToText(CUSTOM_PATCH);*/
+	
 }
 
 void CInstrumentEditorEPSM::PatchBytesToText(int Patch)
 {
-	/*CString patchtxt;
-
-	for (int i = 0; i < 8; ++i)
-		patchtxt.AppendFormat(_T("$%02X "), FetchPatchByte(Patch, i));
-
-	CWnd* pPatchText = GetDlgItem(IDC_PATCH_TEXT);
-	pPatchText->SetWindowText(patchtxt);*/
+	
 }
 
 void CInstrumentEditorEPSM::OnBnClickedCheckbox()

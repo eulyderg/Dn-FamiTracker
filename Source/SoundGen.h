@@ -451,6 +451,7 @@ private:
 	unsigned int		m_iNoteLookupTableFDS[96];			// For FDS
 	unsigned int		m_iNoteLookupTableN163[96];			// For N163
 	unsigned int		m_iNoteLookupTableS5B[96];			// // // For 5B, internal use only
+	unsigned int		m_iNoteLookupTableEPSMSSG[96];
 	int					m_iVibratoTable[VIBRATO_LENGTH];
 
 	machine_t			m_iMachineType;						// // // NTSC/PAL

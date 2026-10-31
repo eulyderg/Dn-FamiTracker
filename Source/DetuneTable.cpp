@@ -264,3 +264,26 @@ double CDetuneS5B::PeriodToFrequency(unsigned int Period, int Octave, int NamcoC
 {
 	return CAPU::BASE_FREQ_NTSC / (16.0 * ((double)Period));
 }
+
+// https://www.nesdev.org/wiki/Sunsoft_5B_audio#Sound
+CDetuneEPSMSSG::CDetuneEPSMSSG(double A440_Note) :
+	CDetuneTable(DETUNE_EPSMSSG, 0, 0xFFF, A440_Note)
+{
+	SetGenerator([this](double x) { return FrequencyToPeriod(x, 1, 0); });
+	SetFrequencyFunc([this](double x) { return PeriodToFrequency(static_cast<int>(x), 1, 0); });
+	GenerateRegisters();
+}
+
+// in the driver, S5B's note LUT uses the regular NTSC note LUT +- 1, since it's off-by-one
+// so for compatibility, the frequency is doubled
+// period = CPU_clk / (frequency * 16)
+unsigned int CDetuneEPSMSSG::FrequencyToPeriod(double Freq, int Octave, int NamcoChannels) const
+{
+	return std::lround(CAPU::BASE_FREQ_EPSM / (32. * Freq));
+}
+
+// frequency = CPU_clk / (16 * period)
+double CDetuneEPSMSSG::PeriodToFrequency(unsigned int Period, int Octave, int NamcoChannels) const
+{
+	return CAPU::BASE_FREQ_EPSM / (32. * ((double)Period));
+}

@@ -4384,7 +4384,7 @@ bool CFamiTrackerDoc::IsPatternEmpty(unsigned int Track, unsigned int Channel, u
 
 // Channel interface, these functions must be synchronized!!!
 
-int CFamiTrackerDoc::GetChannelType(int Channel) const
+chan_id_t CFamiTrackerDoc::GetChannelType(int Channel) const
 {
 	ASSERT(m_iRegisteredChannels != 0);
 	ASSERT(Channel < m_iRegisteredChannels);
@@ -4446,7 +4446,7 @@ void CFamiTrackerDoc::ResetChannels()
 	m_iRegisteredChannels = 0;
 }
 
-void CFamiTrackerDoc::RegisterChannel(CTrackerChannel *pChannel, int ChannelType, int ChipType)
+void CFamiTrackerDoc::RegisterChannel(CTrackerChannel *pChannel, chan_id_t ChannelType, int ChipType)
 {
 	// Adds a channel to the document
 	m_pChannels[m_iRegisteredChannels] = pChannel;

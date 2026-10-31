@@ -2938,6 +2938,7 @@ bool CFamiTrackerView::EditEffNumberColumn(stChanNote &Note, Input input, int Ef
 	CFamiTrackerDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 
+	chan_id_t Channel = pDoc->GetChannel(m_pPatternEditor->GetChannel())->GetID();
 	int Chip = pDoc->GetChannel(m_pPatternEditor->GetChannel())->GetChip();
 
 
@@ -2969,7 +2970,7 @@ bool CFamiTrackerView::EditEffNumberColumn(stChanNote &Note, Input input, int Ef
 	}
 
 	bool bValidEffect = false;
-	effect_t Effect = GetEffectFromChar(effect, Chip, &bValidEffect);		// // //
+	effect_t Effect = GetEffectFromChar(effect, Chip, Channel, &bValidEffect);		// // //
 	effect_t prev = Note.EffNumber[EffectIndex];
 
 	if (bValidEffect) {

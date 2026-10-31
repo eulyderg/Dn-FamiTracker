@@ -39,26 +39,33 @@ public:
 	void Write(uint16_t Address, uint8_t Value) override;
 	uint8_t Read(uint16_t Address, bool& Mapped) override;
 
-	double GetFreq(int Channel) const override;		// // //
+	double GetFreq(int Channel) const override;
 	int GetChannelLevel(int Channel) override;
 	int GetChannelLevelRange(int Channel) const override;
 
 	void SetSampleSpeed(uint32_t SampleRate, double ClockRate, uint32_t FrameRate);
 	void SetDirectVolume(double Volume);
-	void Log(uint16_t Address, uint8_t Value) override;		// // //
+	void Log(uint16_t Address, uint8_t Value) override;
 
 	void UpdateMixLevel(double v, bool UseSurveyMix = false);
-
-	//void UpdatePatchSet(int PatchSelection, bool UseExternalOPLLChip, uint8_t *PatchSet);
 
 	// Report some basic information about the chip
 	uint8_t GetChannelCount() const override { return CHANNELS_EPSM; };			// TODO: Dynamically calculate this?
 	chan_id_t GetFirstChannelID() const override { return CHANID_EPSM_SSG1; };	//
 
 protected:
-	//ymfm::ymf288 m_ymf288;
+	ymfm::ymfm_interface m_ymf288interface;
+	ymfm::ymf288 m_ymf288 = ymfm::ymf288(m_ymf288interface);
+	ymfm::ymf288::output_data m_ymf288output;
 	
 private:
+	uint8_t		m_iSSGVolume[3];
+	bool		m_iSSGToneEnabled[3];
+	uint16_t	m_iSSGPeriod[3];
+	uint16_t	m_iSSGEnvPeriod;
+	uint8_t		m_iSSGEnvMode;
+	uint16_t	m_iAddress;
+
 	uint32_t	m_iTime;
 	uint32_t	m_iMaxSamples = 0;
 
@@ -68,6 +75,8 @@ private:
 	uint8_t		m_iSoundReg = 0;
 
 	double		m_DirectVolume = 1.0f;
+
+	ChannelLevelState<uint8_t> m_ChannelLevels[CHANNELS_EPSM];
 
 	Blip_Buffer	m_BlipEPSM;
 	Blip_Synth<blip_good_quality> m_SynthEPSM;

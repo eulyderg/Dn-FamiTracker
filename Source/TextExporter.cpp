@@ -558,7 +558,7 @@ bool CTextExport::ImportCellText(		// // //
 			if (pC >= TCHAR('a') && pC <= TCHAR('z')) pC += TCHAR('A') - TCHAR('a');
 
 			bool Valid;		// // //
-			effect_t Eff = GetEffectFromChar(pC, pDoc->GetChipType(channel), &Valid);
+			effect_t Eff = GetEffectFromChar(pC, pDoc->GetChipType(channel), pDoc->GetChannelType(channel), &Valid);
 			if (!Valid)
 			{
 				sResult.Format(_T("Line %d column %d: unrecognized effect '%s'."), t.line, t.GetColumn(), sEff);

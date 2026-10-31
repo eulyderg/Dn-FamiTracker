@@ -30,14 +30,14 @@
 #include "ChannelHandler.h"
 #include "ChannelsEPSM.h"
 #include "ChannelsS5B.h"
-#include "InstHandler.h"
 #include "InstHandlerEPSM.h"
 #include "SeqInstHandlerS5B.h"
 #include "Sequence.h"
+
 #include <map>
 
-CChannelHandlerEPSM::CChannelHandlerEPSM() :
-	FrequencyChannelHandler(0x7FF, 0xF)
+CChannelHandlerEPSM::CChannelHandlerEPSM(int MaxPeriod, int MaxVolume) :
+	FrequencyChannelHandler(MaxPeriod, MaxVolume)
 {
 	m_iVolume = VOL_COLUMN_MAX;
 	m_iChannel = CHANID_EPSM_SSG1;
@@ -69,7 +69,8 @@ bool    CEPSMSSGChannel::s_bEnvTrigger   = false;
 uint8_t CEPSMSSGChannel::s_iEnvType      = 0;
 
 // Class functions
-CEPSMSSGChannel::CEPSMSSGChannel()
+CEPSMSSGChannel::CEPSMSSGChannel() :
+	CChannelHandlerEPSM(0xFFF, 0xF)
 {
 	m_bUpdate            = false;
 	m_bEnvelopeEnabled   = false;
@@ -92,9 +93,9 @@ void CEPSMSSGChannel::RefreshChannel()
 	UpdateAutoEnvelope(Period);
 	SetMode(m_iChannelID, Square, Noise);
 
-	//WriteReg((m_iChannelID - CHANID_EPSM_SSG1) * 2, LoPeriod);
-	//WriteReg((m_iChannelID - CHANID_EPSM_SSG1) * 2 + 1, HiPeriod);
-	//WriteReg((m_iChannelID - CHANID_EPSM_SSG1) + 8, Volume | Envelope);
+	WriteReg((m_iChannelID - CHANID_EPSM_SSG1) * 2, LoPeriod);
+	WriteReg((m_iChannelID - CHANID_EPSM_SSG1) * 2 + 1, HiPeriod);
+	WriteReg((m_iChannelID - CHANID_EPSM_SSG1) + 8, Volume | Envelope);
 
 	if (Envelope && (m_bTrigger || m_bUpdate))
 		s_bEnvTrigger = true;
@@ -128,14 +129,9 @@ inst_type_t CEPSMSSGChannel::GetNewInstType() const
 	return INST_S5B;
 }
 
-epsm_channel_type CEPSMSSGChannel::GetChannelType() const
-{
-	return EPSM_SSG;
-}
-
 void CEPSMSSGChannel::ClearRegisters()
 {
-	//WriteReg(8 + m_iChannelID - CHANID_EPSM_SSG1, 0);		// Clear volume
+	WriteReg(8 + m_iChannelID - CHANID_EPSM_SSG1, 0);		// Clear volume
 }
 
 void CEPSMSSGChannel::HandleNoteData(stChanNote* pNoteData, int EffColumns)
@@ -237,7 +233,7 @@ int CEPSMSSGChannel::CalculateVolume() const
 	return LimitVolume((m_iVolume >> VOL_COLUMN_SHIFT) + m_iInstVolume - 15 - GetTremolo());
 }
 
-int CEPSMSSGChannel::ConvertDuty(int Duty) const		// // //
+int CEPSMSSGChannel::ConvertDuty(int Duty) const
 {
 	switch (m_iInstTypeCurrent) {
 	case INST_2A03: case INST_VRC6: case INST_N163:
@@ -247,24 +243,19 @@ int CEPSMSSGChannel::ConvertDuty(int Duty) const		// // //
 	}
 }
 
-int CEPSMSSGChannel::CalculatePeriod(bool MultiplyByHarmonic) const
-{
-	return 1;
-}
-
 void CEPSMSSGChannel::SetMode(int Chan, int Square, int Noise)
 {
-	Chan -= CHANID_S5B_CH1;
+	Chan -= CHANID_EPSM_SSG1;
 
 	switch (Chan) {
 	case 0:
-		s_iModes &= 0x36;
+		s_iModes &= 0b110110;
 		break;
 	case 1:
-		s_iModes &= 0x2D;
+		s_iModes &= 0b101101;
 		break;
 	case 2:
-		s_iModes &= 0x1B;
+		s_iModes &= 0b011011;
 		break;
 	}
 
@@ -299,10 +290,10 @@ void CEPSMSSGChannel::UpdateRegs()
 	s_bEnvTrigger = false;
 }
 
-void CEPSMSSGChannel::WriteReg(int Reg, int Value)
+void CEPSMSSGChannel::WriteReg(uint8_t Reg, uint8_t Value)
 {
-	WriteRegister(0xC000, Reg);
-	WriteRegister(0xE000, Value);
+	WriteRegister(0x401C, Reg);
+	WriteRegister(0x401D, Value);
 }
 
 void CEPSMSSGChannel::SetNoiseFreq(int Pitch)
@@ -314,19 +305,53 @@ void CEPSMSSGChannel::SetNoiseFreq(int Pitch)
 // EPSM FM Channels
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CEPSMFMChannel::CEPSMFMChannel()
+CEPSMFMChannel::CEPSMFMChannel() :
+	CChannelHandlerEPSM(0x3FFF, 0x7F)
 {
-	m_iCommand = CMD_NONE;
+	ResetChannel();
 }
 
 void CEPSMFMChannel::RefreshChannel()
 {
-	
+	int Volume = CalculateVolume();
+	int Fnum = CalculatePeriod();
+	int Bnum = !m_bLinearPitch ? m_iOctave :
+		((GetPeriod() + GetVibrato() - GetFinePitch() - GetPitch()) >> LINEAR_PITCH_AMOUNT) / NOTE_RANGE;
+
+	if (!m_bGate)
+		m_iCommand = CMD_NOTE_HALT;
+
+	if (m_iChannelIndex == 5) {
+		WriteReg(0x22, m_iLFOFreq);
+	}
 }
 
 void CEPSMFMChannel::ResetChannel()
 {
-	
+	m_iCommand = CMD_NONE;
+	m_iChannelIndex = m_iChannelID - CHANID_EPSM_FM1;
+
+	m_iOctave = 0;
+	m_iOldOctave = 0;
+
+	m_bHold = false;
+
+	m_iFeedback = 0;
+
+	for (uint8_t op = 0; op < 4; op++) {
+		m_iDetune[op]     = 0;
+		m_iMult[op]       = 0;
+		m_iKeyScale[op]   = 0;
+		m_iTotalLevel[op] = 0;
+		
+		m_iAttack[op]  = 0;
+		m_iDecay[op]   = 0;
+		m_iSustain[op] = 15;
+		m_iFade[op]    = 31;
+		m_iRelease[op] = 0;
+		
+		m_iSSGEG[op] = 0;
+	}
 }
 
 int CEPSMFMChannel::getDutyMax() const
@@ -339,19 +364,45 @@ inst_type_t CEPSMFMChannel::GetNewInstType() const
 	return INST_EPSM;
 }
 
-epsm_channel_type CEPSMFMChannel::GetChannelType() const
-{
-	return EPSM_FM;
-}
-
 void CEPSMFMChannel::ClearRegisters()
 {
+	m_iNote = 0;
+	m_iOctave = 0
+	m_iOldOctave = 0;
+	m_iEffect = EF_NONE;
+
+	m_iCommand = CMD_NOTE_HALT;
 	
+	uint16_t A0 = (m_iChannelIndex >= 3) ? 0x100 : 0x000;
+	uint16_t offset = A0 + m_iChannelIndex % 3;
+
+	for (uint16_t address = 0x30; address < 0xA0; address++) {
+		WriteReg(address + offset, 0);
+	}
+
+	for (uint8_t op = 0; op < 4; op++) {
+		m_iDetune[op] = 0;
+		m_iMult[op] = 0;
+		m_iKeyScale[op] = 0;
+		m_iTotalLevel[op] = 0;
+
+		m_iAttack[op] = 0;
+		m_iDecay[op] = 0;
+		m_iSustain[op] = 15;
+		m_iFade[op] = 31;
+		m_iRelease[op] = 0;
+
+		m_iSSGEG[op] = 0;
+	}
+
+	WriteReg(0xB0 + offset, 0);
+
+	m_iFeedback = 0;
 }
 
 void CEPSMFMChannel::HandleNoteData(stChanNote* pNoteData, int EffColumns)
 {
-	FrequencyChannelHandler::HandleNoteData(pNoteData, EffColumns);		// // //
+	FrequencyChannelHandler::HandleNoteData(pNoteData, EffColumns);
 
 	if (m_iCommand == CMD_NOTE_TRIGGER && pNoteData->Instrument == HOLD_INSTRUMENT) {
 		m_iCommand = CMD_NOTE_ON;
@@ -365,22 +416,47 @@ bool CEPSMFMChannel::HandleEffect(effect_t EffNum, uint8_t EffParam)
 
 void CEPSMFMChannel::HandleEmptyNote()
 {
-
+	
 }
 
 void CEPSMFMChannel::HandleCut()
 {
+	RegisterKeyState(-1);
+	m_bGate = false;
+	m_iCommand = CMD_NOTE_HALT;
+}
 
+void CEPSMFMChannel::UpdateNoteRelease()
+{
+	// Note release (Lxx)
+	if (m_iNoteRelease > 0) {
+		m_iNoteRelease--;
+		if (m_iNoteRelease == 0) {
+			HandleRelease();
+		}
+	}
 }
 
 void CEPSMFMChannel::HandleRelease()
 {
-
+	if (!m_bRelease) {
+		m_iCommand = CMD_NOTE_RELEASE;
+		RegisterKeyState(-1);
+	}
 }
+
 
 void CEPSMFMChannel::HandleNote(int Note, int Octave)
 {
+	CChannelHandler::HandleNote(Note, Octave);
 
+	m_bHold = true;
+
+	if (m_iPortaSpeed > 0 && m_iEffect == EF_PORTAMENTO &&
+		m_iCommand != CMD_NOTE_HALT && m_iCommand != CMD_NOTE_RELEASE)		// // // 050B
+		CorrectOctave();
+	else
+		m_iCommand = CMD_NOTE_TRIGGER;
 }
 
 int CEPSMFMChannel::RunNote(int Octave, int Note)
@@ -409,6 +485,29 @@ void CEPSMFMChannel::SetupSlide()
 	//CorrectOctave();
 }
 
+void CEPSMFMChannel::CorrectOctave()
+{
+	// Set current frequency to the one with highest octave
+	if (m_bLinearPitch)
+		return;
+
+	if (m_iOldOctave == -1) {
+		m_iOldOctave = m_iOctave;
+		return;
+	}
+
+	int Offset = m_iOctave - m_iOldOctave;
+	if (Offset > 0) {
+		m_iPeriod >>= Offset;
+		m_iOldOctave = m_iOctave;
+	}
+	else if (Offset < 0) {
+		// Do nothing
+		m_iPortaTo >>= -Offset;
+		m_iOctave = m_iOldOctave;
+	}
+}
+
 /*int CEPSMFMChannel::TriggerNote(int Note)
 {
 	m_iTriggeredNote = Note;
@@ -420,11 +519,66 @@ void CEPSMFMChannel::SetupSlide()
 	return m_bLinearPitch ? (Note << LINEAR_PITCH_AMOUNT) : GetFnum(Note);		// // //
 }*/
 
+void CEPSMFMChannel::WritePatch()
+{
+	uint16_t A0 = (m_iChannelIndex >= 3) ? 0x100 : 0x000;
+	uint16_t offset = A0 + m_iChannelIndex % 3; 
+
+	WriteReg(0x30 + offset, m_iDetune[0] << 4 | m_iMult[0]);
+	WriteReg(0x34 + offset, m_iDetune[1] << 4 | m_iMult[1]);
+	WriteReg(0x38 + offset, m_iDetune[2] << 4 | m_iMult[2]);
+	WriteReg(0x3C + offset, m_iDetune[3] << 4 | m_iMult[3]);
+
+	WriteReg(0x40 + offset, m_iTotalLevel[0]);
+	WriteReg(0x44 + offset, m_iTotalLevel[1]);
+	WriteReg(0x48 + offset, m_iTotalLevel[2]);
+	WriteReg(0x4C + offset, m_iTotalLevel[3]);
+
+	WriteReg(0x50 + offset, m_iKeyScale[0] << 6 | m_iAttack[0]);
+	WriteReg(0x54 + offset, m_iKeyScale[1] << 6 | m_iAttack[1]);
+	WriteReg(0x58 + offset, m_iKeyScale[2] << 6 | m_iAttack[2]);
+	WriteReg(0x5C + offset, m_iKeyScale[3] << 6 | m_iAttack[3]);
+
+	WriteReg(0x60 + offset, m_iDecay[0]);
+	WriteReg(0x64 + offset, m_iDecay[1]);
+	WriteReg(0x68 + offset, m_iDecay[2]);
+	WriteReg(0x6C + offset, m_iDecay[3]);
+
+	WriteReg(0x70 + offset, m_iFade[0]);
+	WriteReg(0x74 + offset, m_iFade[1]);
+	WriteReg(0x78 + offset, m_iFade[2]);
+	WriteReg(0x7C + offset, m_iFade[3]);
+
+	WriteReg(0x80 + offset, m_iSustain[0] << 4 | m_iRelease[0]);
+	WriteReg(0x84 + offset, m_iSustain[1] << 4 | m_iRelease[1]);
+	WriteReg(0x88 + offset, m_iSustain[2] << 4 | m_iRelease[2]);
+	WriteReg(0x8C + offset, m_iSustain[3] << 4 | m_iRelease[3]);
+
+	WriteReg(0x90 + offset, m_iFade[0]);
+	WriteReg(0x94 + offset, m_iFade[1]);
+	WriteReg(0x98 + offset, m_iFade[2]);
+	WriteReg(0x9C + offset, m_iFade[3]);
+
+	WriteReg(0xB0 + offset, m_iFeedback);
+}
+
+void CEPSMFMChannel::WriteReg(uint16_t Reg, uint8_t Value)
+{
+	if ((Reg & 0x100) == 0) {
+		WriteRegister(0x401C, Reg & 0xFF);
+		WriteRegister(0x401D, Value);
+	} else {
+		WriteRegister(0x401E, Reg & 0xFF);
+		WriteRegister(0x401F, Value);
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EPSM Sample Channels
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CEPSMSampleChannel::CEPSMSampleChannel()
+CEPSMSampleChannel::CEPSMSampleChannel() :
+	CChannelHandlerEPSM(0x1, 0xF)
 {
 	
 }
@@ -447,11 +601,6 @@ int CEPSMSampleChannel::getDutyMax() const
 inst_type_t CEPSMSampleChannel::GetNewInstType() const
 {
 	return INST_NONE;
-}
-
-epsm_channel_type CEPSMSampleChannel::GetChannelType() const
-{
-	return EPSM_SAMPLE;
 }
 
 void CEPSMSampleChannel::ClearRegisters()

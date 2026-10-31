@@ -1362,6 +1362,12 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 	const char *NOTES_A = m_bDisplayFlat ? NOTES_A_FLAT : NOTES_A_SHARP;
 	const char *NOTES_B = m_bDisplayFlat ? NOTES_B_FLAT : NOTES_B_SHARP;
 
+	const CTrackerChannel* pTrackerChannel = m_pDocument->GetChannel(Channel);
+	const bool isEPSMSample = (pTrackerChannel->GetID() >= CHANID_EPSM_KICK && pTrackerChannel->GetID() <= CHANID_EPSM_RIMSHOT);
+
+	effect_t EffNumber = Column >= 4 ? pNoteData->EffNumber[(Column - 4) / 3] : EF_NONE;		// // //
+	int EffParam = Column >= 4 ? pNoteData->EffParam[(Column - 4) / 3] : 0;
+
 	// Compute font vertical position
 	// TODO resize font about center = avg(cap, base + descender/2)?
 
@@ -1384,11 +1390,6 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 	};
 
 	pDC->SetTextAlign(TA_CENTER | TA_BASELINE);		// // //
-
-	const CTrackerChannel *pTrackerChannel = m_pDocument->GetChannel(Channel);
-
-	effect_t EffNumber = Column >= 4 ? pNoteData->EffNumber[(Column - 4) / 3] : EF_NONE;		// // //
-	int EffParam  = Column >= 4 ? pNoteData->EffParam[(Column - 4) / 3] : 0;
 
 	COLORREF WarningColor = RGB(255, 0, 0);
 	COLORREF ErrorColor = RGB(255, 0, 255);
@@ -1461,7 +1462,7 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 	COLORREF DimEff = pColorInfo->Compact;		// // //
 
 	// Make non-available instruments red in the pattern editor
-	if (pNoteData->Instrument < MAX_INSTRUMENTS && 
+	if (!isEPSMSample && pNoteData->Instrument < MAX_INSTRUMENTS &&
 		(!m_pDocument->IsInstrumentUsed(pNoteData->Instrument) ||
 		!pTrackerChannel->IsInstrumentCompatible(pNoteData->Instrument, m_pDocument->GetInstrumentType(pNoteData->Instrument)))) { // // //
 		DimInst = InstColor = WarningColor;
@@ -1537,6 +1538,16 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 						DrawChar(pDC, PosX + m_iCharWidth * 3 / 2, PosY, '-', pColorInfo->Note);
 						DrawChar(pDC, PosX + m_iCharWidth * 5 / 2, PosY, '#', pColorInfo->Note);
 					}
+					else if (isEPSMSample) {
+						// Sample
+						int sampleID = pTrackerChannel->GetID() - CHANID_EPSM_KICK;
+						DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, SAMPLE_NUMBERS_1[sampleID], pColorInfo->Note);		// // //
+						//DrawChar(pDC, PosX + m_iCharWidth * 3 / 2, PosY, SAMPLE_NUMBERS_2[sampleID], pColorInfo->Note);		// // //
+						//DrawChar(pDC, PosX + m_iCharWidth * 5 / 2, PosY, SAMPLE_NUMBERS_3[sampleID], pColorInfo->Note);		// // //
+						//DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, '#', pColorInfo->Note);
+						DrawChar(pDC, PosX + m_iCharWidth * 3 / 2, PosY, '-', pColorInfo->Note);
+						DrawChar(pDC, PosX + m_iCharWidth * 5 / 2, PosY, '#', pColorInfo->Note);
+					}
 					else {
 						// The rest
 
@@ -1569,6 +1580,8 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 			// Instrument x0
 			if (pNoteData->Instrument == MAX_INSTRUMENTS || pNoteData->Note == HALT || pNoteData->Note == RELEASE)
 				BAR(PosX);
+			else if (isEPSMSample)
+				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, '-', InstColor);
 			else if (pNoteData->Instrument == HOLD_INSTRUMENT)		// // // 050B
 				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, '&', InstColor);
 			else
@@ -1578,6 +1591,8 @@ void CPatternEditor::DrawCell(CDC *pDC, int PosX, cursor_column_t Column, int Ch
 			// Instrument 0x
 			if (pNoteData->Instrument == MAX_INSTRUMENTS || pNoteData->Note == HALT || pNoteData->Note == RELEASE)
 				BAR(PosX);
+			else if (isEPSMSample)
+				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, '-', InstColor);
 			else if (pNoteData->Instrument == HOLD_INSTRUMENT)		// // // 050B
 				DrawChar(pDC, PosX + m_iCharWidth / 2, PosY, '&', InstColor);
 			else
@@ -1858,7 +1873,8 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		m_pDocument->ExpansionEnabled(SNDCHIP_N163) * 18 +
 		m_pDocument->ExpansionEnabled(SNDCHIP_FDS) * 13 +
 		m_pDocument->ExpansionEnabled(SNDCHIP_VRC7) * 9 +
-		m_pDocument->ExpansionEnabled(SNDCHIP_S5B) * 8);		// // //
+		m_pDocument->ExpansionEnabled(SNDCHIP_S5B) * 8 +
+		m_pDocument->ExpansionEnabled(SNDCHIP_EPSM) * 8);		// // //
 	int vis_line = 0;
 
 	// TODO: custom regview palettes
@@ -2365,6 +2381,57 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 			}
 		}
 	}
+
+
+	if (m_pDocument->ExpansionEnabled(SNDCHIP_EPSM)) {		// // //
+		DrawHeaderFunc(_T("EPSM"));		// // //
+
+		// SSG
+		for (int i = 0; i < 4; ++i) {
+			GetRegsFunc(SNDCHIP_EPSM, [&](int x) { return i * 2 + x; }, 2);
+			text.Format(_T("$%02X:"), i * 2);
+			DrawRegFunc(text, 2);
+
+			int period = reg[0] | ((reg[1] & 0x0F) << 8);
+			int period_noise = pSoundGen->GetReg(SNDCHIP_EPSM, 0x06) & 0x1F;
+			int vol = pSoundGen->GetReg(SNDCHIP_EPSM, 8 + i) & 0x0F;
+			float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_EPSM, i);		// // //
+			float freq_env = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_EPSM, 15);		// // //
+			bool enable_tone = !(pSoundGen->GetReg(SNDCHIP_EPSM, 7) & (1 << i));
+			bool enable_noise = !(pSoundGen->GetReg(SNDCHIP_EPSM, 7) & (8 << i));
+			bool enable_env = pSoundGen->GetReg(SNDCHIP_EPSM, 8 + i) & 0x10;
+			if (i < 3)
+				text.Format(_T("%s, vol = %02i, mode = %c%c%c"), GetPitchTextFunc(3, period, freq), vol,
+					enable_tone ? _T('T') : _T('-'),
+					enable_noise ? _T('N') : _T('-'),
+					enable_env ? _T('E') : _T('-'));
+			else
+				text.Format(_T("period = $%02X"), period_noise);
+			DrawTextFunc(180, text);
+
+			if (i < 3)
+				DrawVolFuncS5B(freq, freq_env, period_noise, vol, enable_env, enable_noise);
+		}
+
+		for (int i = 0; i < 2; ++i) {
+			GetRegsFunc(SNDCHIP_EPSM, [&](int x) { return i * 3 + x + 8; }, 3);
+			text.Format(_T("$%02X:"), i * 3 + 8);
+			DrawRegFunc(text, 3);
+
+			if (i == 1) {
+				int period = (reg[0] | (reg[1] << 8));
+				float freq = (float)theApp.GetSoundGenerator()->GetChannelFrequency(SNDCHIP_EPSM, 15);		// // //
+				if (freq != 0. && reg[1] == 0)
+					text.Format(_T("%s, shape = $%01X"), GetPitchTextFunc(4, period, freq, "pitch "), reg[2]);
+				else
+					text.Format(_T("%s, shape = $%01X"), GetPitchTextFunc(4, period, freq, "period"), reg[2]);
+				DrawTextFunc(180, text);
+			}
+		}
+
+
+	}
+
 
 	pDC->SelectObject(pOldFont);
 

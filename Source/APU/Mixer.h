@@ -37,6 +37,7 @@ enum chip_level_t {
 	CHIP_LEVEL_MMC5,
 	CHIP_LEVEL_N163,
 	CHIP_LEVEL_S5B,
+	CHIP_LEVEL_EPSM,
 	CHIP_LEVEL_COUNT
 };
 
@@ -72,7 +73,8 @@ struct MixerConfig {
 		0,		// FDSOffset
 		0,		// MMC5Offset
 		0,		// N163Offset
-		0		// S5BOffset
+		0,		// S5BOffset
+		0		// EPSMOffset
 	};
 };
 

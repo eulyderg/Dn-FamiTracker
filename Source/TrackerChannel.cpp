@@ -169,7 +169,15 @@ bool CTrackerChannel::IsInstrumentCompatible(int Instrument, inst_type_t Type) c
 			case CHANID_EPSM_SSG1:
 			case CHANID_EPSM_SSG2:
 			case CHANID_EPSM_SSG3:
-				return Type == INST_S5B;
+				switch (Type) {
+				case INST_2A03:
+				case INST_VRC6:
+				case INST_N163:
+				case INST_S5B:
+				case INST_FDS:
+					return true;
+				default: return false;
+				}
 			case CHANID_EPSM_KICK:
 			case CHANID_EPSM_SNARE:
 			case CHANID_EPSM_CYMBAL:
@@ -247,7 +255,7 @@ bool CTrackerChannel::IsEffectCompatible(effect_t EffNumber, int EffParam) const
 			return m_iChip == SNDCHIP_FDS;
 		case EF_SUNSOFT_ENV_LO: case EF_SUNSOFT_ENV_HI: case EF_SUNSOFT_ENV_TYPE:
 		case EF_SUNSOFT_NOISE:		// // // 050B
-			return m_iChip == SNDCHIP_S5B;
+			return m_iChip == SNDCHIP_S5B || (CHANID_EPSM_SSG1 <= m_iChannelID && m_iChannelID <= CHANID_EPSM_SSG3);
 		case EF_N163_WAVE_BUFFER:
 			return m_iChip == SNDCHIP_N163 && EffParam <= 0x7F;
 		case EF_FDS_VOLUME:

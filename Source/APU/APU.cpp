@@ -32,6 +32,7 @@
 #include "N163.h"
 #include "VRC7.h"
 #include "S5B.h"
+#include "EPSM.h"
 #include "SoundChip.h"
 #include "../RegisterState.h"		// // //
 #include "../SpeedDlg.h"
@@ -40,6 +41,7 @@ constexpr int		CAPU::SEQUENCER_FREQUENCY	= 240;		// // //
 constexpr uint32_t	CAPU::BASE_FREQ_NTSC		= 1789773;		// 72.667
 constexpr uint32_t	CAPU::BASE_FREQ_PAL			= 1662607;
 constexpr uint32_t	CAPU::BASE_FREQ_VRC7		= 3579545;
+constexpr uint32_t	CAPU::BASE_FREQ_EPSM		= 8000000;
 constexpr uint8_t	CAPU::FRAME_RATE_NTSC		= 60;
 constexpr uint8_t	CAPU::FRAME_RATE_PAL		= 50;
 constexpr uint16_t	CAPU::NSF_RATE_NTSC			= 16639;
@@ -164,6 +166,7 @@ CAPU::CAPU(IAudioCallback *pCallback) :		// // //
 	m_pN163(std::make_unique<CN163>()),
 	m_pVRC7(std::make_unique<CVRC7>()),
 	m_pS5B(std::make_unique<CS5B>()),
+	m_pEPSM(std::make_unique<CEPSM>()),
 	m_iExternalSoundChips(0),
 	m_iCyclesToRun(0),
 	m_iSampleRate(44100)		// // //
@@ -289,6 +292,8 @@ void CAPU::SetExternalSound(uint8_t Chip)
 		m_SoundChips.push_back(m_pN163.get());
 	if (Chip & SNDCHIP_S5B)
 		m_SoundChips.push_back(m_pS5B.get());
+	if (Chip & SNDCHIP_EPSM)
+		m_SoundChips.push_back(m_pEPSM.get());
 
 	// Set (unused) bitfield of external sound chips enabled.
 	m_iExternalSoundChips = Chip;
@@ -322,6 +327,7 @@ void CAPU::ChangeMachineRate(int Machine, int FrameRate)		// // //
 	m_pMixer->SetClockRate(BaseFreq);
 
 	m_pVRC7->SetSampleSpeed(m_iSampleRate, BaseFreq, FrameRate);
+	m_pEPSM->SetSampleSpeed(m_iSampleRate, BASE_FREQ_EPSM, FrameRate);
 	m_iFrameCycleCount = BaseFreq / FrameRate;
 }
 
@@ -509,6 +515,7 @@ double CAPU::GetFreq(int Chip, int Chan) const
 	case SNDCHIP_MMC5: return PtrGetFreq(*m_pMMC5);
 	case SNDCHIP_N163: return PtrGetFreq(*m_pN163);
 	case SNDCHIP_S5B:  return PtrGetFreq(*m_pS5B);
+	case SNDCHIP_EPSM: return PtrGetFreq(*m_pEPSM);
 	default: AfxDebugBreak(); return 0.;
 	}
 }
@@ -532,6 +539,7 @@ CRegisterState *CAPU::GetRegState(int Chip, int Reg) const		// // //
 	case SNDCHIP_MMC5: return PtrGetRegState(*m_pMMC5);
 	case SNDCHIP_N163: return PtrGetRegState(*m_pN163);
 	case SNDCHIP_S5B:  return PtrGetRegState(*m_pS5B);
+	case SNDCHIP_EPSM: return PtrGetRegState(*m_pEPSM);
 	default: AfxDebugBreak(); return nullptr;
 	}
 }
@@ -598,7 +606,8 @@ constexpr double SURVEY_LEVEL_DB_CORRECTION[CHIP_LEVEL_COUNT]{
 	-16.11, // FDS
 	  0.0,  // MMC5
 	-16.44, // N163
-	  2.09  // S5B
+	  2.09, // S5B
+	  0.0  // TODO: EPSM
 };
 
 /*

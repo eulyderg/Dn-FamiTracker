@@ -2724,7 +2724,7 @@ void CMainFrame::OnNewInstrumentMenu(NMHDR* pNotifyStruct, LRESULT* result)
 		menu.AppendMenu(MF_STRING, ID_INSTRUMENT_ADD_MMC5, _T("New MMC5 instrument"));
 	if (Chip & SNDCHIP_N163)
 		menu.AppendMenu(MF_STRING, ID_INSTRUMENT_ADD_N163, _T("New Namco instrument"));
-	if (Chip & SNDCHIP_S5B)
+	if (Chip & SNDCHIP_S5B || Chip & SNDCHIP_EPSM)
 		menu.AppendMenu(MF_STRING, ID_INSTRUMENT_ADD_S5B, _T("New Sunsoft instrument"));
 	if (Chip & SNDCHIP_EPSM)
 		menu.AppendMenu(MF_STRING, ID_INSTRUMENT_ADD_EPSM, _T("New EPSM instrument"));

@@ -43,7 +43,7 @@ const std::array<Effect, EF_COUNT> effects = Effects();
 
 // TODO: Define std::unordered_map<char, effect_t> for all effects, plus each expansion.
 // Faster, but produces duplicate global consts.
-effect_t GetEffectFromChar(char ch, int Chip, bool *bValid)		// // //
+effect_t GetEffectFromChar(char ch, int Chip, chan_id_t Chan, bool *bValid)		// // //
 {
 	bool dummy;
 	if (bValid == nullptr) bValid = &dummy;
@@ -69,6 +69,11 @@ effect_t GetEffectFromChar(char ch, int Chip, bool *bValid)		// // //
 	case SNDCHIP_VRC7:
 		for (const auto &x : VRC7_EFFECTS)
 			if (ch == EFF_CHAR[x])
+				return x;
+		break;
+	case SNDCHIP_EPSM:
+		for (const auto& x : S5B_EFFECTS)
+			if (ch == EFF_CHAR[x] && CHANID_EPSM_SSG1 <= Chan && Chan <= CHANID_EPSM_SSG3)
 				return x;
 		break;
 	}

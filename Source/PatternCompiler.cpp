@@ -677,25 +677,25 @@ void CPatternCompiler::CompileData(int Track, int Pattern, int Channel, bool bUs
 					break;
 				// // // Sunsoft 5B
 				case EF_SUNSOFT_ENV_TYPE:
-					if (ChipID == SNDCHIP_S5B) {
+					if (ChipID == SNDCHIP_S5B || CHANID_EPSM_SSG1 <= ChanID && ChanID <= CHANID_EPSM_SSG3) {
 						WriteData(Command(CMD_EFF_S5B_ENV_TYPE));
 						WriteData(EffParam);
 					}
 					break;
 				case EF_SUNSOFT_ENV_HI:
-					if (ChipID == SNDCHIP_S5B) {
+					if (ChipID == SNDCHIP_S5B || CHANID_EPSM_SSG1 <= ChanID && ChanID <= CHANID_EPSM_SSG3) {
 						WriteData(Command(CMD_EFF_S5B_ENV_RATE_HI));
 						WriteData(EffParam);
 					}
 					break;
 				case EF_SUNSOFT_ENV_LO:
-					if (ChipID == SNDCHIP_S5B) {
+					if (ChipID == SNDCHIP_S5B || CHANID_EPSM_SSG1 <= ChanID && ChanID <= CHANID_EPSM_SSG3) {
 						WriteData(Command(CMD_EFF_S5B_ENV_RATE_LO));
 						WriteData(EffParam);
 					}
 					break;
 				case EF_SUNSOFT_NOISE:		// // // 050B
-					if (ChipID == SNDCHIP_S5B) {
+					if (ChipID == SNDCHIP_S5B || CHANID_EPSM_SSG1 <= ChanID && ChanID <= CHANID_EPSM_SSG3) {
 						WriteData(Command(CMD_EFF_S5B_NOISE));
 						WriteData(EffParam & 0x1F);
 					}

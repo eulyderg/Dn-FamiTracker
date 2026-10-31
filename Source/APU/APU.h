@@ -42,8 +42,8 @@ class CFDS;
 class CMMC5;
 class CN163;
 class CS5B;
+class CEPSM;
 
-class CSoundChip;		// // //
 class CSoundChip;
 class CRegisterState;		// // //
 
@@ -108,6 +108,7 @@ public:
 	static const uint32_t	BASE_FREQ_NTSC;
 	static const uint32_t	BASE_FREQ_PAL;
 	static const uint32_t	BASE_FREQ_VRC7;
+	static const uint32_t	BASE_FREQ_EPSM;
 	static const uint8_t	FRAME_RATE_NTSC;
 	static const uint8_t	FRAME_RATE_PAL;
 	static const uint16_t	NSF_RATE_NTSC;
@@ -137,6 +138,7 @@ private:
 	std::unique_ptr<CN163> m_pN163;
 	std::unique_ptr<CVRC7> m_pVRC7;
 	std::unique_ptr<CS5B> m_pS5B;
+	std::unique_ptr<CEPSM> m_pEPSM;
 
 	/// Bitfield of external sound chips enabled.
 	/// Never read, except for code hidden behind #ifdef LOGGING.

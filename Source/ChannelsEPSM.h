@@ -26,12 +26,6 @@
 
 #include "ChannelsVRC7.h"
 
-enum epsm_channel_type {
-	EPSM_FM,
-	EPSM_SSG,
-	EPSM_SAMPLE
-};
-
 //
 // Derived channels, EPSM
 //
@@ -40,7 +34,7 @@ class CChannelHandlerInterfaceEPSM;
 
 class CChannelHandlerEPSM : public FrequencyChannelHandler, public CChannelHandlerInterfaceEPSM {		// // //
 public:
-	CChannelHandlerEPSM();
+	CChannelHandlerEPSM(int MaxPeriod, int MaxVolume);
 	void SetChannelID(int ID) override;
 
 protected:
@@ -59,7 +53,6 @@ public:
 	void ResetChannel() override;
 	int  getDutyMax() const override;
 	inst_type_t GetNewInstType() const override;
-	epsm_channel_type GetChannelType() const;
 
 protected:
 	void ClearRegisters() override;
@@ -73,14 +66,13 @@ protected:
 	bool CreateInstHandler(inst_type_t Type) override;
 	int  CalculateVolume() const override;
 	int  ConvertDuty(int Duty) const override;
-	int  CalculatePeriod(bool MultiplyByHarmonic = true) const override;
 
 protected:
 	// copied from S5B
 	static void SetMode(int Chan, int Square, int Noise);
 	void UpdateAutoEnvelope(int Period);
 	void UpdateRegs();
-	void WriteReg(int Reg, int Value);
+	void WriteReg(uint8_t Reg, uint8_t Value);
 	void SetNoiseFreq(int Pitch);
 
 	static uint8_t s_iModes;
@@ -105,7 +97,6 @@ public:
 	void ResetChannel() override;
 	int  getDutyMax() const override;
 	inst_type_t GetNewInstType() const override;
-	epsm_channel_type GetChannelType() const;
 
 protected:
 	void ClearRegisters() override;
@@ -113,6 +104,7 @@ protected:
 	bool HandleEffect(effect_t EffNum, uint8_t EffParam) override;
 	void HandleEmptyNote() override;
 	void HandleCut() override;
+	void UpdateNoteRelease() override;
 	void HandleRelease() override;
 	void HandleNote(int Note, int Octave) override;
 	int  RunNote(int Octave, int Note) override;
@@ -121,12 +113,36 @@ protected:
 	int  CalculatePeriod(bool MultiplyByHarmonic = true) const override;
 
 	void SetupSlide() override;
-	//int  TriggerNote(int Note) override;
 
 protected:
+	void CorrectOctave();
+	void WritePatch();
+	void WriteReg(uint16_t Reg, uint8_t Value);
 
-	// copied from VRC7
+	static uint8_t m_iLFOFreq;
+
 	note_command_t m_iCommand;
+	uint8_t m_iChannelIndex; // 0 - 5
+
+	bool    m_bHold;
+
+	uint8_t m_iOctave;
+	uint8_t m_iOldOctave;
+
+	uint8_t m_iFeedback;
+
+	uint8_t m_iDetune[4];
+	uint8_t m_iMult[4];
+	uint8_t m_iKeyScale[4];
+	uint8_t m_iTotalLevel[4];
+
+	uint8_t m_iAttack[4];
+	uint8_t m_iDecay[4];
+	uint8_t m_iSustain[4];
+	uint8_t m_iFade[4];
+	uint8_t m_iRelease[4];
+
+	uint8_t m_iSSGEG[4];
 };
 
 ////////////////////
@@ -138,7 +154,6 @@ public:
 	void ResetChannel() override;
 	int  getDutyMax() const override;
 	inst_type_t GetNewInstType() const override;
-	epsm_channel_type GetChannelType() const;
 
 protected:
 	void ClearRegisters() override;

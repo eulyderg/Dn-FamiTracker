@@ -149,11 +149,11 @@ public:
 	// Interface functions (not related to document data) TODO move this?
 	//
 	void			ResetChannels();
-	void			RegisterChannel(CTrackerChannel *pChannel, int ChannelType, int ChipType);
+	void			RegisterChannel(CTrackerChannel *pChannel, chan_id_t ChannelType, int ChipType);
 	CTrackerChannel* GetChannel(int Index) const;
 	int				GetChannelIndex(int Channel) const;
 
-	int				GetChannelType(int Channel) const;
+	chan_id_t		GetChannelType(int Channel) const;
 	int				GetChipType(int Channel) const;
 	int				GetChannelCount() const;
 
@@ -514,7 +514,7 @@ private:
 	// Channels (TODO: run-time state, remove or move these?)
 	CTrackerChannel	*m_pChannels[CHANNELS];
 	int				m_iRegisteredChannels;
-	int				m_iChannelTypes[CHANNELS];
+	chan_id_t		m_iChannelTypes[CHANNELS];
 	int				m_iChannelChip[CHANNELS];
 
 

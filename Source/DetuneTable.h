@@ -35,7 +35,8 @@ public:
 		DETUNE_VRC7,
 		DETUNE_FDS,
 		DETUNE_N163,
-		DETUNE_S5B
+		DETUNE_S5B,
+		DETUNE_EPSMSSG
 	};
 
 protected:
@@ -173,6 +174,14 @@ class CDetuneS5B : public CDetuneTable
 {
 public:
 	CDetuneS5B(double A440_Note);
+	virtual unsigned int FrequencyToPeriod(double Freq, int Octave, int NamcoChannels) const override;
+	virtual double PeriodToFrequency(unsigned int Period, int Octave, int NamcoChannels) const override;
+};
+
+class CDetuneEPSMSSG : public CDetuneTable
+{
+public:
+	CDetuneEPSMSSG(double A440_Note);
 	virtual unsigned int FrequencyToPeriod(double Freq, int Octave, int NamcoChannels) const override;
 	virtual double PeriodToFrequency(unsigned int Period, int Octave, int NamcoChannels) const override;
 };
