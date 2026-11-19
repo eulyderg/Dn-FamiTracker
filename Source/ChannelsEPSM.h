@@ -25,6 +25,7 @@
 #pragma once
 
 #include "ChannelsVRC7.h"
+#include "InstrumentEPSM.h";
 
 //
 // Derived channels, EPSM
@@ -118,8 +119,11 @@ protected:
 	void CorrectOctave();
 	void WritePatch();
 	void WriteReg(uint16_t Reg, uint8_t Value);
+	void ResetFMData();
+	void SetFMData(epsm_fm_data FMData);
 
 	static uint8_t m_iLFOFreq;
+	static uint8_t m_iGates;
 
 	note_command_t m_iCommand;
 	uint8_t m_iChannelIndex; // 0 - 5
@@ -129,20 +133,7 @@ protected:
 	uint8_t m_iOctave;
 	uint8_t m_iOldOctave;
 
-	uint8_t m_iFeedback;
-
-	uint8_t m_iDetune[4];
-	uint8_t m_iMult[4];
-	uint8_t m_iKeyScale[4];
-	uint8_t m_iTotalLevel[4];
-
-	uint8_t m_iAttack[4];
-	uint8_t m_iDecay[4];
-	uint8_t m_iSustain[4];
-	uint8_t m_iFade[4];
-	uint8_t m_iRelease[4];
-
-	uint8_t m_iSSGEG[4];
+	epsm_fm_data m_pFMData;
 };
 
 ////////////////////

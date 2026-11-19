@@ -48,10 +48,7 @@ void CInstHandlerEPSM::UpdateInstrument() {
 	auto pEPSMInst = std::dynamic_pointer_cast<const CInstrumentEPSM>(m_pInstrument);
 	if (pEPSMInst == nullptr) return;
 
-	//pInterface->SetPatch(pEPSMInst->GetPatch());
-	//if (!pEPSMInst->GetPatch())
-	//	for (std::size_t i = 0; i < 8; i++)
-	//		pInterface->SetCustomReg(i, pEPSMInst->GetCustomReg(static_cast<int>(i)));
+	pInterface->SetFMData(pEPSMInst->GetFMData());
 
 	m_bUpdate = false;
 }

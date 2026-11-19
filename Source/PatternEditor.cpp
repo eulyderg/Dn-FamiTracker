@@ -1874,7 +1874,7 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		m_pDocument->ExpansionEnabled(SNDCHIP_FDS) * 13 +
 		m_pDocument->ExpansionEnabled(SNDCHIP_VRC7) * 9 +
 		m_pDocument->ExpansionEnabled(SNDCHIP_S5B) * 8 +
-		m_pDocument->ExpansionEnabled(SNDCHIP_EPSM) * 8);		// // //
+		m_pDocument->ExpansionEnabled(SNDCHIP_EPSM) * 17);		// // //
 	int vis_line = 0;
 
 	// TODO: custom regview palettes
@@ -2429,7 +2429,14 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 			}
 		}
 
+		++line; y += LINE_HEIGHT;
 
+		// FM registers
+		for (int i = 0; i < 0xA-0x2; ++i) {
+			GetRegsFunc(SNDCHIP_EPSM, [&](int x) { return 0x20 + i * 0x10 + x; }, 0x10);
+			text.Format(_T("$%03X:"), 0x20 + i * 0x10);
+			DrawRegFunc(text, 0x10);
+		}
 	}
 
 

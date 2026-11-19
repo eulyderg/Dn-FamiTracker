@@ -24,6 +24,24 @@
 
 #pragma once
 
+struct epsm_fm_data {
+	uint8_t Feedback = 0;
+
+	uint8_t Detune[4] = {};
+	uint8_t Mult[4] = {};
+	uint8_t KeyScale[4] = {};
+	uint8_t TotalLevel[4] = {};
+
+	uint8_t Attack[4] = {};
+	uint8_t Decay[4] = {};
+	uint8_t Sustain[4] = {};
+	uint8_t Fade[4] = {};
+	uint8_t Release[4] = {};
+
+	uint8_t SSGEG[4] = {};
+
+	bool LFO[4] = {};
+};
 
 class CInstrumentEPSM : public CInstrument {
 public:
@@ -38,15 +56,12 @@ public:
 	bool	CanRelease() const;
 
 public:
-	void		 SetPatch(unsigned int Patch);
-	unsigned int GetPatch() const;
-	void		 SetCustomReg(int Reg, unsigned char Value);		// // //
-	unsigned char GetCustomReg(int Reg) const;		// // //
+	epsm_fm_data GetFMData() const;
+	void SetFMData(epsm_fm_data FMData);
 
 protected:
-	virtual void	CloneFrom(const CInstrument *pInst);		// // //
+	virtual void	CloneFrom(const CInstrument *pInst);
 
 private:
-	unsigned int m_iPatch;
-	unsigned char m_iRegs[8];		// // // Custom patch settings
+	epsm_fm_data m_pFMData;
 };

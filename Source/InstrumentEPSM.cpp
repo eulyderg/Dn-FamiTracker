@@ -34,11 +34,26 @@
  *
  */
 
-//static const unsigned char VRC7_SINE_PATCH[] = {0x01, 0x21, 0x00, 0x00, 0x00, 0xF0, 0x00, 0x0F};		// // //
-
-CInstrumentEPSM::CInstrumentEPSM() : CInstrument(INST_EPSM), m_iPatch()
+CInstrumentEPSM::CInstrumentEPSM() : CInstrument(INST_EPSM), m_pFMData()
 {
-	//memcpy(m_iRegs, VRC7_SINE_PATCH, sizeof(VRC7_SINE_PATCH));
+	for (uint8_t op = 0; op < 4; op++) {
+		m_pFMData.Detune[op] = 0;
+		m_pFMData.Mult[op] = 0;
+		m_pFMData.KeyScale[op] = 0;
+		m_pFMData.TotalLevel[op] = 0;
+
+		m_pFMData.Attack[op] = 0;
+		m_pFMData.Decay[op] = 0;
+		m_pFMData.Sustain[op] = 15;
+		m_pFMData.Fade[op] = 31;
+		m_pFMData.Release[op] = 0;
+
+		m_pFMData.LFO[op] = false;
+
+		m_pFMData.SSGEG[op] = 0;
+	}
+
+	m_pFMData.Feedback = 0;
 }
 
 CInstrument *CInstrumentEPSM::Clone() const
@@ -52,66 +67,35 @@ void CInstrumentEPSM::CloneFrom(const CInstrument *pInst)
 {
 	CInstrument::CloneFrom(pInst);
 	
-	/*if (auto pNew = dynamic_cast<const CInstrumentEPSM*>(pInst)) {
-		SetPatch(pNew->GetPatch());
-		for (int i = 0; i < 8; ++i)
-			SetCustomReg(i, pNew->GetCustomReg(i));
-	}*/
+	if (auto pNew = dynamic_cast<const CInstrumentEPSM*>(pInst)) {
+		m_pFMData = pNew->m_pFMData;
+	}
 }
 
 void CInstrumentEPSM::Setup() { }
 
 void CInstrumentEPSM::Store(CDocumentFile *pDocFile)
 {
-	//pDocFile->WriteBlockInt(m_iPatch);
-	//
-	//for (int i = 0; i < 8; ++i)
-	//	pDocFile->WriteBlockChar(GetCustomReg(i));
+	
 }
 
 bool CInstrumentEPSM::Load(CDocumentFile *pDocFile)
 {
-	m_iPatch = CModuleException::AssertRangeFmt(pDocFile->GetBlockInt(), 0, 0xF, "EPSM patch number", "%i");
-
-	//for (int i = 0; i < 8; ++i)
-	//	SetCustomReg(i, pDocFile->GetBlockChar());
-
 	return true;
 }
 
 void CInstrumentEPSM::SaveFile(CInstrumentFile *pFile)
 {
-	pFile->WriteInt(m_iPatch);
-
-	for (int i = 0; i < 8; ++i)
-		pFile->WriteChar(GetCustomReg(i));
+	
 }
 
 bool CInstrumentEPSM::LoadFile(CInstrumentFile *pFile, int iVersion)
 {
-	m_iPatch = pFile->ReadInt();
-
-	for (int i = 0; i < 8; ++i)
-		SetCustomReg(i, pFile->ReadChar());
-
 	return true;
 }
 
 int CInstrumentEPSM::Compile(CChunk *pChunk, int Index)
 {
-	/*int Patch = GetPatch();
-
-	pChunk->StoreByte(6);		// // // CHAN_VRC7
-	pChunk->StoreByte(Patch << 4);	// Shift up by 4 to make room for volume
-
-	if (Patch == 0) {
-		// Write custom patch settings
-		for (int i = 0; i < 8; ++i) {
-			pChunk->StoreByte(GetCustomReg(i));
-		}
-	}
-
-	return (Patch == 0) ? 10 : 2;		// // //*/
 	return 0;
 }
 
@@ -120,24 +104,12 @@ bool CInstrumentEPSM::CanRelease() const
 	return false;	// This can use release but disable it when previewing notes
 }
 
-void CInstrumentEPSM::SetPatch(unsigned int Patch)
+void CInstrumentEPSM::SetFMData(epsm_fm_data FMData)
 {
-	//m_iPatch = Patch;
-	InstrumentChanged();
+	m_pFMData = FMData;
 }
 
-unsigned int CInstrumentEPSM::GetPatch() const
+epsm_fm_data CInstrumentEPSM::GetFMData() const
 {
-	return m_iPatch;
-}
-
-void CInstrumentEPSM::SetCustomReg(int Reg, unsigned char Value)		// // //
-{
-	//m_iRegs[Reg] = Value;
-	InstrumentChanged();
-}
-
-unsigned char CInstrumentEPSM::GetCustomReg(int Reg) const		// // //
-{
-	return m_iRegs[Reg];
+	return m_pFMData;
 }
