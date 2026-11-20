@@ -58,17 +58,6 @@ void CInstrumentEditorEPSM::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CInstrumentEditorEPSM, CInstrumentEditPanel)
-	/*ON_CBN_SELCHANGE(IDC_PATCH, OnCbnSelchangePatch)
-	ON_BN_CLICKED(IDC_M_AM, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_M_VIB, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_M_EG, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_M_KSR2, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_M_DM, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_C_AM, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_C_VIB, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_C_EG, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_C_KSR, &CInstrumentEditorEPSM::OnBnClickedCheckbox)
-	ON_BN_CLICKED(IDC_C_DM, &CInstrumentEditorEPSM::OnBnClickedCheckbox)*/
 	ON_WM_VSCROLL()
 	ON_WM_HSCROLL()
 	/*_WM_CONTEXTMENU()
@@ -207,198 +196,81 @@ void CInstrumentEditorEPSM::SetSliderTic(int Slider, int Tic)
 	pSlider->SetTic(Tic);
 }
 
-void CInstrumentEditorEPSM::LoadPatch(int Num)
-{
-	
-}
-
-void CInstrumentEditorEPSM::SavePatch()
-{
-	
-}
-
-void CInstrumentEditorEPSM::PatchBytesToText(int Patch)
-{
-	
-}
-
 void CInstrumentEditorEPSM::OnBnClickedCheckbox()
 {
-	//SavePatch();
 	SetFocus();
 }
 
 void CInstrumentEditorEPSM::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-	//SavePatch();
+	UpdateInstrument();
 	SetFocus();
 	CInstrumentEditPanel::OnVScroll(nSBCode, nPos, pScrollBar);
 }
 
 void CInstrumentEditorEPSM::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-	//SavePatch();
+	UpdateInstrument();
 	SetFocus();
 	CInstrumentEditPanel::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
 void CInstrumentEditorEPSM::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 {
-	/*CMenu menu;
-	
-	menu.CreatePopupMenu();
-	menu.AppendMenu(MF_STRING, 1, _T("&Copy"));
-	menu.AppendMenu(MF_STRING, 2, _T("Copy as Plain &Text"));		// // //
-	menu.AppendMenu(MF_STRING, 3, _T("&Paste"));
 
-	switch (menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, point.x, point.y, this)) {
-		case 1: // Copy
-			OnCopy();
-			break;
-		case 2: // // //
-			CopyAsPlainText();
-			break;
-		case 3: // Paste
-			OnPaste();
-			break;
-	}*/
 }
 
-void CInstrumentEditorEPSM::OnCopy()
-{
-	/*CString MML;
+void CInstrumentEditorEPSM::OnCopy() {}
 
-	int patch = m_pInstrument->GetPatch();
-	// Assemble a MML string
-	for (int i = 0; i < 8; ++i)
-		MML.AppendFormat(_T("$%02X "), FetchPatchByte(patch, i));
-	
-	CClipboard Clipboard(this, CF_TEXT);
-
-	if (!Clipboard.IsOpened()) {
-		AfxMessageBox(IDS_CLIPBOARD_OPEN_ERROR);
-		return;
-	}
-
-	Clipboard.SetDataPointer(MML.GetBuffer(), MML.GetLength() + 1);*/
-}
-
-void CInstrumentEditorEPSM::CopyAsPlainText()		// // //
-{
-	/*int patch = m_pInstrument->GetPatch();
-	unsigned char reg[8] = {};
-	for (int i = 0; i < 8; ++i)
-		reg[i] = FetchPatchByte(patch, i);//patch == 0 ? m_pInstrument->GetCustomReg(i) : DEFAULT_PATCHES[PatchBank][patch * 8 + i];
-	
-	CString MML;
-	GetDlgItemTextA(IDC_PATCH, MML);
-	MML.Format(_T(";%s\r\n;%s\r\n"), MML, m_pInstrument->GetName());
-	MML.AppendFormat(_T(";TL FB\r\n %2d,%2d,\r\n;AR DR SL RR KL MT AM VB EG KR DT\r\n"), reg[2] & 0x3F, reg[3] & 0x07);
-	for (int i = 0; i <= 1; i++)
-		MML.AppendFormat(_T(" %2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,%2d,\r\n"),
-			(reg[4 + i] >> 4) & 0x0F, reg[4 + i] & 0x0F, (reg[6 + i] >> 4) & 0x0F, reg[6 + i] & 0x0F,
-			(reg[2 + i] >> 6) & 0x03, reg[i] & 0x0F,
-			(reg[i] >> 7) & 0x01, (reg[i] >> 6) & 0x01, (reg[i] >> 5) & 0x01, (reg[i] >> 4) & 0x01,
-			(reg[3] >> (4 - i)) & 0x01);
-	
-	CClipboard Clipboard(this, CF_TEXT);
-
-	if (!Clipboard.IsOpened()) {
-		AfxMessageBox(IDS_CLIPBOARD_OPEN_ERROR);
-		return;
-	}
-
-	Clipboard.SetDataPointer(MML.GetBuffer(), MML.GetLength() + 1);*/
-}
-
-uint8_t CInstrumentEditorEPSM::FetchPatchByte(int patch, unsigned char patch_byte)
-{
-	return 0;
-	//if (patch > CUSTOM_PATCH)
-	//	return OPLLPatchBytes[(8 * patch) + patch_byte];
-	//else
-		//return m_pInstrument->GetCustomReg(patch_byte);
-}
-
-void CInstrumentEditorEPSM::OnPaste()
-{
-	/*// Copy from clipboard
-	CClipboard Clipboard(this, CF_TEXT);
-
-	if (!Clipboard.IsOpened()) {
-		AfxMessageBox(IDS_CLIPBOARD_OPEN_ERROR);
-		return;
-	}
-
-	if (Clipboard.IsDataAvailable()) {
-		LPCTSTR text = (LPCTSTR)Clipboard.GetDataPointer();
-		if (text != NULL)
-			PatchTextToBytes(text);
-	}*/
-}
-
-void CInstrumentEditorEPSM::PatchTextToBytes(LPCTSTR pString)
-{
-	/*std::string str(pString);
-
-	// Convert to register values
-	std::istringstream values(str);
-	std::istream_iterator<std::string> begin(values);
-	std::istream_iterator<std::string> end;
-
-	for (int i = 0; (i < 8) && (begin != end); ++i) {
-		int value = CSequenceInstrumentEditPanel::ReadStringValue(*begin++, false);		// // //
-		if (value < 0) value = 0;
-		if (value > 0xFF) value = 0xFF;
-		m_pInstrument->SetCustomReg(i, value);
-	}
-
-	int Patch = m_pInstrument->GetPatch();
-	if (Patch != CUSTOM_PATCH) {
-		SelectPatch(CUSTOM_PATCH);
-		static_cast<CComboBox*>(GetDlgItem(IDC_PATCH))->SetCurSel(0);
-		LoadPatch(CUSTOM_PATCH);
-	}
-	else
-		LoadPatch(CUSTOM_PATCH); */
-}
+void CInstrumentEditorEPSM::OnPaste() {}
 
 BOOL CInstrumentEditorEPSM::PreTranslateMessage(MSG* pMsg)
 {
-	/*int Patch = m_pInstrument->GetPatch();
-
-	if (pMsg->message == WM_KEYDOWN && m_pInstrument != NULL) {
-		if (GetFocus() == GetDlgItem(IDC_PATCH_TEXT)) {
-			if (pMsg->wParam == VK_RETURN) {
-				CString patchtxt;
-				CWnd* pPatchText = GetDlgItem(IDC_PATCH_TEXT);
-				pPatchText->GetWindowText(patchtxt);
-				if (Patch != CUSTOM_PATCH) {
-					SelectPatch(CUSTOM_PATCH);
-					static_cast<CComboBox*>(GetDlgItem(IDC_PATCH))->SetCurSel(0);
-					PatchTextToBytes(patchtxt);
-				}
-				else
-					PatchTextToBytes(patchtxt);
-			}
-		}
-		else if (GetFocus() != GetDlgItem(IDC_PATCH)) {
-			switch (pMsg->wParam) {
-			case VK_DOWN:
-				if (Patch < 15) {
-					SelectPatch(Patch + 1);
-					static_cast<CComboBox*>(GetDlgItem(IDC_PATCH))->SetCurSel(Patch + 1);
-				}
-				break;
-			case VK_UP:
-				if (Patch > CUSTOM_PATCH) {
-					SelectPatch(Patch - 1);
-					static_cast<CComboBox*>(GetDlgItem(IDC_PATCH))->SetCurSel(Patch - 1);
-				}
-				break;
-			}
-		}
-	}
-	*/
 	return CInstrumentEditPanel::PreTranslateMessage(pMsg);
+}
+
+// all of our target values are uint8_t
+void CInstrumentEditorEPSM::SliderUpdate(int Slider, bool Reversed, uint8_t* target)
+{
+	CSliderCtrl* pSlider = static_cast<CSliderCtrl*>(GetDlgItem(Slider));
+	int Value = Reversed ? pSlider->GetPos() : pSlider->GetRangeMax() - pSlider->GetPos();
+	
+	(*target) = uint8_t(Value);
+}
+
+void CInstrumentEditorEPSM::UpdateInstrument()
+{
+	SliderUpdate(IDC_M_FB1, false, &(m_pInstrument->m_pFMData.Feedback));
+	SliderUpdate(IDC_M_MUL1, false, &(m_pInstrument->m_pFMData.Mult[0]));
+	SliderUpdate(IDC_M_MUL2, false, &(m_pInstrument->m_pFMData.Mult[1]));
+	SliderUpdate(IDC_M_MUL3, false, &(m_pInstrument->m_pFMData.Mult[2]));
+	SliderUpdate(IDC_M_MUL4, false, &(m_pInstrument->m_pFMData.Mult[3]));
+	SliderUpdate(IDC_M_VOL1, false, &(m_pInstrument->m_pFMData.TotalLevel[0]));
+	SliderUpdate(IDC_M_VOL2, false, &(m_pInstrument->m_pFMData.TotalLevel[1]));
+	SliderUpdate(IDC_M_VOL3, false, &(m_pInstrument->m_pFMData.TotalLevel[2]));
+	SliderUpdate(IDC_M_VOL4, false, &(m_pInstrument->m_pFMData.TotalLevel[3]));
+	SliderUpdate(IDC_M_DET1, false, &(m_pInstrument->m_pFMData.Detune[0]));
+	SliderUpdate(IDC_M_DET2, false, &(m_pInstrument->m_pFMData.Detune[1]));
+	SliderUpdate(IDC_M_DET3, false, &(m_pInstrument->m_pFMData.Detune[2]));
+	SliderUpdate(IDC_M_DET4, false, &(m_pInstrument->m_pFMData.Detune[3]));
+	SliderUpdate(IDC_M_ATT1, true, &(m_pInstrument->m_pFMData.Attack[0]));
+	SliderUpdate(IDC_M_ATT2, true, &(m_pInstrument->m_pFMData.Attack[1]));
+	SliderUpdate(IDC_M_ATT3, true, &(m_pInstrument->m_pFMData.Attack[2]));
+	SliderUpdate(IDC_M_ATT4, true, &(m_pInstrument->m_pFMData.Attack[3]));
+	SliderUpdate(IDC_M_DEC1, true, &(m_pInstrument->m_pFMData.Decay[0]));
+	SliderUpdate(IDC_M_DEC2, true, &(m_pInstrument->m_pFMData.Decay[1]));
+	SliderUpdate(IDC_M_DEC3, true, &(m_pInstrument->m_pFMData.Decay[2]));
+	SliderUpdate(IDC_M_DEC4, true, &(m_pInstrument->m_pFMData.Decay[3]));
+	SliderUpdate(IDC_M_SUS1, true, &(m_pInstrument->m_pFMData.Sustain[0]));
+	SliderUpdate(IDC_M_SUS2, true, &(m_pInstrument->m_pFMData.Sustain[1]));
+	SliderUpdate(IDC_M_SUS3, true, &(m_pInstrument->m_pFMData.Sustain[2]));
+	SliderUpdate(IDC_M_SUS4, true, &(m_pInstrument->m_pFMData.Sustain[3]));
+	SliderUpdate(IDC_M_FAD1, true, &(m_pInstrument->m_pFMData.Fade[0]));
+	SliderUpdate(IDC_M_FAD2, true, &(m_pInstrument->m_pFMData.Fade[1]));
+	SliderUpdate(IDC_M_FAD3, true, &(m_pInstrument->m_pFMData.Fade[2]));
+	SliderUpdate(IDC_M_FAD4, true, &(m_pInstrument->m_pFMData.Fade[3]));
+	SliderUpdate(IDC_M_REL1, true, &(m_pInstrument->m_pFMData.Release[0]));
+	SliderUpdate(IDC_M_REL2, true, &(m_pInstrument->m_pFMData.Release[1]));
+	SliderUpdate(IDC_M_REL3, true, &(m_pInstrument->m_pFMData.Release[2]));
+	SliderUpdate(IDC_M_REL4, true, &(m_pInstrument->m_pFMData.Release[3]));
 }

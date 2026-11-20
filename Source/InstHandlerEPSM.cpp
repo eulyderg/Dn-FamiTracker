@@ -48,7 +48,7 @@ void CInstHandlerEPSM::UpdateInstrument() {
 	auto pEPSMInst = std::dynamic_pointer_cast<const CInstrumentEPSM>(m_pInstrument);
 	if (pEPSMInst == nullptr) return;
 
-	pInterface->SetFMData(pEPSMInst->GetFMData());
+	pInterface->SetFMData(pEPSMInst->m_pFMData);
 
 	m_bUpdate = false;
 }

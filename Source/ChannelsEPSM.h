@@ -25,7 +25,7 @@
 #pragma once
 
 #include "ChannelsVRC7.h"
-#include "InstrumentEPSM.h";
+#include "InstrumentEPSM.h"
 
 //
 // Derived channels, EPSM
@@ -54,6 +54,7 @@ public:
 	void ResetChannel() override;
 	int  getDutyMax() const override;
 	inst_type_t GetNewInstType() const override;
+	void SetFMData(epsm_fm_data FMData) override {};
 
 protected:
 	void ClearRegisters() override;
@@ -98,6 +99,7 @@ public:
 	void ResetChannel() override;
 	int  getDutyMax() const override;
 	inst_type_t GetNewInstType() const override;
+	void SetFMData(epsm_fm_data FMData) override;
 
 protected:
 	void ClearRegisters() override;
@@ -120,7 +122,6 @@ protected:
 	void WritePatch();
 	void WriteReg(uint16_t Reg, uint8_t Value);
 	void ResetFMData();
-	void SetFMData(epsm_fm_data FMData);
 
 	static uint8_t m_iLFOFreq;
 	static uint8_t m_iGates;
@@ -128,7 +129,7 @@ protected:
 	note_command_t m_iCommand;
 	uint8_t m_iChannelIndex; // 0 - 5
 
-	bool    m_bHold;
+	bool m_bHold;
 
 	uint8_t m_iOctave;
 	uint8_t m_iOldOctave;
@@ -145,6 +146,7 @@ public:
 	void ResetChannel() override;
 	int  getDutyMax() const override;
 	inst_type_t GetNewInstType() const override;
+	void SetFMData(epsm_fm_data FMData) override {};
 
 protected:
 	void ClearRegisters() override;

@@ -101,15 +101,5 @@ int CInstrumentEPSM::Compile(CChunk *pChunk, int Index)
 
 bool CInstrumentEPSM::CanRelease() const
 {
-	return false;	// This can use release but disable it when previewing notes
-}
-
-void CInstrumentEPSM::SetFMData(epsm_fm_data FMData)
-{
-	m_pFMData = FMData;
-}
-
-epsm_fm_data CInstrumentEPSM::GetFMData() const
-{
-	return m_pFMData;
+	return true;
 }

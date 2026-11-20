@@ -23,7 +23,7 @@
 */
 
 #pragma once
-#include <InstrumentEPSM.h>
+#include "InstrumentEPSM.h"
 
 class CInstrumentEditorEPSM : public CInstrumentEditPanel
 {
@@ -40,25 +40,15 @@ public:
 	enum { IDD = IDD_INSTRUMENT_EPSM };
 
 private:
-
-	std::uint8_t			OPLLPatchBytes[19 * 8];
-	std::string		OPLLPatchNames[19];
-
+	
 	CFamiTrackerDoc *m_pDocument;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-	void LoadPatch(int Num);
-	void SavePatch();
-	void PatchBytesToText(int Patch);
 
 	void SetupSlider(int Slider, int Max);
 	int GetSliderVal(int Slider);
 	void SetSliderVal(int Slider, int Value);
 	void SetSliderTic(int Slider, int Tic);
-	void PatchTextToBytes(LPCTSTR pString);
-	void CopyAsPlainText();		// // //
-	std::uint8_t FetchPatchByte(int patch, unsigned char patch_byte);
 
 protected:
 	std::shared_ptr<CInstrumentEPSM> m_pInstrument;
@@ -75,4 +65,8 @@ public:
 	afx_msg void OnCopy();
 	afx_msg void OnPaste();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+
+private:
+	void SliderUpdate(int Slider, bool Reversed, uint8_t* target);
+	void UpdateInstrument();
 };

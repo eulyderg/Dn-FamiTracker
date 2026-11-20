@@ -19,7 +19,7 @@
 */
 
 #pragma once
-#include "InstrumentEPSM.h";
+#include "InstrumentEPSM.h"
 
 /*!
 	\brief A pure virtual interface for channel handlers.
@@ -92,5 +92,5 @@ public:
 class CChannelHandlerInterfaceEPSM
 {
 public:
-	virtual void	SetFMData(epsm_fm_data FMData);
+	virtual void	SetFMData(epsm_fm_data);
 };

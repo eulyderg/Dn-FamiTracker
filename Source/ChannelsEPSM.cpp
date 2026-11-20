@@ -400,7 +400,24 @@ void CEPSMFMChannel::ResetFMData()
 
 void CEPSMFMChannel::SetFMData(epsm_fm_data FMData)
 {
-	m_pFMData = FMData;
+	for (uint8_t op = 0; op < 4; op++) {
+		m_pFMData.Detune[op] = FMData.Detune[op];
+		m_pFMData.Mult[op] = FMData.Mult[op];
+		m_pFMData.KeyScale[op] = FMData.KeyScale[op];
+		m_pFMData.TotalLevel[op] = FMData.TotalLevel[op];
+
+		m_pFMData.Attack[op] = FMData.Attack[op];
+		m_pFMData.Decay[op] = FMData.Decay[op];
+		m_pFMData.Sustain[op] = FMData.Sustain[op];
+		m_pFMData.Fade[op] = FMData.Fade[op];
+		m_pFMData.Release[op] = FMData.Release[op];
+
+		m_pFMData.LFO[op] = FMData.LFO[op];
+
+		m_pFMData.SSGEG[op] = FMData.SSGEG[op];
+	}
+
+	m_pFMData.Feedback = FMData.Feedback;
 }
 
 int CEPSMFMChannel::getDutyMax() const

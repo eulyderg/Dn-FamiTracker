@@ -23,6 +23,7 @@
 */
 
 #pragma once
+#include "Instrument.h"
 
 struct epsm_fm_data {
 	uint8_t Feedback = 0;
@@ -56,12 +57,8 @@ public:
 	bool	CanRelease() const;
 
 public:
-	epsm_fm_data GetFMData() const;
-	void SetFMData(epsm_fm_data FMData);
+	epsm_fm_data m_pFMData;
 
 protected:
-	virtual void	CloneFrom(const CInstrument *pInst);
-
-private:
-	epsm_fm_data m_pFMData;
+	virtual void CloneFrom(const CInstrument* pInst);
 };
