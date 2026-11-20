@@ -42,7 +42,7 @@ void CInstHandlerEPSM::ReleaseInstrument() {}
 void CInstHandlerEPSM::UpdateInstrument() {
 	if (!m_bUpdate) return;
 
-	CChannelHandlerInterfaceEPSM *pInterface = dynamic_cast<CChannelHandlerInterfaceEPSM*>(m_pInterface);
+	CChannelHandlerInterfaceEPSMFM*pInterface = dynamic_cast<CChannelHandlerInterfaceEPSMFM*>(m_pInterface);
 	if (pInterface == nullptr) return;
 
 	auto pEPSMInst = std::dynamic_pointer_cast<const CInstrumentEPSM>(m_pInstrument);

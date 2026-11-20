@@ -75,83 +75,83 @@ BOOL CInstrumentEditorEPSM::OnInitDialog()
 	m_pDocument = GetDocument();
 
 	SetupSlider(IDC_M_FB1, 7);
-	SetSliderVal(IDC_M_FB1, 0);
+	SetSliderVal(IDC_M_FB1, false, 0);
 
 	SetupSlider(IDC_M_MUL1, 15);
 	SetupSlider(IDC_M_MUL2, 15);
 	SetupSlider(IDC_M_MUL3, 15);
 	SetupSlider(IDC_M_MUL4, 15);
-	SetSliderVal(IDC_M_MUL1, 1);
-	SetSliderVal(IDC_M_MUL2, 1);
-	SetSliderVal(IDC_M_MUL3, 1);
-	SetSliderVal(IDC_M_MUL4, 1);
-	SetSliderTic(IDC_M_MUL1, 1);
-	SetSliderTic(IDC_M_MUL2, 1);
-	SetSliderTic(IDC_M_MUL3, 1);
-	SetSliderTic(IDC_M_MUL4, 1);
+	SetSliderVal(IDC_M_MUL1, false, 1);
+	SetSliderVal(IDC_M_MUL2, false, 1);
+	SetSliderVal(IDC_M_MUL3, false, 1);
+	SetSliderVal(IDC_M_MUL4, false, 1);
+	SetSliderTic(IDC_M_MUL1, false, 1);
+	SetSliderTic(IDC_M_MUL2, false, 1);
+	SetSliderTic(IDC_M_MUL3, false, 1);
+	SetSliderTic(IDC_M_MUL4, false, 1);
 
 	SetupSlider(IDC_M_VOL1, 127);
 	SetupSlider(IDC_M_VOL2, 127);
 	SetupSlider(IDC_M_VOL3, 127);
 	SetupSlider(IDC_M_VOL4, 127);
-	SetSliderVal(IDC_M_VOL1, 127);
-	SetSliderVal(IDC_M_VOL2, 127);
-	SetSliderVal(IDC_M_VOL3, 127);
-	SetSliderVal(IDC_M_VOL4, 127);
+	SetSliderVal(IDC_M_VOL1, false, 127);
+	SetSliderVal(IDC_M_VOL2, false, 127);
+	SetSliderVal(IDC_M_VOL3, false, 127);
+	SetSliderVal(IDC_M_VOL4, false, 127);
 
 	SetupSlider(IDC_M_DET1, 6);
 	SetupSlider(IDC_M_DET2, 6);
 	SetupSlider(IDC_M_DET3, 6);
 	SetupSlider(IDC_M_DET4, 6);
-	SetSliderVal(IDC_M_DET1, 3);
-	SetSliderVal(IDC_M_DET2, 3);
-	SetSliderVal(IDC_M_DET3, 3);
-	SetSliderVal(IDC_M_DET4, 3);
-	SetSliderTic(IDC_M_DET1, 3);
-	SetSliderTic(IDC_M_DET2, 3);
-	SetSliderTic(IDC_M_DET3, 3);
-	SetSliderTic(IDC_M_DET4, 3);
+	SetSliderVal(IDC_M_DET1, false, 3);
+	SetSliderVal(IDC_M_DET2, false, 3);
+	SetSliderVal(IDC_M_DET3, false, 3);
+	SetSliderVal(IDC_M_DET4, false, 3);
+	SetSliderTic(IDC_M_DET1, false, 3);
+	SetSliderTic(IDC_M_DET2, false, 3);
+	SetSliderTic(IDC_M_DET3, false, 3);
+	SetSliderTic(IDC_M_DET4, false, 3);
 
 	SetupSlider(IDC_M_ATT1, 31);
 	SetupSlider(IDC_M_ATT2, 31);
 	SetupSlider(IDC_M_ATT3, 31);
 	SetupSlider(IDC_M_ATT4, 31);
-	SetSliderVal(IDC_M_ATT1, 31); // 0
-	SetSliderVal(IDC_M_ATT2, 31); // 0
-	SetSliderVal(IDC_M_ATT3, 31); // 0
-	SetSliderVal(IDC_M_ATT4, 31); // 0
+	SetSliderVal(IDC_M_ATT1, true, 0);
+	SetSliderVal(IDC_M_ATT2, true, 0);
+	SetSliderVal(IDC_M_ATT3, true, 0);
+	SetSliderVal(IDC_M_ATT4, true, 0);
 	SetupSlider(IDC_M_DEC1, 31);
 	SetupSlider(IDC_M_DEC2, 31);
 	SetupSlider(IDC_M_DEC3, 31);
 	SetupSlider(IDC_M_DEC4, 31);
-	SetSliderVal(IDC_M_DEC1, 31); // 0
-	SetSliderVal(IDC_M_DEC2, 31); // 0
-	SetSliderVal(IDC_M_DEC3, 31); // 0
-	SetSliderVal(IDC_M_DEC4, 31); // 0
+	SetSliderVal(IDC_M_DEC1, true, 0);
+	SetSliderVal(IDC_M_DEC2, true, 0);
+	SetSliderVal(IDC_M_DEC3, true, 0);
+	SetSliderVal(IDC_M_DEC4, true, 0);
 	SetupSlider(IDC_M_SUS1, 15);
 	SetupSlider(IDC_M_SUS2, 15);
 	SetupSlider(IDC_M_SUS3, 15);
 	SetupSlider(IDC_M_SUS4, 15);
-	SetSliderVal(IDC_M_SUS1, 0); // 15
-	SetSliderVal(IDC_M_SUS2, 0); // 15
-	SetSliderVal(IDC_M_SUS3, 0); // 15
-	SetSliderVal(IDC_M_SUS4, 0); // 15
+	SetSliderVal(IDC_M_SUS1, true, 15);
+	SetSliderVal(IDC_M_SUS2, true, 15);
+	SetSliderVal(IDC_M_SUS3, true, 15);
+	SetSliderVal(IDC_M_SUS4, true, 15);
 	SetupSlider(IDC_M_FAD1, 31);
 	SetupSlider(IDC_M_FAD2, 31);
 	SetupSlider(IDC_M_FAD3, 31);
 	SetupSlider(IDC_M_FAD4, 31);
-	SetSliderVal(IDC_M_FAD1, 0); // 31
-	SetSliderVal(IDC_M_FAD2, 0); // 31
-	SetSliderVal(IDC_M_FAD3, 0); // 31
-	SetSliderVal(IDC_M_FAD4, 0); // 31
+	SetSliderVal(IDC_M_FAD1, true, 31);
+	SetSliderVal(IDC_M_FAD2, true, 31);
+	SetSliderVal(IDC_M_FAD3, true, 31);
+	SetSliderVal(IDC_M_FAD4, true, 31);
 	SetupSlider(IDC_M_REL1, 15);
 	SetupSlider(IDC_M_REL2, 15);
 	SetupSlider(IDC_M_REL3, 15);
 	SetupSlider(IDC_M_REL4, 15);
-	SetSliderVal(IDC_M_REL1, 15); // 0
-	SetSliderVal(IDC_M_REL2, 15); // 0
-	SetSliderVal(IDC_M_REL3, 15); // 0
-	SetSliderVal(IDC_M_REL4, 15); // 0
+	SetSliderVal(IDC_M_REL1, true, 0);
+	SetSliderVal(IDC_M_REL2, true, 0);
+	SetSliderVal(IDC_M_REL3, true, 0);
+	SetSliderVal(IDC_M_REL4, true, 0);
 
 	return TRUE;
 }
@@ -178,22 +178,25 @@ void CInstrumentEditorEPSM::SetupSlider(int Slider, int Max)
 	pSlider->SetRangeMax(Max);
 }
 
-int CInstrumentEditorEPSM::GetSliderVal(int Slider)
+int CInstrumentEditorEPSM::GetSliderVal(int Slider, bool Reversed)
 {
 	CSliderCtrl *pSlider = static_cast<CSliderCtrl*>(GetDlgItem(Slider));
-	return pSlider->GetPos();
+	int Value = Reversed ? pSlider->GetRangeMax() - pSlider->GetPos() : pSlider->GetPos();
+	return Value;
 }
 
-void CInstrumentEditorEPSM::SetSliderVal(int Slider, int Value)
+void CInstrumentEditorEPSM::SetSliderVal(int Slider, bool Reversed, int Value)
 {
 	CSliderCtrl *pSlider = static_cast<CSliderCtrl*>(GetDlgItem(Slider));
+	Value = Reversed ? pSlider->GetRangeMax() - Value : Value;
 	pSlider->SetPos(Value);
 }
 
-void CInstrumentEditorEPSM::SetSliderTic(int Slider, int Tic)
+void CInstrumentEditorEPSM::SetSliderTic(int Slider, bool Reversed, int Tic)
 {
 	CSliderCtrl* pSlider = static_cast<CSliderCtrl*>(GetDlgItem(Slider));
-	pSlider->SetTic(Tic);
+	int Value = Reversed ? pSlider->GetRangeMax() - Tic : Tic;
+	pSlider->SetTic(Value);
 }
 
 void CInstrumentEditorEPSM::OnBnClickedCheckbox()
@@ -233,7 +236,7 @@ BOOL CInstrumentEditorEPSM::PreTranslateMessage(MSG* pMsg)
 void CInstrumentEditorEPSM::SliderUpdate(int Slider, bool Reversed, uint8_t* target)
 {
 	CSliderCtrl* pSlider = static_cast<CSliderCtrl*>(GetDlgItem(Slider));
-	int Value = Reversed ? pSlider->GetPos() : pSlider->GetRangeMax() - pSlider->GetPos();
+	int Value = Reversed ? pSlider->GetRangeMax() - pSlider->GetPos() : pSlider->GetPos();
 	
 	(*target) = uint8_t(Value);
 }

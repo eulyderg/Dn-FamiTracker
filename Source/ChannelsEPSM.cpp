@@ -309,9 +309,15 @@ uint8_t CEPSMFMChannel::m_iLFOFreq = 0;
 uint8_t CEPSMFMChannel::m_iGates = 0;
 
 CEPSMFMChannel::CEPSMFMChannel() :
-	CChannelHandlerEPSM(0x3FFF, 0x7F)
+	FrequencyChannelHandler(0x3FFF, 0x7F)
 {
 	ResetChannel();
+}
+
+void CEPSMFMChannel::SetChannelID(int ID)
+{
+	CChannelHandler::SetChannelID(ID);
+	m_iChannel = ID - CHANID_EPSM_SSG1;
 }
 
 void CEPSMFMChannel::RefreshChannel()
@@ -354,7 +360,11 @@ void CEPSMFMChannel::RefreshChannel()
 	}
 
 	// Write frequency
-	//WriteReg(0x10 + m_iChannel, Fnum & 0xFF);
+	WriteReg(0xA0 + m_iChannelIndex, Fnum & 0xFF);
+	WriteReg(0xA1 + m_iChannelIndex, ((Bnum & 0x07) << 3) | (Fnum & 0x07));
+
+	// Write volume
+	WriteReg(0xA0 + m_iChannelIndex, Fnum & 0xFF);
 
 	if (m_iChannelIndex == 5) {
 		WriteReg(0x22, m_iLFOFreq);
@@ -517,16 +527,31 @@ int CEPSMFMChannel::RunNote(int Octave, int Note)
 
 bool CEPSMFMChannel::CreateInstHandler(inst_type_t Type)
 {
-	return CChannelHandler::CreateInstHandler(Type);
+	switch (Type) {
+	case INST_EPSM:
+		if (m_iInstTypeCurrent != INST_EPSM)
+			m_pInstHandler.reset(new CInstHandlerEPSM(this, 0x0F));
+		return true;
+	}
+	return false;
 }
 
-// TODO
 int CEPSMFMChannel::CalculateVolume() const
 {
-	return 0;
+	int Volume = (m_iVolume >> VOL_COLUMN_SHIFT);// - GetTremolo();
+	if (Volume > 15)
+		Volume = 15;
+	if (Volume < 0)
+		Volume = 0;
+	return Volume;		// // //
 }
 
-// TODO
+unsigned int CEPSMFMChannel::GetFnum(int Note) const
+{
+	//return m_pNoteLookupTable[Note % NOTE_RANGE];		// // //
+	return 1;
+}
+
 int CEPSMFMChannel::CalculatePeriod(bool MultiplyByHarmonic) const
 {
 	return 1;
@@ -561,31 +586,31 @@ void CEPSMFMChannel::CorrectOctave()
 	}
 }
 
-/*int CEPSMFMChannel::TriggerNote(int Note)
+int CEPSMFMChannel::TriggerNote(int Note)
 {
-	m_iTriggeredNote = Note;
+	//m_iTriggeredNote = Note;
 	RegisterKeyState(Note);
 	if (m_iCommand != CMD_NOTE_TRIGGER && m_iCommand != CMD_NOTE_HALT)
 		m_iCommand = CMD_NOTE_ON;
 	m_iOctave = Note / NOTE_RANGE;
 
 	return m_bLinearPitch ? (Note << LINEAR_PITCH_AMOUNT) : GetFnum(Note);		// // //
-}*/
+}
 
 void CEPSMFMChannel::WritePatch()
 {
 	uint16_t A0 = (m_iChannelIndex >= 3) ? 0x100 : 0x000;
-	uint16_t offset = A0 + m_iChannelIndex % 3; 
+	uint16_t offset = A0 + m_iChannelIndex % 3;
 
 	WriteReg(0x30 + offset, m_pFMData.Detune[0] << 4 | m_pFMData.Mult[0]);
 	WriteReg(0x34 + offset, m_pFMData.Detune[1] << 4 | m_pFMData.Mult[1]);
 	WriteReg(0x38 + offset, m_pFMData.Detune[2] << 4 | m_pFMData.Mult[2]);
 	WriteReg(0x3C + offset, m_pFMData.Detune[3] << 4 | m_pFMData.Mult[3]);
-
-	WriteReg(0x40 + offset, m_pFMData.TotalLevel[0]);
+	
+	/*WriteReg(0x40 + offset, m_pFMData.TotalLevel[0]);
 	WriteReg(0x44 + offset, m_pFMData.TotalLevel[1]);
 	WriteReg(0x48 + offset, m_pFMData.TotalLevel[2]);
-	WriteReg(0x4C + offset, m_pFMData.TotalLevel[3]);
+	WriteReg(0x4C + offset, m_pFMData.TotalLevel[3]);*/
 
 	WriteReg(0x50 + offset, m_pFMData.KeyScale[0] << 6 | m_pFMData.Attack[0]);
 	WriteReg(0x54 + offset, m_pFMData.KeyScale[1] << 6 | m_pFMData.Attack[1]);
@@ -612,7 +637,7 @@ void CEPSMFMChannel::WritePatch()
 	WriteReg(0x98 + offset, m_pFMData.Fade[2]);
 	WriteReg(0x9C + offset, m_pFMData.Fade[3]);
 
-	WriteReg(0xB0 + offset, m_pFMData.Feedback);
+	WriteReg(0xB0 + offset, m_pFMData.Feedback << 3);
 }
 
 void CEPSMFMChannel::WriteReg(uint16_t Reg, uint8_t Value)

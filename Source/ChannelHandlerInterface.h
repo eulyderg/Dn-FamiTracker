@@ -91,6 +91,11 @@ public:
 
 class CChannelHandlerInterfaceEPSM
 {
+	
+};
+
+class CChannelHandlerInterfaceEPSMFM
+{
 public:
-	virtual void	SetFMData(epsm_fm_data);
+	virtual void	SetFMData(epsm_fm_data) = 0;
 };

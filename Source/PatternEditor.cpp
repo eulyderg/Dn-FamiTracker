@@ -1874,7 +1874,7 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 		m_pDocument->ExpansionEnabled(SNDCHIP_FDS) * 13 +
 		m_pDocument->ExpansionEnabled(SNDCHIP_VRC7) * 9 +
 		m_pDocument->ExpansionEnabled(SNDCHIP_S5B) * 8 +
-		m_pDocument->ExpansionEnabled(SNDCHIP_EPSM) * 17);		// // //
+		m_pDocument->ExpansionEnabled(SNDCHIP_EPSM) * 28);		// // //
 	int vis_line = 0;
 
 	// TODO: custom regview palettes
@@ -2429,10 +2429,9 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 			}
 		}
 
-		
 		++line; y += LINE_HEIGHT;
 		// FM registers
-		for (int i = 0x20; i < 0xA0; i += 4) {
+		for (int i = 0x20; i < 0x60; i += 4) {
 			GetRegsFunc(SNDCHIP_EPSM, [&](int x) { return i + x; }, 4);
 			text.Format(_T("$%02X:"), i);
 			DrawRegFunc(text, 4);

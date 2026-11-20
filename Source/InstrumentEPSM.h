@@ -57,6 +57,7 @@ public:
 	bool	CanRelease() const;
 
 public:
+	void ResetFMData();
 	epsm_fm_data m_pFMData;
 
 protected:

@@ -54,7 +54,6 @@ public:
 	void ResetChannel() override;
 	int  getDutyMax() const override;
 	inst_type_t GetNewInstType() const override;
-	void SetFMData(epsm_fm_data FMData) override {};
 
 protected:
 	void ClearRegisters() override;
@@ -92,14 +91,16 @@ protected:
 
 /////////////////
 // FM channels //
-class CEPSMFMChannel : public CChannelHandlerEPSM {
+class CEPSMFMChannel : public FrequencyChannelHandler, public CChannelHandlerInterfaceEPSMFM {
 public:
 	CEPSMFMChannel();
+	void SetChannelID(int ID) override;
+
 	void RefreshChannel() override;
 	void ResetChannel() override;
 	int  getDutyMax() const override;
 	inst_type_t GetNewInstType() const override;
-	void SetFMData(epsm_fm_data FMData) override;
+	void SetFMData(epsm_fm_data FMData) override final;
 
 protected:
 	void ClearRegisters() override;
@@ -111,6 +112,7 @@ protected:
 	void HandleRelease() override;
 	void HandleNote(int Note, int Octave) override;
 	int  RunNote(int Octave, int Note) override;
+	int	 TriggerNote(int Note) override;
 	bool CreateInstHandler(inst_type_t Type) override;
 	int  CalculateVolume() const override;
 	int  CalculatePeriod(bool MultiplyByHarmonic = true) const override;
@@ -118,7 +120,11 @@ protected:
 	void SetupSlide() override;
 
 protected:
+	uint8_t m_iChannel;
+
+protected:
 	void CorrectOctave();
+	unsigned int GetFnum(int Note) const;
 	void WritePatch();
 	void WriteReg(uint16_t Reg, uint8_t Value);
 	void ResetFMData();
@@ -135,6 +141,7 @@ protected:
 	uint8_t m_iOldOctave;
 
 	epsm_fm_data m_pFMData;
+	uint8_t m_I;
 };
 
 ////////////////////
@@ -146,7 +153,6 @@ public:
 	void ResetChannel() override;
 	int  getDutyMax() const override;
 	inst_type_t GetNewInstType() const override;
-	void SetFMData(epsm_fm_data FMData) override {};
 
 protected:
 	void ClearRegisters() override;

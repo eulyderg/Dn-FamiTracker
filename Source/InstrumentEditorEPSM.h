@@ -46,9 +46,9 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	void SetupSlider(int Slider, int Max);
-	int GetSliderVal(int Slider);
-	void SetSliderVal(int Slider, int Value);
-	void SetSliderTic(int Slider, int Tic);
+	int GetSliderVal(int Slider, bool Reversed);
+	void SetSliderVal(int Slider, bool Reversed, int Value);
+	void SetSliderTic(int Slider, bool Reversed, int Tic);
 
 protected:
 	std::shared_ptr<CInstrumentEPSM> m_pInstrument;

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "InstrumentEPSM.h"
 #include "SoundChip.h"
 #include "ChannelLevelState.h"
 
@@ -65,6 +66,8 @@ private:
 	uint16_t	m_iSSGEnvPeriod;
 	uint8_t		m_iSSGEnvMode;
 	uint16_t	m_iAddress;
+
+	epsm_fm_data m_pFMData[6];
 
 	uint32_t	m_iTime;
 	uint32_t	m_iMaxSamples = 0;

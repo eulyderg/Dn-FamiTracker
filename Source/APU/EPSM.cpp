@@ -107,6 +107,81 @@ void CEPSM::Write(uint16_t Address, uint8_t Value)
 				case 0x0B: m_iSSGEnvPeriod = (m_iSSGEnvPeriod & 0xFF00) | Value; break;
 				case 0x0C: m_iSSGEnvPeriod = (m_iSSGEnvPeriod & 0x00FF) | (Value << 8); break;
 				case 0x0D: m_iSSGEnvMode   = Value & 0xF; break;
+
+
+				// FM
+				case 0x30:
+					m_pFMData[0].Detune[0] = (Value >> 4) & 0b1111;
+					m_pFMData[0].Mult[0] = Value & 0b1111;
+					break;
+				case 0x31:
+					m_pFMData[1].Detune[0] = (Value >> 4) & 0b1111;
+					m_pFMData[1].Mult[0] = Value & 0b1111;
+					break;
+				case 0x32:
+					m_pFMData[2].Detune[0] = (Value >> 4) & 0b1111;
+					m_pFMData[2].Mult[0] = Value & 0b1111;
+					break;
+
+				case 0x34:
+					m_pFMData[0].Detune[1] = (Value >> 4) & 0b1111;
+					m_pFMData[0].Mult[1] = Value & 0b1111;
+					break;
+				case 0x35:
+					m_pFMData[1].Detune[1] = (Value >> 4) & 0b1111;
+					m_pFMData[1].Mult[1] = Value & 0b1111;
+					break;
+				case 0x36:
+					m_pFMData[2].Detune[1] = (Value >> 4) & 0b1111;
+					m_pFMData[2].Mult[1] = Value & 0b1111;
+					break;
+
+				case 0x38:
+					m_pFMData[0].Detune[2] = (Value >> 4) & 0b1111;
+					m_pFMData[0].Mult[2] = Value & 0b1111;
+					break;
+				case 0x39:
+					m_pFMData[1].Detune[2] = (Value >> 4) & 0b1111;
+					m_pFMData[1].Mult[2] = Value & 0b1111;
+					break;
+				case 0x3A:
+					m_pFMData[2].Detune[2] = (Value >> 4) & 0b1111;
+					m_pFMData[2].Mult[2] = Value & 0b1111;
+					break;
+
+				case 0x3C:
+					m_pFMData[0].Detune[3] = (Value >> 4) & 0b1111;
+					m_pFMData[0].Mult[3] = Value & 0b1111;
+					break;
+				case 0x3D:
+					m_pFMData[1].Detune[3] = (Value >> 4) & 0b1111;
+					m_pFMData[1].Mult[3] = Value & 0b1111;
+					break;
+				case 0x3E:
+					m_pFMData[2].Detune[3] = (Value >> 4) & 0b1111;
+					m_pFMData[2].Mult[3] = Value & 0b1111;
+					break;
+
+				case 0x40: m_pFMData[0].TotalLevel[0] = Value & 0b1111111; break;
+				case 0x41: m_pFMData[1].TotalLevel[0] = Value & 0b1111111; break;
+				case 0x42: m_pFMData[2].TotalLevel[0] = Value & 0b1111111; break;
+
+				case 0x44: m_pFMData[0].TotalLevel[1] = Value & 0b1111111; break;
+				case 0x45: m_pFMData[1].TotalLevel[1] = Value & 0b1111111; break;
+				case 0x46: m_pFMData[2].TotalLevel[1] = Value & 0b1111111; break;
+
+				case 0x48: m_pFMData[0].TotalLevel[2] = Value & 0b1111111; break;
+				case 0x49: m_pFMData[1].TotalLevel[2] = Value & 0b1111111; break;
+				case 0x4A: m_pFMData[2].TotalLevel[2] = Value & 0b1111111; break;
+
+				case 0x4C: m_pFMData[0].TotalLevel[3] = Value & 0b1111111; break;
+				case 0x4D: m_pFMData[1].TotalLevel[3] = Value & 0b1111111; break;
+				case 0x4E: m_pFMData[2].TotalLevel[3] = Value & 0b1111111; break;
+
+				case 0xB0: m_pFMData[0].Feedback = (Value >> 3) & 0b111; break;
+				case 0xB1: m_pFMData[1].Feedback = (Value >> 3) & 0b111; break;
+				case 0xB2: m_pFMData[2].Feedback = (Value >> 3) & 0b111; break;
+
 				default: break;
 			}
 			break;
