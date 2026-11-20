@@ -5,7 +5,7 @@ set drivers=%cd%
 cd asm\build || goto :error
 
 python build_engine.py %1 %2 || goto :error
-copy drivers\* %drivers%\ || goto :error
+cp drivers\* C:\dev\c++\Dn-FamiTracker\Source\drivers || goto :error
 rmdir /s /q drivers || goto :error
 goto :EOF
 

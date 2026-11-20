@@ -562,6 +562,7 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 	std::unique_ptr<CDetuneN163> pDetuneN163(new CDetuneN163(A440_NOTE));
 	std::unique_ptr<CDetuneS5B> pDetuneS5B(new CDetuneS5B(A440_NOTE));
 	std::unique_ptr<CDetuneEPSMSSG> pDetuneEPSMSSG(new CDetuneEPSMSSG(A440_NOTE));
+	std::unique_ptr<CDetuneEPSMFM> pDetuneEPSMFM(new CDetuneEPSMFM(A440_NOTE));
 	// TODO: EPSM detune table
 
 	for (int i = 0; i < NOTE_COUNT; ++i) {
@@ -604,9 +605,15 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 		Pitch = pDetuneS5B->FrequencyToPeriod(pDetuneS5B->NoteToFreq(i), 1, 0);
 		m_iNoteLookupTableS5B[i] = std::lround(Pitch - pDocument->GetDetuneOffset(0, i));
 
-		// EPSM
+		// EPSM SSG
 		Pitch = pDetuneEPSMSSG->FrequencyToPeriod(pDetuneEPSMSSG->NoteToFreq(i), 1, 0);
 		m_iNoteLookupTableEPSMSSG[i] = std::lround(Pitch - pDocument->GetDetuneOffset(0, i));
+
+		// EPSM FM
+		//if (i < NOTE_RANGE) {
+		Pitch = pDetuneEPSMFM->FrequencyToPeriod(pDetuneEPSMFM->NoteToFreq(i), 1, 0);
+		m_iNoteLookupTableEPSMFM[i] = std::lround(Pitch + pDocument->GetDetuneOffset(3, i));		// // //
+		//}
 	}
 
 #ifdef WRITE_PERIOD_FILES
@@ -710,6 +717,9 @@ void CSoundGen::DocumentPropertiesChanged(CFamiTrackerDoc *pDocument)
 			Table = m_iNoteLookupTableS5B; break;
 		case CHANID_EPSM_SSG1: case CHANID_EPSM_SSG2: case CHANID_EPSM_SSG3:
 			Table = m_iNoteLookupTableEPSMSSG; break;
+		case CHANID_EPSM_FM1: case CHANID_EPSM_FM2: case CHANID_EPSM_FM3:
+		case CHANID_EPSM_FM4: case CHANID_EPSM_FM5: case CHANID_EPSM_FM6:
+			Table = m_iNoteLookupTableEPSMFM; break;
 		// TODO: EPSM note table
 		default: continue;
 		}

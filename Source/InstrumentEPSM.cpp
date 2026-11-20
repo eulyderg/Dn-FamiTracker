@@ -24,55 +24,61 @@
 
 #include "stdafx.h"
 #include "Instrument.h"
-#include "InstrumentEPSM.h"		// // //
-#include "ModuleException.h"		// // //
+#include "InstrumentEPSM.h"
+#include "ModuleException.h"
 #include "Chunk.h"
 #include "DocumentFile.h"
 
-/*
- * class InstrumentEPSM
- *
- */
+CInstrumentEPSM::CInstrumentEPSM() : CInstrument(INST_EPSM)
+{
+	ResetFMData();
+}
 
-CInstrumentEPSM::CInstrumentEPSM() : CInstrument(INST_EPSM), m_pFMData()
+void CInstrumentEPSM::ResetFMData()
+{
+	SetFMData(DEFAULT_EPSM_INST);
+}
+
+void CInstrumentEPSM::SetFMData(epsm_fm_data FMData)
 {
 	for (uint8_t op = 0; op < 4; op++) {
-		m_pFMData.Detune[op] = 0;
-		m_pFMData.Mult[op] = 0;
-		m_pFMData.KeyScale[op] = 0;
-		m_pFMData.TotalLevel[op] = 0;
+		m_pFMData.Detune[op] = FMData.Detune[op];
+		m_pFMData.Mult[op] = FMData.Mult[op];
+		m_pFMData.KeyScale[op] = FMData.KeyScale[op];
+		m_pFMData.TotalLevel[op] = FMData.TotalLevel[op];
 
-		m_pFMData.Attack[op] = 0;
-		m_pFMData.Decay[op] = 0;
-		m_pFMData.Sustain[op] = 15;
-		m_pFMData.Fade[op] = 31;
-		m_pFMData.Release[op] = 0;
+		m_pFMData.Attack[op] = FMData.Attack[op];
+		m_pFMData.Decay[op] = FMData.Decay[op];
+		m_pFMData.Sustain[op] = FMData.Sustain[op];
+		m_pFMData.Fade[op] = FMData.Fade[op];
+		m_pFMData.Release[op] = FMData.Release[op];
 
-		m_pFMData.LFO[op] = false;
+		m_pFMData.LFO[op] = FMData.LFO[op];
 
-		m_pFMData.SSGEG[op] = 0;
+		m_pFMData.SSGEG[op] = FMData.SSGEG[op];
 	}
 
-	m_pFMData.Feedback = 0;
+	m_pFMData.Feedback = FMData.Feedback;
 }
 
 CInstrument *CInstrumentEPSM::Clone() const
 {
-	CInstrumentEPSM* inst = new CInstrumentEPSM();		// // //
+	CInstrumentEPSM* inst = new CInstrumentEPSM();
 	inst->CloneFrom(this);
 	return inst;
 }
 
-void CInstrumentEPSM::CloneFrom(const CInstrument *pInst)
-{
+void CInstrumentEPSM::CloneFrom(const CInstrument *pInst) {
 	CInstrument::CloneFrom(pInst);
 	
 	if (auto pNew = dynamic_cast<const CInstrumentEPSM*>(pInst)) {
-		m_pFMData = pNew->m_pFMData;
+		//(*pNew).
 	}
 }
 
-void CInstrumentEPSM::Setup() { }
+void CInstrumentEPSM::Setup() {
+
+}
 
 void CInstrumentEPSM::Store(CDocumentFile *pDocFile)
 {

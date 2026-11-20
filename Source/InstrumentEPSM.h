@@ -28,35 +28,37 @@
 struct epsm_fm_data {
 	uint8_t Feedback = 0;
 
-	uint8_t Detune[4] = {};
-	uint8_t Mult[4] = {};
-	uint8_t KeyScale[4] = {};
-	uint8_t TotalLevel[4] = {};
+	uint8_t Detune[4] = {3, 3, 3, 3};
+	uint8_t Mult[4] = {1, 1, 1, 1};
+	uint8_t KeyScale[4] = {0, 0, 0, 0};
+	uint8_t TotalLevel[4] = {127, 127, 0, 0};
 
-	uint8_t Attack[4] = {};
-	uint8_t Decay[4] = {};
-	uint8_t Sustain[4] = {};
-	uint8_t Fade[4] = {};
-	uint8_t Release[4] = {};
+	uint8_t Attack[4] = {31, 31, 31, 31};
+	uint8_t Decay[4] = {31, 31, 31, 31};
+	uint8_t Sustain[4] = {0, 0, 0, 0};
+	uint8_t Fade[4] = {0, 0, 0, 0};
+	uint8_t Release[4] = {15, 15, 8, 12};
 
-	uint8_t SSGEG[4] = {};
+	uint8_t SSGEG[4] = {0, 0, 0, 0};
 
-	bool LFO[4] = {};
+	bool LFO[4] = {false, false, false, false};
 };
+
+const epsm_fm_data DEFAULT_EPSM_INST;
 
 class CInstrumentEPSM : public CInstrument {
 public:
 	CInstrumentEPSM();
 	CInstrument* Clone() const;
-	void	Setup();
-	void	Store(CDocumentFile *pDocFile);
-	bool	Load(CDocumentFile *pDocFile);
-	void	SaveFile(CInstrumentFile *pFile);
-	bool	LoadFile(CInstrumentFile *pFile, int iVersion);
-	int		Compile(CChunk *pChunk, int Index);
-	bool	CanRelease() const;
+	void Setup();
+	void Store(CDocumentFile *pDocFile);
+	bool Load(CDocumentFile *pDocFile);
+	void SaveFile(CInstrumentFile *pFile);
+	bool LoadFile(CInstrumentFile *pFile, int iVersion);
+	int  Compile(CChunk *pChunk, int Index);
+	bool CanRelease() const;
 
-public:
+	void SetFMData(epsm_fm_data FMData);
 	void ResetFMData();
 	epsm_fm_data m_pFMData;
 

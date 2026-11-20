@@ -74,17 +74,25 @@ BOOL CInstrumentEditorEPSM::OnInitDialog()
 	// Get active document
 	m_pDocument = GetDocument();
 
+	return TRUE;
+}
+
+void CInstrumentEditorEPSM::SelectInstrument(std::shared_ptr<CInstrument> pInst)
+{
+	m_pInstrument = std::dynamic_pointer_cast<CInstrumentEPSM>(pInst);
+	ASSERT(m_pInstrument);
+
 	SetupSlider(IDC_M_FB1, 7);
-	SetSliderVal(IDC_M_FB1, false, 0);
+	SetSliderVal(IDC_M_FB1, false, m_pInstrument->m_pFMData.Feedback);
 
 	SetupSlider(IDC_M_MUL1, 15);
 	SetupSlider(IDC_M_MUL2, 15);
 	SetupSlider(IDC_M_MUL3, 15);
 	SetupSlider(IDC_M_MUL4, 15);
-	SetSliderVal(IDC_M_MUL1, false, 1);
-	SetSliderVal(IDC_M_MUL2, false, 1);
-	SetSliderVal(IDC_M_MUL3, false, 1);
-	SetSliderVal(IDC_M_MUL4, false, 1);
+	SetSliderVal(IDC_M_MUL1, false, m_pInstrument->m_pFMData.Mult[0]);
+	SetSliderVal(IDC_M_MUL2, false, m_pInstrument->m_pFMData.Mult[1]);
+	SetSliderVal(IDC_M_MUL3, false, m_pInstrument->m_pFMData.Mult[2]);
+	SetSliderVal(IDC_M_MUL4, false, m_pInstrument->m_pFMData.Mult[3]);
 	SetSliderTic(IDC_M_MUL1, false, 1);
 	SetSliderTic(IDC_M_MUL2, false, 1);
 	SetSliderTic(IDC_M_MUL3, false, 1);
@@ -94,19 +102,19 @@ BOOL CInstrumentEditorEPSM::OnInitDialog()
 	SetupSlider(IDC_M_VOL2, 127);
 	SetupSlider(IDC_M_VOL3, 127);
 	SetupSlider(IDC_M_VOL4, 127);
-	SetSliderVal(IDC_M_VOL1, false, 127);
-	SetSliderVal(IDC_M_VOL2, false, 127);
-	SetSliderVal(IDC_M_VOL3, false, 127);
-	SetSliderVal(IDC_M_VOL4, false, 127);
+	SetSliderVal(IDC_M_VOL1, true, m_pInstrument->m_pFMData.TotalLevel[0]);
+	SetSliderVal(IDC_M_VOL2, true, m_pInstrument->m_pFMData.TotalLevel[1]);
+	SetSliderVal(IDC_M_VOL3, true, m_pInstrument->m_pFMData.TotalLevel[2]);
+	SetSliderVal(IDC_M_VOL4, true, m_pInstrument->m_pFMData.TotalLevel[3]);
 
 	SetupSlider(IDC_M_DET1, 6);
 	SetupSlider(IDC_M_DET2, 6);
 	SetupSlider(IDC_M_DET3, 6);
 	SetupSlider(IDC_M_DET4, 6);
-	SetSliderVal(IDC_M_DET1, false, 3);
-	SetSliderVal(IDC_M_DET2, false, 3);
-	SetSliderVal(IDC_M_DET3, false, 3);
-	SetSliderVal(IDC_M_DET4, false, 3);
+	SetSliderVal(IDC_M_DET1, false, m_pInstrument->m_pFMData.Detune[0]);
+	SetSliderVal(IDC_M_DET2, false, m_pInstrument->m_pFMData.Detune[1]);
+	SetSliderVal(IDC_M_DET3, false, m_pInstrument->m_pFMData.Detune[2]);
+	SetSliderVal(IDC_M_DET4, false, m_pInstrument->m_pFMData.Detune[3]);
 	SetSliderTic(IDC_M_DET1, false, 3);
 	SetSliderTic(IDC_M_DET2, false, 3);
 	SetSliderTic(IDC_M_DET3, false, 3);
@@ -116,50 +124,42 @@ BOOL CInstrumentEditorEPSM::OnInitDialog()
 	SetupSlider(IDC_M_ATT2, 31);
 	SetupSlider(IDC_M_ATT3, 31);
 	SetupSlider(IDC_M_ATT4, 31);
-	SetSliderVal(IDC_M_ATT1, true, 0);
-	SetSliderVal(IDC_M_ATT2, true, 0);
-	SetSliderVal(IDC_M_ATT3, true, 0);
-	SetSliderVal(IDC_M_ATT4, true, 0);
+	SetSliderVal(IDC_M_ATT1, true, m_pInstrument->m_pFMData.Attack[0]);
+	SetSliderVal(IDC_M_ATT2, true, m_pInstrument->m_pFMData.Attack[1]);
+	SetSliderVal(IDC_M_ATT3, true, m_pInstrument->m_pFMData.Attack[2]);
+	SetSliderVal(IDC_M_ATT4, true, m_pInstrument->m_pFMData.Attack[3]);
 	SetupSlider(IDC_M_DEC1, 31);
 	SetupSlider(IDC_M_DEC2, 31);
 	SetupSlider(IDC_M_DEC3, 31);
 	SetupSlider(IDC_M_DEC4, 31);
-	SetSliderVal(IDC_M_DEC1, true, 0);
-	SetSliderVal(IDC_M_DEC2, true, 0);
-	SetSliderVal(IDC_M_DEC3, true, 0);
-	SetSliderVal(IDC_M_DEC4, true, 0);
+	SetSliderVal(IDC_M_DEC1, true, m_pInstrument->m_pFMData.Decay[0]);
+	SetSliderVal(IDC_M_DEC2, true, m_pInstrument->m_pFMData.Decay[1]);
+	SetSliderVal(IDC_M_DEC3, true, m_pInstrument->m_pFMData.Decay[2]);
+	SetSliderVal(IDC_M_DEC4, true, m_pInstrument->m_pFMData.Decay[3]);
 	SetupSlider(IDC_M_SUS1, 15);
 	SetupSlider(IDC_M_SUS2, 15);
 	SetupSlider(IDC_M_SUS3, 15);
 	SetupSlider(IDC_M_SUS4, 15);
-	SetSliderVal(IDC_M_SUS1, true, 15);
-	SetSliderVal(IDC_M_SUS2, true, 15);
-	SetSliderVal(IDC_M_SUS3, true, 15);
-	SetSliderVal(IDC_M_SUS4, true, 15);
+	SetSliderVal(IDC_M_SUS1, false, m_pInstrument->m_pFMData.Sustain[0]);
+	SetSliderVal(IDC_M_SUS2, false, m_pInstrument->m_pFMData.Sustain[1]);
+	SetSliderVal(IDC_M_SUS3, false, m_pInstrument->m_pFMData.Sustain[2]);
+	SetSliderVal(IDC_M_SUS4, false, m_pInstrument->m_pFMData.Sustain[3]);
 	SetupSlider(IDC_M_FAD1, 31);
 	SetupSlider(IDC_M_FAD2, 31);
 	SetupSlider(IDC_M_FAD3, 31);
 	SetupSlider(IDC_M_FAD4, 31);
-	SetSliderVal(IDC_M_FAD1, true, 31);
-	SetSliderVal(IDC_M_FAD2, true, 31);
-	SetSliderVal(IDC_M_FAD3, true, 31);
-	SetSliderVal(IDC_M_FAD4, true, 31);
+	SetSliderVal(IDC_M_FAD1, true, m_pInstrument->m_pFMData.Fade[0]);
+	SetSliderVal(IDC_M_FAD2, true, m_pInstrument->m_pFMData.Fade[1]);
+	SetSliderVal(IDC_M_FAD3, true, m_pInstrument->m_pFMData.Fade[2]);
+	SetSliderVal(IDC_M_FAD4, true, m_pInstrument->m_pFMData.Fade[3]);
 	SetupSlider(IDC_M_REL1, 15);
 	SetupSlider(IDC_M_REL2, 15);
 	SetupSlider(IDC_M_REL3, 15);
 	SetupSlider(IDC_M_REL4, 15);
-	SetSliderVal(IDC_M_REL1, true, 0);
-	SetSliderVal(IDC_M_REL2, true, 0);
-	SetSliderVal(IDC_M_REL3, true, 0);
-	SetSliderVal(IDC_M_REL4, true, 0);
-
-	return TRUE;
-}
-
-void CInstrumentEditorEPSM::SelectInstrument(std::shared_ptr<CInstrument> pInst)
-{
-	m_pInstrument = std::dynamic_pointer_cast<CInstrumentEPSM>(pInst);
-	ASSERT(m_pInstrument);
+	SetSliderVal(IDC_M_REL1, true, m_pInstrument->m_pFMData.Release[0]);
+	SetSliderVal(IDC_M_REL2, true, m_pInstrument->m_pFMData.Release[1]);
+	SetSliderVal(IDC_M_REL3, true, m_pInstrument->m_pFMData.Release[2]);
+	SetSliderVal(IDC_M_REL4, true, m_pInstrument->m_pFMData.Release[3]);
 }
 
 BOOL CInstrumentEditorEPSM::OnEraseBkgnd(CDC* pDC)

@@ -2431,10 +2431,10 @@ void CPatternEditor::DrawRegisters(CDC *pDC)
 
 		++line; y += LINE_HEIGHT;
 		// FM registers
-		for (int i = 0x20; i < 0x60; i += 4) {
-			GetRegsFunc(SNDCHIP_EPSM, [&](int x) { return i + x; }, 4);
+		for (int i = 0x20; i < 0xC0; i += 8) {
+			GetRegsFunc(SNDCHIP_EPSM, [&](int x) { return i + x; }, 8);
 			text.Format(_T("$%02X:"), i);
-			DrawRegFunc(text, 4);
+			DrawRegFunc(text, 8);
 		}
 	}
 

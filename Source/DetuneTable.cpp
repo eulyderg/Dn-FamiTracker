@@ -287,3 +287,25 @@ double CDetuneEPSMSSG::PeriodToFrequency(unsigned int Period, int Octave, int Na
 {
 	return CAPU::BASE_FREQ_EPSM / (32. * ((double)Period));
 }
+
+
+// https://www.nesdev.org/wiki/VRC7_audio#Channels
+CDetuneEPSMFM::CDetuneEPSMFM(double A440_Note) :
+	CDetuneTable(DETUNE_EPSMFM, 0, 0x1FF, A440_Note)
+{
+	//SetNoteCount(12);
+	SetGenerator([this](double x) { return FrequencyToPeriod(x, 1, 0); });
+	SetFrequencyFunc([this](double x) { return PeriodToFrequency(static_cast<int>(x), 1, 0); });
+	//GenerateRegisters();
+}
+
+unsigned int CDetuneEPSMFM::FrequencyToPeriod(double Freq, int Octave, int NamcoChannels) const
+{
+	return std::lround((Freq * std::pow(2, (19 - Octave))) / (CAPU::BASE_FREQ_EPSM / 64.));
+}
+
+// frequency = (VRC7_Xclock / 72 * period) / 2^(19 - octave - 1)
+double CDetuneEPSMFM::PeriodToFrequency(unsigned int Period, int Octave, int NamcoChannels) const
+{
+	return ((CAPU::BASE_FREQ_EPSM / 64.) * (double)Period) / std::pow(2, (19 - Octave - 1));
+}
